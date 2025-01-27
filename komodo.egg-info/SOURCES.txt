@@ -1,0 +1,11 @@
+README.md
+setup.py
+komodo.egg-info/PKG-INFO
+komodo.egg-info/SOURCES.txt
+komodo.egg-info/dependency_links.txt
+komodo.egg-info/not-zip-safe
+komodo.egg-info/top_level.txt
+src/__init__.py
+src/config.py
+src/core.c
+src/thread_pool.c
