@@ -4,7 +4,7 @@ from Cython.Build import cythonize
 extensions = [
     Extension(
         name="src.core",
-        sources=["src/core.pyx", "src/thread_pool.c"],
+        sources=["src/core.pyx", "src/thread_pool.c", "src/utils.c"],
         language="c",
         include_dirs=["./include"],
         extra_compile_args=['-pthread'],

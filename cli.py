@@ -1,11 +1,9 @@
-# # yek/cli.py
 # import argparse
 # from pathlib import Path
 # from src.config import KomodoConfig
 # from src.core import process_repository
 
 # def main():
-#     parser = argparse.ArgumentParser(prog='yek')
 #     parser.add_argument('directories', nargs='*', default=['.'])
 #     parser.add_argument('--max-size', default='10MB')
 #     parser.add_argument('--tokens', action='store_true')

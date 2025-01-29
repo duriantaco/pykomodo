@@ -20,7 +20,8 @@
         "name": "src.core",
         "sources": [
             "src/core.pyx",
-            "src/thread_pool.c"
+            "src/thread_pool.c",
+            "src/utils.c"
         ]
     },
     "module_name": "src.core"
@@ -1246,6 +1247,8 @@ static CYTHON_INLINE float __PYX_NAN() {
 #define __PYX_HAVE__src__core
 #define __PYX_HAVE_API__src__core
 /* Early includes */
+#include <sys/types.h>
+#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -1520,8 +1523,8 @@ static const char *__pyx_f[] = {
 struct __pyx_obj_3src_4core_Chunker;
 struct __pyx_obj_3src_4core_ParallelChunker;
 
-/* "src/core.pyx":238
- * # 9. The main Chunker class
+/* "src/core.pyx":237
+ * # 8. The main Chunker class
  * # --------------------------------------------------------------------------
  * cdef class Chunker:             # <<<<<<<<<<<<<<
  *     """
@@ -1535,8 +1538,8 @@ struct __pyx_obj_3src_4core_Chunker {
 };
 
 
-/* "src/core.pyx":440
- *     void thread_pool_process_directory(ThreadPool* pool)
+/* "src/core.pyx":395
+ * 
  * 
  * cdef class ParallelChunker:             # <<<<<<<<<<<<<<
  *     cdef ThreadPool* pool
@@ -1550,8 +1553,8 @@ struct __pyx_obj_3src_4core_ParallelChunker {
 
 
 
-/* "src/core.pyx":238
- * # 9. The main Chunker class
+/* "src/core.pyx":237
+ * # 8. The main Chunker class
  * # --------------------------------------------------------------------------
  * cdef class Chunker:             # <<<<<<<<<<<<<<
  *     """
@@ -2117,25 +2120,55 @@ static PyObject *__Pyx_CyFunction_New(PyMethodDef *ml,
                                       PyObject *module, PyObject *globals,
                                       PyObject* code);
 
-/* decode_c_string_utf16.proto */
-static CYTHON_INLINE PyObject *__Pyx_PyUnicode_DecodeUTF16(const char *s, Py_ssize_t size, const char *errors) {
-    int byteorder = 0;
-    return PyUnicode_DecodeUTF16(s, size, errors, &byteorder);
+/* PyDictVersioning.proto */
+#if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_TYPE_SLOTS
+#define __PYX_DICT_VERSION_INIT  ((PY_UINT64_T) -1)
+#define __PYX_GET_DICT_VERSION(dict)  (((PyDictObject*)(dict))->ma_version_tag)
+#define __PYX_UPDATE_DICT_CACHE(dict, value, cache_var, version_var)\
+    (version_var) = __PYX_GET_DICT_VERSION(dict);\
+    (cache_var) = (value);
+#define __PYX_PY_DICT_LOOKUP_IF_MODIFIED(VAR, DICT, LOOKUP) {\
+    static PY_UINT64_T __pyx_dict_version = 0;\
+    static PyObject *__pyx_dict_cached_value = NULL;\
+    if (likely(__PYX_GET_DICT_VERSION(DICT) == __pyx_dict_version)) {\
+        (VAR) = __pyx_dict_cached_value;\
+    } else {\
+        (VAR) = __pyx_dict_cached_value = (LOOKUP);\
+        __pyx_dict_version = __PYX_GET_DICT_VERSION(DICT);\
+    }\
 }
-static CYTHON_INLINE PyObject *__Pyx_PyUnicode_DecodeUTF16LE(const char *s, Py_ssize_t size, const char *errors) {
-    int byteorder = -1;
-    return PyUnicode_DecodeUTF16(s, size, errors, &byteorder);
-}
-static CYTHON_INLINE PyObject *__Pyx_PyUnicode_DecodeUTF16BE(const char *s, Py_ssize_t size, const char *errors) {
-    int byteorder = 1;
-    return PyUnicode_DecodeUTF16(s, size, errors, &byteorder);
-}
+static CYTHON_INLINE PY_UINT64_T __Pyx_get_tp_dict_version(PyObject *obj);
+static CYTHON_INLINE PY_UINT64_T __Pyx_get_object_dict_version(PyObject *obj);
+static CYTHON_INLINE int __Pyx_object_dict_version_matches(PyObject* obj, PY_UINT64_T tp_dict_version, PY_UINT64_T obj_dict_version);
+#else
+#define __PYX_GET_DICT_VERSION(dict)  (0)
+#define __PYX_UPDATE_DICT_CACHE(dict, value, cache_var, version_var)
+#define __PYX_PY_DICT_LOOKUP_IF_MODIFIED(VAR, DICT, LOOKUP)  (VAR) = (LOOKUP);
+#endif
 
-/* decode_c_string.proto */
-static CYTHON_INLINE PyObject* __Pyx_decode_c_string(
-         const char* cstring, Py_ssize_t start, Py_ssize_t stop,
-         const char* encoding, const char* errors,
-         PyObject* (*decode_func)(const char *s, Py_ssize_t size, const char *errors));
+/* GetModuleGlobalName.proto */
+#if CYTHON_USE_DICT_VERSIONS
+#define __Pyx_GetModuleGlobalName(var, name)  do {\
+    static PY_UINT64_T __pyx_dict_version = 0;\
+    static PyObject *__pyx_dict_cached_value = NULL;\
+    (var) = (likely(__pyx_dict_version == __PYX_GET_DICT_VERSION(__pyx_d))) ?\
+        (likely(__pyx_dict_cached_value) ? __Pyx_NewRef(__pyx_dict_cached_value) : __Pyx_GetBuiltinName(name)) :\
+        __Pyx__GetModuleGlobalName(name, &__pyx_dict_version, &__pyx_dict_cached_value);\
+} while(0)
+#define __Pyx_GetModuleGlobalNameUncached(var, name)  do {\
+    PY_UINT64_T __pyx_dict_version;\
+    PyObject *__pyx_dict_cached_value;\
+    (var) = __Pyx__GetModuleGlobalName(name, &__pyx_dict_version, &__pyx_dict_cached_value);\
+} while(0)
+static PyObject *__Pyx__GetModuleGlobalName(PyObject *name, PY_UINT64_T *dict_version, PyObject **dict_cached_value);
+#else
+#define __Pyx_GetModuleGlobalName(var, name)  (var) = __Pyx__GetModuleGlobalName(name)
+#define __Pyx_GetModuleGlobalNameUncached(var, name)  (var) = __Pyx__GetModuleGlobalName(name)
+static CYTHON_INLINE PyObject *__Pyx__GetModuleGlobalName(PyObject *name);
+#endif
+
+/* PyUnicode_Unicode.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyUnicode_Unicode(PyObject *obj);
 
 /* PyObjectCallNoArg.proto */
 static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func);
@@ -2188,32 +2221,6 @@ static int __Pyx_setup_reduce(PyObject* type_obj);
 static PyObject *__Pyx_ImportDottedModule(PyObject *name, PyObject *parts_tuple);
 #if PY_MAJOR_VERSION >= 3
 static PyObject *__Pyx_ImportDottedModule_WalkParts(PyObject *module, PyObject *name, PyObject *parts_tuple);
-#endif
-
-/* PyDictVersioning.proto */
-#if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_TYPE_SLOTS
-#define __PYX_DICT_VERSION_INIT  ((PY_UINT64_T) -1)
-#define __PYX_GET_DICT_VERSION(dict)  (((PyDictObject*)(dict))->ma_version_tag)
-#define __PYX_UPDATE_DICT_CACHE(dict, value, cache_var, version_var)\
-    (version_var) = __PYX_GET_DICT_VERSION(dict);\
-    (cache_var) = (value);
-#define __PYX_PY_DICT_LOOKUP_IF_MODIFIED(VAR, DICT, LOOKUP) {\
-    static PY_UINT64_T __pyx_dict_version = 0;\
-    static PyObject *__pyx_dict_cached_value = NULL;\
-    if (likely(__PYX_GET_DICT_VERSION(DICT) == __pyx_dict_version)) {\
-        (VAR) = __pyx_dict_cached_value;\
-    } else {\
-        (VAR) = __pyx_dict_cached_value = (LOOKUP);\
-        __pyx_dict_version = __PYX_GET_DICT_VERSION(DICT);\
-    }\
-}
-static CYTHON_INLINE PY_UINT64_T __Pyx_get_tp_dict_version(PyObject *obj);
-static CYTHON_INLINE PY_UINT64_T __Pyx_get_object_dict_version(PyObject *obj);
-static CYTHON_INLINE int __Pyx_object_dict_version_matches(PyObject* obj, PY_UINT64_T tp_dict_version, PY_UINT64_T obj_dict_version);
-#else
-#define __PYX_GET_DICT_VERSION(dict)  (0)
-#define __PYX_UPDATE_DICT_CACHE(dict, value, cache_var, version_var)
-#define __PYX_PY_DICT_LOOKUP_IF_MODIFIED(VAR, DICT, LOOKUP)  (VAR) = (LOOKUP);
 #endif
 
 /* CLineInTraceback.proto */
@@ -2311,6 +2318,10 @@ static void __pyx_f_3src_4core_7Chunker__flush_chunk(CYTHON_UNUSED struct __pyx_
 
 /* Module declarations from "cython" */
 
+/* Module declarations from "posix.types" */
+
+/* Module declarations from "posix.unistd" */
+
 /* Module declarations from "libc.string" */
 
 /* Module declarations from "libc.stdlib" */
@@ -2323,7 +2334,6 @@ static void __pyx_f_3src_4core_7Chunker__flush_chunk(CYTHON_UNUSED struct __pyx_
 static int __pyx_v_3src_4core_DT_DIR;
 static char *__pyx_f_3src_4core_make_c_string(PyObject *); /*proto*/
 static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *); /*proto*/
-static char *__pyx_f_3src_4core_read_file_contents(char const *); /*proto*/
 static size_t __pyx_f_3src_4core_count_tokens(char const *); /*proto*/
 static int __pyx_f_3src_4core_is_binary_file(char const *, char const **, size_t); /*proto*/
 static struct ProcessedFile __pyx_convert__from_py_struct__ProcessedFile(PyObject *); /*proto*/
@@ -2339,22 +2349,24 @@ static PyObject *__pyx_builtin_MemoryError;
 static PyObject *__pyx_builtin_range;
 static PyObject *__pyx_builtin_enumerate;
 static PyObject *__pyx_builtin_TypeError;
-static PyObject *__pyx_builtin_KeyError;
 static PyObject *__pyx_builtin_ValueError;
+static PyObject *__pyx_builtin_KeyError;
 /* #### Code section: string_decls ### */
 static const char __pyx_k_i[] = "i";
 static const char __pyx_k_x[] = "x";
 static const char __pyx_k__5[] = ".";
 static const char __pyx_k__8[] = "*";
 static const char __pyx_k_gc[] = "gc";
+static const char __pyx_k_os[] = "os";
 static const char __pyx_k_pf[] = "pf";
-static const char __pyx_k__25[] = "?";
+static const char __pyx_k__26[] = "?";
 static const char __pyx_k_int[] = "int";
 static const char __pyx_k_key[] = "key";
 static const char __pyx_k_str[] = "str";
 static const char __pyx_k_sys[] = "sys";
+static const char __pyx_k_None[] = "None";
 static const char __pyx_k_bool[] = "bool";
-static const char __pyx_k_dirp[] = "dirp";
+static const char __pyx_k_exit[] = "__exit__";
 static const char __pyx_k_list[] = "list";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_name[] = "__name__";
@@ -2363,29 +2375,32 @@ static const char __pyx_k_self[] = "self";
 static const char __pyx_k_sort[] = "sort";
 static const char __pyx_k_spec[] = "__spec__";
 static const char __pyx_k_test[] = "__test__";
-static const char __pyx_k_chunk[] = "chunk";
-static const char __pyx_k_cpath[] = "cpath";
-static const char __pyx_k_entry[] = "entry";
+static const char __pyx_k_enter[] = "__enter__";
+static const char __pyx_k_isdir[] = "isdir";
 static const char __pyx_k_range[] = "range";
 static const char __pyx_k_score[] = "score";
 static const char __pyx_k_b_path[] = "b_path";
 static const char __pyx_k_c_exts[] = "c_exts";
 static const char __pyx_k_c_path[] = "c_path";
 static const char __pyx_k_enable[] = "enable";
+static const char __pyx_k_exc_tb[] = "exc_tb";
+static const char __pyx_k_exists[] = "exists";
 static const char __pyx_k_import[] = "__import__";
 static const char __pyx_k_reduce[] = "__reduce__";
 static const char __pyx_k_result[] = "result";
 static const char __pyx_k_return[] = "return";
 static const char __pyx_k_stream[] = "stream";
 static const char __pyx_k_Chunker[] = "Chunker";
+static const char __pyx_k_abspath[] = "abspath";
 static const char __pyx_k_content[] = "content";
 static const char __pyx_k_disable[] = "disable";
+static const char __pyx_k_exc_val[] = "exc_val";
 static const char __pyx_k_pattern[] = "pattern";
 static const char __pyx_k_reverse[] = "reverse";
 static const char __pyx_k_KeyError[] = "KeyError";
+static const char __pyx_k_abs_path[] = "abs_path";
 static const char __pyx_k_add_file[] = "add_file";
-static const char __pyx_k_contents[] = "contents";
-static const char __pyx_k_fullpath[] = "fullpath";
+static const char __pyx_k_exc_type[] = "exc_type";
 static const char __pyx_k_getstate[] = "__getstate__";
 static const char __pyx_k_max_size[] = "max_size";
 static const char __pyx_k_num_exts[] = "num_exts";
@@ -2405,7 +2420,6 @@ static const char __pyx_k_entry_size[] = "entry_size";
 static const char __pyx_k_output_dir[] = "output_dir";
 static const char __pyx_k_pyx_vtable[] = "__pyx_vtable__";
 static const char __pyx_k_src_config[] = "src.config";
-static const char __pyx_k_start_path[] = "start_path";
 static const char __pyx_k_token_mode[] = "token_mode";
 static const char __pyx_k_MemoryError[] = "MemoryError";
 static const char __pyx_k_binary_exts[] = "binary_exts";
@@ -2431,7 +2445,11 @@ static const char __pyx_k_process_directory[] = "process_directory";
 static const char __pyx_k_asyncio_coroutines[] = "asyncio.coroutines";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_Chunker_write_chunks[] = "Chunker.write_chunks";
+static const char __pyx_k_ParallelChunker___exit[] = "ParallelChunker.__exit__";
 static const char __pyx_k_Chunker___reduce_cython[] = "Chunker.__reduce_cython__";
+static const char __pyx_k_ParallelChunker___enter[] = "ParallelChunker.__enter__";
+static const char __pyx_k_Path_is_not_a_directory[] = "Path is not a directory: ";
+static const char __pyx_k_Directory_does_not_exist[] = "Directory does not exist: ";
 static const char __pyx_k_Chunker___setstate_cython[] = "Chunker.__setstate_cython__";
 static const char __pyx_k_Failed_to_allocate_c_exts[] = "Failed to allocate c_exts";
 static const char __pyx_k_write_chunks_locals_lambda[] = "write_chunks.<locals>.<lambda>";
@@ -2452,12 +2470,12 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_4write_chunks(struct __pyx_obj_3sr
 static PyObject *__pyx_pf_3src_4core_7Chunker_6__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_3src_4core_Chunker *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_3src_4core_7Chunker_8__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_3src_4core_Chunker *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
 static PyObject *__pyx_pf_3src_4core_py_is_binary(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_path, PyObject *__pyx_v_binary_exts); /* proto */
-static PyObject *__pyx_pf_3src_4core_2process_directory(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_start_path, PyObject *__pyx_v_py_config); /* proto */
-static int __pyx_pf_3src_4core_15ParallelChunker___cinit__(struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self, PyObject *__pyx_v_py_config, int __pyx_v_num_threads); /* proto */
-static void __pyx_pf_3src_4core_15ParallelChunker_2__dealloc__(struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_3src_4core_15ParallelChunker_4process_directory(struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self, PyObject *__pyx_v_path); /* proto */
-static PyObject *__pyx_pf_3src_4core_15ParallelChunker_6__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_3src_4core_15ParallelChunker_8__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
+static PyObject *__pyx_pf_3src_4core_15ParallelChunker___enter__(struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self); /* proto */
+static int __pyx_pf_3src_4core_15ParallelChunker_2__cinit__(struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self, PyObject *__pyx_v_py_config, int __pyx_v_num_threads); /* proto */
+static PyObject *__pyx_pf_3src_4core_15ParallelChunker_4__exit__(struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v_exc_type, CYTHON_UNUSED PyObject *__pyx_v_exc_val, CYTHON_UNUSED PyObject *__pyx_v_exc_tb); /* proto */
+static PyObject *__pyx_pf_3src_4core_15ParallelChunker_6process_directory(struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self, PyObject *__pyx_v_path); /* proto */
+static PyObject *__pyx_pf_3src_4core_15ParallelChunker_8__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_3src_4core_15ParallelChunker_10__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
 static PyObject *__pyx_tp_new_3src_4core_Chunker(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_3src_4core_ParallelChunker(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 /* #### Code section: late_includes ### */
@@ -2498,6 +2516,10 @@ typedef struct {
   #if CYTHON_USE_MODULE_STATE
   #endif
   #if CYTHON_USE_MODULE_STATE
+  #endif
+  #if CYTHON_USE_MODULE_STATE
+  #endif
+  #if CYTHON_USE_MODULE_STATE
   PyObject *__pyx_type_3src_4core_Chunker;
   PyObject *__pyx_type_3src_4core_ParallelChunker;
   #endif
@@ -2509,6 +2531,7 @@ typedef struct {
   PyObject *__pyx_n_s_Chunker_add_file;
   PyObject *__pyx_kp_u_Chunker_requires_a_KomodoConfig;
   PyObject *__pyx_n_s_Chunker_write_chunks;
+  PyObject *__pyx_kp_u_Directory_does_not_exist;
   PyObject *__pyx_kp_u_Failed_to_allocate_c_exts;
   PyObject *__pyx_kp_u_Failed_to_allocate_for_string;
   PyObject *__pyx_n_s_KeyError;
@@ -2517,15 +2540,21 @@ typedef struct {
   PyObject *__pyx_kp_s_No_value_specified_for_struct_at;
   PyObject *__pyx_kp_s_No_value_specified_for_struct_at_2;
   PyObject *__pyx_kp_s_No_value_specified_for_struct_at_3;
+  PyObject *__pyx_kp_u_None;
   PyObject *__pyx_n_s_ParallelChunker;
+  PyObject *__pyx_n_s_ParallelChunker___enter;
+  PyObject *__pyx_n_s_ParallelChunker___exit;
   PyObject *__pyx_n_s_ParallelChunker___reduce_cython;
   PyObject *__pyx_n_s_ParallelChunker___setstate_cytho;
   PyObject *__pyx_n_s_ParallelChunker_process_director;
+  PyObject *__pyx_kp_u_Path_is_not_a_directory;
   PyObject *__pyx_n_s_TypeError;
   PyObject *__pyx_n_s_ValueError;
-  PyObject *__pyx_n_s__25;
+  PyObject *__pyx_n_s__26;
   PyObject *__pyx_kp_u__5;
   PyObject *__pyx_n_s__8;
+  PyObject *__pyx_n_s_abs_path;
+  PyObject *__pyx_n_s_abspath;
   PyObject *__pyx_n_s_add_file;
   PyObject *__pyx_n_s_asyncio_coroutines;
   PyObject *__pyx_n_s_b_path;
@@ -2534,22 +2563,22 @@ typedef struct {
   PyObject *__pyx_n_s_bool;
   PyObject *__pyx_n_s_c_exts;
   PyObject *__pyx_n_s_c_path;
-  PyObject *__pyx_n_s_chunk;
   PyObject *__pyx_n_s_chunk_idx;
   PyObject *__pyx_n_s_class_getitem;
   PyObject *__pyx_n_s_cline_in_traceback;
   PyObject *__pyx_n_s_content;
-  PyObject *__pyx_n_s_contents;
-  PyObject *__pyx_n_s_cpath;
   PyObject *__pyx_n_s_current_chunk;
   PyObject *__pyx_n_s_current_size;
-  PyObject *__pyx_n_s_dirp;
   PyObject *__pyx_kp_u_disable;
   PyObject *__pyx_kp_u_enable;
-  PyObject *__pyx_n_s_entry;
+  PyObject *__pyx_n_s_enter;
   PyObject *__pyx_n_s_entry_size;
   PyObject *__pyx_n_s_enumerate;
-  PyObject *__pyx_n_s_fullpath;
+  PyObject *__pyx_n_s_exc_tb;
+  PyObject *__pyx_n_s_exc_type;
+  PyObject *__pyx_n_s_exc_val;
+  PyObject *__pyx_n_s_exists;
+  PyObject *__pyx_n_s_exit;
   PyObject *__pyx_kp_u_gc;
   PyObject *__pyx_n_s_getstate;
   PyObject *__pyx_n_s_i;
@@ -2558,6 +2587,7 @@ typedef struct {
   PyObject *__pyx_n_s_initializing;
   PyObject *__pyx_n_s_int;
   PyObject *__pyx_n_s_is_coroutine;
+  PyObject *__pyx_n_s_isdir;
   PyObject *__pyx_kp_u_isenabled;
   PyObject *__pyx_n_s_key;
   PyObject *__pyx_n_s_list;
@@ -2567,6 +2597,7 @@ typedef struct {
   PyObject *__pyx_kp_s_no_default___reduce___due_to_non;
   PyObject *__pyx_n_s_num_exts;
   PyObject *__pyx_n_s_num_threads;
+  PyObject *__pyx_n_s_os;
   PyObject *__pyx_n_s_output_dir;
   PyObject *__pyx_n_s_path;
   PyObject *__pyx_n_s_pattern;
@@ -2595,7 +2626,6 @@ typedef struct {
   PyObject *__pyx_n_s_src_config;
   PyObject *__pyx_n_s_src_core;
   PyObject *__pyx_kp_s_src_core_pyx;
-  PyObject *__pyx_n_s_start_path;
   PyObject *__pyx_n_s_str;
   PyObject *__pyx_n_s_stream;
   PyObject *__pyx_kp_s_stringsource;
@@ -2618,17 +2648,18 @@ typedef struct {
   PyObject *__pyx_tuple__13;
   PyObject *__pyx_tuple__15;
   PyObject *__pyx_tuple__17;
-  PyObject *__pyx_tuple__19;
-  PyObject *__pyx_tuple__21;
+  PyObject *__pyx_tuple__20;
+  PyObject *__pyx_tuple__22;
   PyObject *__pyx_codeobj__10;
   PyObject *__pyx_codeobj__12;
   PyObject *__pyx_codeobj__14;
   PyObject *__pyx_codeobj__16;
   PyObject *__pyx_codeobj__18;
-  PyObject *__pyx_codeobj__20;
-  PyObject *__pyx_codeobj__22;
+  PyObject *__pyx_codeobj__19;
+  PyObject *__pyx_codeobj__21;
   PyObject *__pyx_codeobj__23;
   PyObject *__pyx_codeobj__24;
+  PyObject *__pyx_codeobj__25;
 } __pyx_mstate;
 
 #if CYTHON_USE_MODULE_STATE
@@ -2681,6 +2712,7 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_Chunker_add_file);
   Py_CLEAR(clear_module_state->__pyx_kp_u_Chunker_requires_a_KomodoConfig);
   Py_CLEAR(clear_module_state->__pyx_n_s_Chunker_write_chunks);
+  Py_CLEAR(clear_module_state->__pyx_kp_u_Directory_does_not_exist);
   Py_CLEAR(clear_module_state->__pyx_kp_u_Failed_to_allocate_c_exts);
   Py_CLEAR(clear_module_state->__pyx_kp_u_Failed_to_allocate_for_string);
   Py_CLEAR(clear_module_state->__pyx_n_s_KeyError);
@@ -2689,15 +2721,21 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_kp_s_No_value_specified_for_struct_at);
   Py_CLEAR(clear_module_state->__pyx_kp_s_No_value_specified_for_struct_at_2);
   Py_CLEAR(clear_module_state->__pyx_kp_s_No_value_specified_for_struct_at_3);
+  Py_CLEAR(clear_module_state->__pyx_kp_u_None);
   Py_CLEAR(clear_module_state->__pyx_n_s_ParallelChunker);
+  Py_CLEAR(clear_module_state->__pyx_n_s_ParallelChunker___enter);
+  Py_CLEAR(clear_module_state->__pyx_n_s_ParallelChunker___exit);
   Py_CLEAR(clear_module_state->__pyx_n_s_ParallelChunker___reduce_cython);
   Py_CLEAR(clear_module_state->__pyx_n_s_ParallelChunker___setstate_cytho);
   Py_CLEAR(clear_module_state->__pyx_n_s_ParallelChunker_process_director);
+  Py_CLEAR(clear_module_state->__pyx_kp_u_Path_is_not_a_directory);
   Py_CLEAR(clear_module_state->__pyx_n_s_TypeError);
   Py_CLEAR(clear_module_state->__pyx_n_s_ValueError);
-  Py_CLEAR(clear_module_state->__pyx_n_s__25);
+  Py_CLEAR(clear_module_state->__pyx_n_s__26);
   Py_CLEAR(clear_module_state->__pyx_kp_u__5);
   Py_CLEAR(clear_module_state->__pyx_n_s__8);
+  Py_CLEAR(clear_module_state->__pyx_n_s_abs_path);
+  Py_CLEAR(clear_module_state->__pyx_n_s_abspath);
   Py_CLEAR(clear_module_state->__pyx_n_s_add_file);
   Py_CLEAR(clear_module_state->__pyx_n_s_asyncio_coroutines);
   Py_CLEAR(clear_module_state->__pyx_n_s_b_path);
@@ -2706,22 +2744,22 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_bool);
   Py_CLEAR(clear_module_state->__pyx_n_s_c_exts);
   Py_CLEAR(clear_module_state->__pyx_n_s_c_path);
-  Py_CLEAR(clear_module_state->__pyx_n_s_chunk);
   Py_CLEAR(clear_module_state->__pyx_n_s_chunk_idx);
   Py_CLEAR(clear_module_state->__pyx_n_s_class_getitem);
   Py_CLEAR(clear_module_state->__pyx_n_s_cline_in_traceback);
   Py_CLEAR(clear_module_state->__pyx_n_s_content);
-  Py_CLEAR(clear_module_state->__pyx_n_s_contents);
-  Py_CLEAR(clear_module_state->__pyx_n_s_cpath);
   Py_CLEAR(clear_module_state->__pyx_n_s_current_chunk);
   Py_CLEAR(clear_module_state->__pyx_n_s_current_size);
-  Py_CLEAR(clear_module_state->__pyx_n_s_dirp);
   Py_CLEAR(clear_module_state->__pyx_kp_u_disable);
   Py_CLEAR(clear_module_state->__pyx_kp_u_enable);
-  Py_CLEAR(clear_module_state->__pyx_n_s_entry);
+  Py_CLEAR(clear_module_state->__pyx_n_s_enter);
   Py_CLEAR(clear_module_state->__pyx_n_s_entry_size);
   Py_CLEAR(clear_module_state->__pyx_n_s_enumerate);
-  Py_CLEAR(clear_module_state->__pyx_n_s_fullpath);
+  Py_CLEAR(clear_module_state->__pyx_n_s_exc_tb);
+  Py_CLEAR(clear_module_state->__pyx_n_s_exc_type);
+  Py_CLEAR(clear_module_state->__pyx_n_s_exc_val);
+  Py_CLEAR(clear_module_state->__pyx_n_s_exists);
+  Py_CLEAR(clear_module_state->__pyx_n_s_exit);
   Py_CLEAR(clear_module_state->__pyx_kp_u_gc);
   Py_CLEAR(clear_module_state->__pyx_n_s_getstate);
   Py_CLEAR(clear_module_state->__pyx_n_s_i);
@@ -2730,6 +2768,7 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_initializing);
   Py_CLEAR(clear_module_state->__pyx_n_s_int);
   Py_CLEAR(clear_module_state->__pyx_n_s_is_coroutine);
+  Py_CLEAR(clear_module_state->__pyx_n_s_isdir);
   Py_CLEAR(clear_module_state->__pyx_kp_u_isenabled);
   Py_CLEAR(clear_module_state->__pyx_n_s_key);
   Py_CLEAR(clear_module_state->__pyx_n_s_list);
@@ -2739,6 +2778,7 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_kp_s_no_default___reduce___due_to_non);
   Py_CLEAR(clear_module_state->__pyx_n_s_num_exts);
   Py_CLEAR(clear_module_state->__pyx_n_s_num_threads);
+  Py_CLEAR(clear_module_state->__pyx_n_s_os);
   Py_CLEAR(clear_module_state->__pyx_n_s_output_dir);
   Py_CLEAR(clear_module_state->__pyx_n_s_path);
   Py_CLEAR(clear_module_state->__pyx_n_s_pattern);
@@ -2767,7 +2807,6 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_src_config);
   Py_CLEAR(clear_module_state->__pyx_n_s_src_core);
   Py_CLEAR(clear_module_state->__pyx_kp_s_src_core_pyx);
-  Py_CLEAR(clear_module_state->__pyx_n_s_start_path);
   Py_CLEAR(clear_module_state->__pyx_n_s_str);
   Py_CLEAR(clear_module_state->__pyx_n_s_stream);
   Py_CLEAR(clear_module_state->__pyx_kp_s_stringsource);
@@ -2790,17 +2829,18 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_tuple__13);
   Py_CLEAR(clear_module_state->__pyx_tuple__15);
   Py_CLEAR(clear_module_state->__pyx_tuple__17);
-  Py_CLEAR(clear_module_state->__pyx_tuple__19);
-  Py_CLEAR(clear_module_state->__pyx_tuple__21);
+  Py_CLEAR(clear_module_state->__pyx_tuple__20);
+  Py_CLEAR(clear_module_state->__pyx_tuple__22);
   Py_CLEAR(clear_module_state->__pyx_codeobj__10);
   Py_CLEAR(clear_module_state->__pyx_codeobj__12);
   Py_CLEAR(clear_module_state->__pyx_codeobj__14);
   Py_CLEAR(clear_module_state->__pyx_codeobj__16);
   Py_CLEAR(clear_module_state->__pyx_codeobj__18);
-  Py_CLEAR(clear_module_state->__pyx_codeobj__20);
-  Py_CLEAR(clear_module_state->__pyx_codeobj__22);
+  Py_CLEAR(clear_module_state->__pyx_codeobj__19);
+  Py_CLEAR(clear_module_state->__pyx_codeobj__21);
   Py_CLEAR(clear_module_state->__pyx_codeobj__23);
   Py_CLEAR(clear_module_state->__pyx_codeobj__24);
+  Py_CLEAR(clear_module_state->__pyx_codeobj__25);
   return 0;
 }
 #endif
@@ -2831,6 +2871,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_Chunker_add_file);
   Py_VISIT(traverse_module_state->__pyx_kp_u_Chunker_requires_a_KomodoConfig);
   Py_VISIT(traverse_module_state->__pyx_n_s_Chunker_write_chunks);
+  Py_VISIT(traverse_module_state->__pyx_kp_u_Directory_does_not_exist);
   Py_VISIT(traverse_module_state->__pyx_kp_u_Failed_to_allocate_c_exts);
   Py_VISIT(traverse_module_state->__pyx_kp_u_Failed_to_allocate_for_string);
   Py_VISIT(traverse_module_state->__pyx_n_s_KeyError);
@@ -2839,15 +2880,21 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_kp_s_No_value_specified_for_struct_at);
   Py_VISIT(traverse_module_state->__pyx_kp_s_No_value_specified_for_struct_at_2);
   Py_VISIT(traverse_module_state->__pyx_kp_s_No_value_specified_for_struct_at_3);
+  Py_VISIT(traverse_module_state->__pyx_kp_u_None);
   Py_VISIT(traverse_module_state->__pyx_n_s_ParallelChunker);
+  Py_VISIT(traverse_module_state->__pyx_n_s_ParallelChunker___enter);
+  Py_VISIT(traverse_module_state->__pyx_n_s_ParallelChunker___exit);
   Py_VISIT(traverse_module_state->__pyx_n_s_ParallelChunker___reduce_cython);
   Py_VISIT(traverse_module_state->__pyx_n_s_ParallelChunker___setstate_cytho);
   Py_VISIT(traverse_module_state->__pyx_n_s_ParallelChunker_process_director);
+  Py_VISIT(traverse_module_state->__pyx_kp_u_Path_is_not_a_directory);
   Py_VISIT(traverse_module_state->__pyx_n_s_TypeError);
   Py_VISIT(traverse_module_state->__pyx_n_s_ValueError);
-  Py_VISIT(traverse_module_state->__pyx_n_s__25);
+  Py_VISIT(traverse_module_state->__pyx_n_s__26);
   Py_VISIT(traverse_module_state->__pyx_kp_u__5);
   Py_VISIT(traverse_module_state->__pyx_n_s__8);
+  Py_VISIT(traverse_module_state->__pyx_n_s_abs_path);
+  Py_VISIT(traverse_module_state->__pyx_n_s_abspath);
   Py_VISIT(traverse_module_state->__pyx_n_s_add_file);
   Py_VISIT(traverse_module_state->__pyx_n_s_asyncio_coroutines);
   Py_VISIT(traverse_module_state->__pyx_n_s_b_path);
@@ -2856,22 +2903,22 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_bool);
   Py_VISIT(traverse_module_state->__pyx_n_s_c_exts);
   Py_VISIT(traverse_module_state->__pyx_n_s_c_path);
-  Py_VISIT(traverse_module_state->__pyx_n_s_chunk);
   Py_VISIT(traverse_module_state->__pyx_n_s_chunk_idx);
   Py_VISIT(traverse_module_state->__pyx_n_s_class_getitem);
   Py_VISIT(traverse_module_state->__pyx_n_s_cline_in_traceback);
   Py_VISIT(traverse_module_state->__pyx_n_s_content);
-  Py_VISIT(traverse_module_state->__pyx_n_s_contents);
-  Py_VISIT(traverse_module_state->__pyx_n_s_cpath);
   Py_VISIT(traverse_module_state->__pyx_n_s_current_chunk);
   Py_VISIT(traverse_module_state->__pyx_n_s_current_size);
-  Py_VISIT(traverse_module_state->__pyx_n_s_dirp);
   Py_VISIT(traverse_module_state->__pyx_kp_u_disable);
   Py_VISIT(traverse_module_state->__pyx_kp_u_enable);
-  Py_VISIT(traverse_module_state->__pyx_n_s_entry);
+  Py_VISIT(traverse_module_state->__pyx_n_s_enter);
   Py_VISIT(traverse_module_state->__pyx_n_s_entry_size);
   Py_VISIT(traverse_module_state->__pyx_n_s_enumerate);
-  Py_VISIT(traverse_module_state->__pyx_n_s_fullpath);
+  Py_VISIT(traverse_module_state->__pyx_n_s_exc_tb);
+  Py_VISIT(traverse_module_state->__pyx_n_s_exc_type);
+  Py_VISIT(traverse_module_state->__pyx_n_s_exc_val);
+  Py_VISIT(traverse_module_state->__pyx_n_s_exists);
+  Py_VISIT(traverse_module_state->__pyx_n_s_exit);
   Py_VISIT(traverse_module_state->__pyx_kp_u_gc);
   Py_VISIT(traverse_module_state->__pyx_n_s_getstate);
   Py_VISIT(traverse_module_state->__pyx_n_s_i);
@@ -2880,6 +2927,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_initializing);
   Py_VISIT(traverse_module_state->__pyx_n_s_int);
   Py_VISIT(traverse_module_state->__pyx_n_s_is_coroutine);
+  Py_VISIT(traverse_module_state->__pyx_n_s_isdir);
   Py_VISIT(traverse_module_state->__pyx_kp_u_isenabled);
   Py_VISIT(traverse_module_state->__pyx_n_s_key);
   Py_VISIT(traverse_module_state->__pyx_n_s_list);
@@ -2889,6 +2937,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_kp_s_no_default___reduce___due_to_non);
   Py_VISIT(traverse_module_state->__pyx_n_s_num_exts);
   Py_VISIT(traverse_module_state->__pyx_n_s_num_threads);
+  Py_VISIT(traverse_module_state->__pyx_n_s_os);
   Py_VISIT(traverse_module_state->__pyx_n_s_output_dir);
   Py_VISIT(traverse_module_state->__pyx_n_s_path);
   Py_VISIT(traverse_module_state->__pyx_n_s_pattern);
@@ -2917,7 +2966,6 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_src_config);
   Py_VISIT(traverse_module_state->__pyx_n_s_src_core);
   Py_VISIT(traverse_module_state->__pyx_kp_s_src_core_pyx);
-  Py_VISIT(traverse_module_state->__pyx_n_s_start_path);
   Py_VISIT(traverse_module_state->__pyx_n_s_str);
   Py_VISIT(traverse_module_state->__pyx_n_s_stream);
   Py_VISIT(traverse_module_state->__pyx_kp_s_stringsource);
@@ -2940,17 +2988,18 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_tuple__13);
   Py_VISIT(traverse_module_state->__pyx_tuple__15);
   Py_VISIT(traverse_module_state->__pyx_tuple__17);
-  Py_VISIT(traverse_module_state->__pyx_tuple__19);
-  Py_VISIT(traverse_module_state->__pyx_tuple__21);
+  Py_VISIT(traverse_module_state->__pyx_tuple__20);
+  Py_VISIT(traverse_module_state->__pyx_tuple__22);
   Py_VISIT(traverse_module_state->__pyx_codeobj__10);
   Py_VISIT(traverse_module_state->__pyx_codeobj__12);
   Py_VISIT(traverse_module_state->__pyx_codeobj__14);
   Py_VISIT(traverse_module_state->__pyx_codeobj__16);
   Py_VISIT(traverse_module_state->__pyx_codeobj__18);
-  Py_VISIT(traverse_module_state->__pyx_codeobj__20);
-  Py_VISIT(traverse_module_state->__pyx_codeobj__22);
+  Py_VISIT(traverse_module_state->__pyx_codeobj__19);
+  Py_VISIT(traverse_module_state->__pyx_codeobj__21);
   Py_VISIT(traverse_module_state->__pyx_codeobj__23);
   Py_VISIT(traverse_module_state->__pyx_codeobj__24);
+  Py_VISIT(traverse_module_state->__pyx_codeobj__25);
   return 0;
 }
 #endif
@@ -2990,6 +3039,10 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #if CYTHON_USE_MODULE_STATE
 #endif
 #if CYTHON_USE_MODULE_STATE
+#endif
+#if CYTHON_USE_MODULE_STATE
+#endif
+#if CYTHON_USE_MODULE_STATE
 #define __pyx_type_3src_4core_Chunker __pyx_mstate_global->__pyx_type_3src_4core_Chunker
 #define __pyx_type_3src_4core_ParallelChunker __pyx_mstate_global->__pyx_type_3src_4core_ParallelChunker
 #endif
@@ -3001,6 +3054,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_Chunker_add_file __pyx_mstate_global->__pyx_n_s_Chunker_add_file
 #define __pyx_kp_u_Chunker_requires_a_KomodoConfig __pyx_mstate_global->__pyx_kp_u_Chunker_requires_a_KomodoConfig
 #define __pyx_n_s_Chunker_write_chunks __pyx_mstate_global->__pyx_n_s_Chunker_write_chunks
+#define __pyx_kp_u_Directory_does_not_exist __pyx_mstate_global->__pyx_kp_u_Directory_does_not_exist
 #define __pyx_kp_u_Failed_to_allocate_c_exts __pyx_mstate_global->__pyx_kp_u_Failed_to_allocate_c_exts
 #define __pyx_kp_u_Failed_to_allocate_for_string __pyx_mstate_global->__pyx_kp_u_Failed_to_allocate_for_string
 #define __pyx_n_s_KeyError __pyx_mstate_global->__pyx_n_s_KeyError
@@ -3009,15 +3063,21 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_kp_s_No_value_specified_for_struct_at __pyx_mstate_global->__pyx_kp_s_No_value_specified_for_struct_at
 #define __pyx_kp_s_No_value_specified_for_struct_at_2 __pyx_mstate_global->__pyx_kp_s_No_value_specified_for_struct_at_2
 #define __pyx_kp_s_No_value_specified_for_struct_at_3 __pyx_mstate_global->__pyx_kp_s_No_value_specified_for_struct_at_3
+#define __pyx_kp_u_None __pyx_mstate_global->__pyx_kp_u_None
 #define __pyx_n_s_ParallelChunker __pyx_mstate_global->__pyx_n_s_ParallelChunker
+#define __pyx_n_s_ParallelChunker___enter __pyx_mstate_global->__pyx_n_s_ParallelChunker___enter
+#define __pyx_n_s_ParallelChunker___exit __pyx_mstate_global->__pyx_n_s_ParallelChunker___exit
 #define __pyx_n_s_ParallelChunker___reduce_cython __pyx_mstate_global->__pyx_n_s_ParallelChunker___reduce_cython
 #define __pyx_n_s_ParallelChunker___setstate_cytho __pyx_mstate_global->__pyx_n_s_ParallelChunker___setstate_cytho
 #define __pyx_n_s_ParallelChunker_process_director __pyx_mstate_global->__pyx_n_s_ParallelChunker_process_director
+#define __pyx_kp_u_Path_is_not_a_directory __pyx_mstate_global->__pyx_kp_u_Path_is_not_a_directory
 #define __pyx_n_s_TypeError __pyx_mstate_global->__pyx_n_s_TypeError
 #define __pyx_n_s_ValueError __pyx_mstate_global->__pyx_n_s_ValueError
-#define __pyx_n_s__25 __pyx_mstate_global->__pyx_n_s__25
+#define __pyx_n_s__26 __pyx_mstate_global->__pyx_n_s__26
 #define __pyx_kp_u__5 __pyx_mstate_global->__pyx_kp_u__5
 #define __pyx_n_s__8 __pyx_mstate_global->__pyx_n_s__8
+#define __pyx_n_s_abs_path __pyx_mstate_global->__pyx_n_s_abs_path
+#define __pyx_n_s_abspath __pyx_mstate_global->__pyx_n_s_abspath
 #define __pyx_n_s_add_file __pyx_mstate_global->__pyx_n_s_add_file
 #define __pyx_n_s_asyncio_coroutines __pyx_mstate_global->__pyx_n_s_asyncio_coroutines
 #define __pyx_n_s_b_path __pyx_mstate_global->__pyx_n_s_b_path
@@ -3026,22 +3086,22 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_bool __pyx_mstate_global->__pyx_n_s_bool
 #define __pyx_n_s_c_exts __pyx_mstate_global->__pyx_n_s_c_exts
 #define __pyx_n_s_c_path __pyx_mstate_global->__pyx_n_s_c_path
-#define __pyx_n_s_chunk __pyx_mstate_global->__pyx_n_s_chunk
 #define __pyx_n_s_chunk_idx __pyx_mstate_global->__pyx_n_s_chunk_idx
 #define __pyx_n_s_class_getitem __pyx_mstate_global->__pyx_n_s_class_getitem
 #define __pyx_n_s_cline_in_traceback __pyx_mstate_global->__pyx_n_s_cline_in_traceback
 #define __pyx_n_s_content __pyx_mstate_global->__pyx_n_s_content
-#define __pyx_n_s_contents __pyx_mstate_global->__pyx_n_s_contents
-#define __pyx_n_s_cpath __pyx_mstate_global->__pyx_n_s_cpath
 #define __pyx_n_s_current_chunk __pyx_mstate_global->__pyx_n_s_current_chunk
 #define __pyx_n_s_current_size __pyx_mstate_global->__pyx_n_s_current_size
-#define __pyx_n_s_dirp __pyx_mstate_global->__pyx_n_s_dirp
 #define __pyx_kp_u_disable __pyx_mstate_global->__pyx_kp_u_disable
 #define __pyx_kp_u_enable __pyx_mstate_global->__pyx_kp_u_enable
-#define __pyx_n_s_entry __pyx_mstate_global->__pyx_n_s_entry
+#define __pyx_n_s_enter __pyx_mstate_global->__pyx_n_s_enter
 #define __pyx_n_s_entry_size __pyx_mstate_global->__pyx_n_s_entry_size
 #define __pyx_n_s_enumerate __pyx_mstate_global->__pyx_n_s_enumerate
-#define __pyx_n_s_fullpath __pyx_mstate_global->__pyx_n_s_fullpath
+#define __pyx_n_s_exc_tb __pyx_mstate_global->__pyx_n_s_exc_tb
+#define __pyx_n_s_exc_type __pyx_mstate_global->__pyx_n_s_exc_type
+#define __pyx_n_s_exc_val __pyx_mstate_global->__pyx_n_s_exc_val
+#define __pyx_n_s_exists __pyx_mstate_global->__pyx_n_s_exists
+#define __pyx_n_s_exit __pyx_mstate_global->__pyx_n_s_exit
 #define __pyx_kp_u_gc __pyx_mstate_global->__pyx_kp_u_gc
 #define __pyx_n_s_getstate __pyx_mstate_global->__pyx_n_s_getstate
 #define __pyx_n_s_i __pyx_mstate_global->__pyx_n_s_i
@@ -3050,6 +3110,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_initializing __pyx_mstate_global->__pyx_n_s_initializing
 #define __pyx_n_s_int __pyx_mstate_global->__pyx_n_s_int
 #define __pyx_n_s_is_coroutine __pyx_mstate_global->__pyx_n_s_is_coroutine
+#define __pyx_n_s_isdir __pyx_mstate_global->__pyx_n_s_isdir
 #define __pyx_kp_u_isenabled __pyx_mstate_global->__pyx_kp_u_isenabled
 #define __pyx_n_s_key __pyx_mstate_global->__pyx_n_s_key
 #define __pyx_n_s_list __pyx_mstate_global->__pyx_n_s_list
@@ -3059,6 +3120,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_kp_s_no_default___reduce___due_to_non __pyx_mstate_global->__pyx_kp_s_no_default___reduce___due_to_non
 #define __pyx_n_s_num_exts __pyx_mstate_global->__pyx_n_s_num_exts
 #define __pyx_n_s_num_threads __pyx_mstate_global->__pyx_n_s_num_threads
+#define __pyx_n_s_os __pyx_mstate_global->__pyx_n_s_os
 #define __pyx_n_s_output_dir __pyx_mstate_global->__pyx_n_s_output_dir
 #define __pyx_n_s_path __pyx_mstate_global->__pyx_n_s_path
 #define __pyx_n_s_pattern __pyx_mstate_global->__pyx_n_s_pattern
@@ -3087,7 +3149,6 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_src_config __pyx_mstate_global->__pyx_n_s_src_config
 #define __pyx_n_s_src_core __pyx_mstate_global->__pyx_n_s_src_core
 #define __pyx_kp_s_src_core_pyx __pyx_mstate_global->__pyx_kp_s_src_core_pyx
-#define __pyx_n_s_start_path __pyx_mstate_global->__pyx_n_s_start_path
 #define __pyx_n_s_str __pyx_mstate_global->__pyx_n_s_str
 #define __pyx_n_s_stream __pyx_mstate_global->__pyx_n_s_stream
 #define __pyx_kp_s_stringsource __pyx_mstate_global->__pyx_kp_s_stringsource
@@ -3110,17 +3171,18 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_tuple__13 __pyx_mstate_global->__pyx_tuple__13
 #define __pyx_tuple__15 __pyx_mstate_global->__pyx_tuple__15
 #define __pyx_tuple__17 __pyx_mstate_global->__pyx_tuple__17
-#define __pyx_tuple__19 __pyx_mstate_global->__pyx_tuple__19
-#define __pyx_tuple__21 __pyx_mstate_global->__pyx_tuple__21
+#define __pyx_tuple__20 __pyx_mstate_global->__pyx_tuple__20
+#define __pyx_tuple__22 __pyx_mstate_global->__pyx_tuple__22
 #define __pyx_codeobj__10 __pyx_mstate_global->__pyx_codeobj__10
 #define __pyx_codeobj__12 __pyx_mstate_global->__pyx_codeobj__12
 #define __pyx_codeobj__14 __pyx_mstate_global->__pyx_codeobj__14
 #define __pyx_codeobj__16 __pyx_mstate_global->__pyx_codeobj__16
 #define __pyx_codeobj__18 __pyx_mstate_global->__pyx_codeobj__18
-#define __pyx_codeobj__20 __pyx_mstate_global->__pyx_codeobj__20
-#define __pyx_codeobj__22 __pyx_mstate_global->__pyx_codeobj__22
+#define __pyx_codeobj__19 __pyx_mstate_global->__pyx_codeobj__19
+#define __pyx_codeobj__21 __pyx_mstate_global->__pyx_codeobj__21
 #define __pyx_codeobj__23 __pyx_mstate_global->__pyx_codeobj__23
 #define __pyx_codeobj__24 __pyx_mstate_global->__pyx_codeobj__24
+#define __pyx_codeobj__25 __pyx_mstate_global->__pyx_codeobj__25
 /* #### Code section: module_code ### */
 
 /* "FromPyStructUtility":12
@@ -3514,8 +3576,8 @@ static struct ProcessedFile __pyx_convert__from_py_struct__ProcessedFile(PyObjec
   return __pyx_r;
 }
 
-/* "src/core.pyx":75
- * # 5. Helper: make_c_string
+/* "src/core.pyx":74
+ * # 4. Helper: make_c_string
  * # --------------------------------------------------------------------------
  * cdef char* make_c_string(object s) except NULL:             # <<<<<<<<<<<<<<
  *     """
@@ -3538,7 +3600,7 @@ static char *__pyx_f_3src_4core_make_c_string(PyObject *__pyx_v_s) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("make_c_string", 1);
 
-  /* "src/core.pyx":80
+  /* "src/core.pyx":79
  *     Caller must free() it later if non-null.
  *     """
  *     if s is None:             # <<<<<<<<<<<<<<
@@ -3548,7 +3610,7 @@ static char *__pyx_f_3src_4core_make_c_string(PyObject *__pyx_v_s) {
   __pyx_t_1 = (__pyx_v_s == Py_None);
   if (__pyx_t_1) {
 
-    /* "src/core.pyx":81
+    /* "src/core.pyx":80
  *     """
  *     if s is None:
  *         return <char*>NULL             # <<<<<<<<<<<<<<
@@ -3558,7 +3620,7 @@ static char *__pyx_f_3src_4core_make_c_string(PyObject *__pyx_v_s) {
     __pyx_r = ((char *)NULL);
     goto __pyx_L0;
 
-    /* "src/core.pyx":80
+    /* "src/core.pyx":79
  *     Caller must free() it later if non-null.
  *     """
  *     if s is None:             # <<<<<<<<<<<<<<
@@ -3567,22 +3629,22 @@ static char *__pyx_f_3src_4core_make_c_string(PyObject *__pyx_v_s) {
  */
   }
 
-  /* "src/core.pyx":82
+  /* "src/core.pyx":81
  *     if s is None:
  *         return <char*>NULL
  *     cdef bytes py_bytes = str(s).encode('utf-8')             # <<<<<<<<<<<<<<
  *     cdef size_t length = len(py_bytes)
  * 
  */
-  __pyx_t_2 = __Pyx_PyObject_Unicode(__pyx_v_s); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 82, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Unicode(__pyx_v_s); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 81, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyUnicode_AsUTF8String(((PyObject*)__pyx_t_2)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 82, __pyx_L1_error)
+  __pyx_t_3 = PyUnicode_AsUTF8String(((PyObject*)__pyx_t_2)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 81, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_py_bytes = ((PyObject*)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "src/core.pyx":83
+  /* "src/core.pyx":82
  *         return <char*>NULL
  *     cdef bytes py_bytes = str(s).encode('utf-8')
  *     cdef size_t length = len(py_bytes)             # <<<<<<<<<<<<<<
@@ -3591,12 +3653,12 @@ static char *__pyx_f_3src_4core_make_c_string(PyObject *__pyx_v_s) {
  */
   if (unlikely(__pyx_v_py_bytes == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 83, __pyx_L1_error)
+    __PYX_ERR(0, 82, __pyx_L1_error)
   }
-  __pyx_t_4 = __Pyx_PyBytes_GET_SIZE(__pyx_v_py_bytes); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 83, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyBytes_GET_SIZE(__pyx_v_py_bytes); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 82, __pyx_L1_error)
   __pyx_v_length = __pyx_t_4;
 
-  /* "src/core.pyx":85
+  /* "src/core.pyx":84
  *     cdef size_t length = len(py_bytes)
  * 
  *     cdef char* buf = <char*>malloc((length + 1) * sizeof(char))             # <<<<<<<<<<<<<<
@@ -3605,7 +3667,7 @@ static char *__pyx_f_3src_4core_make_c_string(PyObject *__pyx_v_s) {
  */
   __pyx_v_buf = ((char *)malloc(((__pyx_v_length + 1) * (sizeof(char)))));
 
-  /* "src/core.pyx":86
+  /* "src/core.pyx":85
  * 
  *     cdef char* buf = <char*>malloc((length + 1) * sizeof(char))
  *     if not buf:             # <<<<<<<<<<<<<<
@@ -3615,20 +3677,20 @@ static char *__pyx_f_3src_4core_make_c_string(PyObject *__pyx_v_s) {
   __pyx_t_1 = (!(__pyx_v_buf != 0));
   if (unlikely(__pyx_t_1)) {
 
-    /* "src/core.pyx":87
+    /* "src/core.pyx":86
  *     cdef char* buf = <char*>malloc((length + 1) * sizeof(char))
  *     if not buf:
  *         raise MemoryError("Failed to allocate for string")             # <<<<<<<<<<<<<<
  * 
  *     strcpy(buf, py_bytes)
  */
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 87, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 86, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_Raise(__pyx_t_3, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __PYX_ERR(0, 87, __pyx_L1_error)
+    __PYX_ERR(0, 86, __pyx_L1_error)
 
-    /* "src/core.pyx":86
+    /* "src/core.pyx":85
  * 
  *     cdef char* buf = <char*>malloc((length + 1) * sizeof(char))
  *     if not buf:             # <<<<<<<<<<<<<<
@@ -3637,7 +3699,7 @@ static char *__pyx_f_3src_4core_make_c_string(PyObject *__pyx_v_s) {
  */
   }
 
-  /* "src/core.pyx":89
+  /* "src/core.pyx":88
  *         raise MemoryError("Failed to allocate for string")
  * 
  *     strcpy(buf, py_bytes)             # <<<<<<<<<<<<<<
@@ -3646,12 +3708,12 @@ static char *__pyx_f_3src_4core_make_c_string(PyObject *__pyx_v_s) {
  */
   if (unlikely(__pyx_v_py_bytes == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
-    __PYX_ERR(0, 89, __pyx_L1_error)
+    __PYX_ERR(0, 88, __pyx_L1_error)
   }
-  __pyx_t_5 = __Pyx_PyBytes_AsString(__pyx_v_py_bytes); if (unlikely((!__pyx_t_5) && PyErr_Occurred())) __PYX_ERR(0, 89, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyBytes_AsString(__pyx_v_py_bytes); if (unlikely((!__pyx_t_5) && PyErr_Occurred())) __PYX_ERR(0, 88, __pyx_L1_error)
   (void)(strcpy(__pyx_v_buf, __pyx_t_5));
 
-  /* "src/core.pyx":90
+  /* "src/core.pyx":89
  * 
  *     strcpy(buf, py_bytes)
  *     return buf             # <<<<<<<<<<<<<<
@@ -3661,8 +3723,8 @@ static char *__pyx_f_3src_4core_make_c_string(PyObject *__pyx_v_s) {
   __pyx_r = __pyx_v_buf;
   goto __pyx_L0;
 
-  /* "src/core.pyx":75
- * # 5. Helper: make_c_string
+  /* "src/core.pyx":74
+ * # 4. Helper: make_c_string
  * # --------------------------------------------------------------------------
  * cdef char* make_c_string(object s) except NULL:             # <<<<<<<<<<<<<<
  *     """
@@ -3681,8 +3743,8 @@ static char *__pyx_f_3src_4core_make_c_string(PyObject *__pyx_v_s) {
   return __pyx_r;
 }
 
-/* "src/core.pyx":95
- * # 6. Convert from Python config -> CConfig
+/* "src/core.pyx":94
+ * # 5. Convert from Python config -> CConfig
  * # --------------------------------------------------------------------------
  * cdef CConfig convert_to_cconfig(object py_config):             # <<<<<<<<<<<<<<
  *     """
@@ -3713,84 +3775,84 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("convert_to_cconfig", 1);
 
-  /* "src/core.pyx":102
+  /* "src/core.pyx":101
  *     cdef CConfig c_config
  * 
  *     c_config.max_size = py_config.max_size             # <<<<<<<<<<<<<<
  *     c_config.token_mode = py_config.token_mode
  *     c_config.stream = py_config.stream
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_max_size); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 102, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_max_size); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 101, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_As_size_t(__pyx_t_1); if (unlikely((__pyx_t_2 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 102, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_size_t(__pyx_t_1); if (unlikely((__pyx_t_2 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 101, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_c_config.max_size = __pyx_t_2;
 
-  /* "src/core.pyx":103
+  /* "src/core.pyx":102
  * 
  *     c_config.max_size = py_config.max_size
  *     c_config.token_mode = py_config.token_mode             # <<<<<<<<<<<<<<
  *     c_config.stream = py_config.stream
  *     c_config.output_dir = make_c_string(py_config.output_dir)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_token_mode); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 103, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_token_mode); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 102, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 103, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 102, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_c_config.token_mode = __pyx_t_3;
 
-  /* "src/core.pyx":104
+  /* "src/core.pyx":103
  *     c_config.max_size = py_config.max_size
  *     c_config.token_mode = py_config.token_mode
  *     c_config.stream = py_config.stream             # <<<<<<<<<<<<<<
  *     c_config.output_dir = make_c_string(py_config.output_dir)
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_stream); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 104, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_stream); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 103, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 104, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 103, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_c_config.stream = __pyx_t_3;
 
-  /* "src/core.pyx":105
+  /* "src/core.pyx":104
  *     c_config.token_mode = py_config.token_mode
  *     c_config.stream = py_config.stream
  *     c_config.output_dir = make_c_string(py_config.output_dir)             # <<<<<<<<<<<<<<
  * 
  *     # ignore_patterns
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_output_dir); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 105, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_output_dir); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 104, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = __pyx_f_3src_4core_make_c_string(__pyx_t_1); if (unlikely(__pyx_t_4 == ((char *)NULL))) __PYX_ERR(0, 105, __pyx_L1_error)
+  __pyx_t_4 = __pyx_f_3src_4core_make_c_string(__pyx_t_1); if (unlikely(__pyx_t_4 == ((char *)NULL))) __PYX_ERR(0, 104, __pyx_L1_error)
   __pyx_v_c_config.output_dir = __pyx_t_4;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "src/core.pyx":108
+  /* "src/core.pyx":107
  * 
  *     # ignore_patterns
  *     if py_config.ignore_patterns is None:             # <<<<<<<<<<<<<<
  *         py_config.ignore_patterns = []
  *     cdef int num_ignore = len(py_config.ignore_patterns)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_ignore_patterns); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 108, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_ignore_patterns); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 107, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_3 = (__pyx_t_1 == Py_None);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_3) {
 
-    /* "src/core.pyx":109
+    /* "src/core.pyx":108
  *     # ignore_patterns
  *     if py_config.ignore_patterns is None:
  *         py_config.ignore_patterns = []             # <<<<<<<<<<<<<<
  *     cdef int num_ignore = len(py_config.ignore_patterns)
  *     c_config.num_ignore = num_ignore
  */
-    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 109, __pyx_L1_error)
+    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 108, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (__Pyx_PyObject_SetAttrStr(__pyx_v_py_config, __pyx_n_s_ignore_patterns, __pyx_t_1) < 0) __PYX_ERR(0, 109, __pyx_L1_error)
+    if (__Pyx_PyObject_SetAttrStr(__pyx_v_py_config, __pyx_n_s_ignore_patterns, __pyx_t_1) < 0) __PYX_ERR(0, 108, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "src/core.pyx":108
+    /* "src/core.pyx":107
  * 
  *     # ignore_patterns
  *     if py_config.ignore_patterns is None:             # <<<<<<<<<<<<<<
@@ -3799,20 +3861,20 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
  */
   }
 
-  /* "src/core.pyx":110
+  /* "src/core.pyx":109
  *     if py_config.ignore_patterns is None:
  *         py_config.ignore_patterns = []
  *     cdef int num_ignore = len(py_config.ignore_patterns)             # <<<<<<<<<<<<<<
  *     c_config.num_ignore = num_ignore
  *     if num_ignore > 0:
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_ignore_patterns); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 110, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_ignore_patterns); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 109, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_5 = PyObject_Length(__pyx_t_1); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 110, __pyx_L1_error)
+  __pyx_t_5 = PyObject_Length(__pyx_t_1); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 109, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_num_ignore = __pyx_t_5;
 
-  /* "src/core.pyx":111
+  /* "src/core.pyx":110
  *         py_config.ignore_patterns = []
  *     cdef int num_ignore = len(py_config.ignore_patterns)
  *     c_config.num_ignore = num_ignore             # <<<<<<<<<<<<<<
@@ -3821,7 +3883,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
  */
   __pyx_v_c_config.num_ignore = __pyx_v_num_ignore;
 
-  /* "src/core.pyx":112
+  /* "src/core.pyx":111
  *     cdef int num_ignore = len(py_config.ignore_patterns)
  *     c_config.num_ignore = num_ignore
  *     if num_ignore > 0:             # <<<<<<<<<<<<<<
@@ -3831,7 +3893,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
   __pyx_t_3 = (__pyx_v_num_ignore > 0);
   if (__pyx_t_3) {
 
-    /* "src/core.pyx":113
+    /* "src/core.pyx":112
  *     c_config.num_ignore = num_ignore
  *     if num_ignore > 0:
  *         c_config.ignore_patterns = <char**>malloc(num_ignore * sizeof(char*))             # <<<<<<<<<<<<<<
@@ -3840,16 +3902,16 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
  */
     __pyx_v_c_config.ignore_patterns = ((char **)malloc((__pyx_v_num_ignore * (sizeof(char *)))));
 
-    /* "src/core.pyx":114
+    /* "src/core.pyx":113
  *     if num_ignore > 0:
  *         c_config.ignore_patterns = <char**>malloc(num_ignore * sizeof(char*))
  *         for i in range(num_ignore):             # <<<<<<<<<<<<<<
  *             c_config.ignore_patterns[i] = make_c_string(py_config.ignore_patterns[i])
  *     else:
  */
-    __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_num_ignore); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 114, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_num_ignore); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 113, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_builtin_range, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 114, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_builtin_range, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 113, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (likely(PyList_CheckExact(__pyx_t_6)) || PyTuple_CheckExact(__pyx_t_6)) {
@@ -3857,9 +3919,9 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
       __pyx_t_5 = 0;
       __pyx_t_7 = NULL;
     } else {
-      __pyx_t_5 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 114, __pyx_L1_error)
+      __pyx_t_5 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 113, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_7 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 114, __pyx_L1_error)
+      __pyx_t_7 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 113, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     for (;;) {
@@ -3868,28 +3930,28 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
           {
             Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_1);
             #if !CYTHON_ASSUME_SAFE_MACROS
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 114, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 113, __pyx_L1_error)
             #endif
             if (__pyx_t_5 >= __pyx_temp) break;
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_6 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_5); __Pyx_INCREF(__pyx_t_6); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 114, __pyx_L1_error)
+          __pyx_t_6 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_5); __Pyx_INCREF(__pyx_t_6); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 113, __pyx_L1_error)
           #else
-          __pyx_t_6 = __Pyx_PySequence_ITEM(__pyx_t_1, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 114, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PySequence_ITEM(__pyx_t_1, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 113, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
           #endif
         } else {
           {
             Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_1);
             #if !CYTHON_ASSUME_SAFE_MACROS
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 114, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 113, __pyx_L1_error)
             #endif
             if (__pyx_t_5 >= __pyx_temp) break;
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_6 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_5); __Pyx_INCREF(__pyx_t_6); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 114, __pyx_L1_error)
+          __pyx_t_6 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_5); __Pyx_INCREF(__pyx_t_6); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 113, __pyx_L1_error)
           #else
-          __pyx_t_6 = __Pyx_PySequence_ITEM(__pyx_t_1, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 114, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PySequence_ITEM(__pyx_t_1, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 113, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
           #endif
         }
@@ -3899,7 +3961,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else __PYX_ERR(0, 114, __pyx_L1_error)
+            else __PYX_ERR(0, 113, __pyx_L1_error)
           }
           break;
         }
@@ -3908,24 +3970,24 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
       __Pyx_XDECREF_SET(__pyx_v_i, __pyx_t_6);
       __pyx_t_6 = 0;
 
-      /* "src/core.pyx":115
+      /* "src/core.pyx":114
  *         c_config.ignore_patterns = <char**>malloc(num_ignore * sizeof(char*))
  *         for i in range(num_ignore):
  *             c_config.ignore_patterns[i] = make_c_string(py_config.ignore_patterns[i])             # <<<<<<<<<<<<<<
  *     else:
  *         c_config.ignore_patterns = <char**>NULL
  */
-      __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_ignore_patterns); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 115, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_ignore_patterns); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 114, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_8 = __Pyx_PyObject_GetItem(__pyx_t_6, __pyx_v_i); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 115, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_PyObject_GetItem(__pyx_t_6, __pyx_v_i); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 114, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-      __pyx_t_4 = __pyx_f_3src_4core_make_c_string(__pyx_t_8); if (unlikely(__pyx_t_4 == ((char *)NULL))) __PYX_ERR(0, 115, __pyx_L1_error)
-      __pyx_t_9 = __Pyx_PyIndex_AsSsize_t(__pyx_v_i); if (unlikely((__pyx_t_9 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 115, __pyx_L1_error)
+      __pyx_t_4 = __pyx_f_3src_4core_make_c_string(__pyx_t_8); if (unlikely(__pyx_t_4 == ((char *)NULL))) __PYX_ERR(0, 114, __pyx_L1_error)
+      __pyx_t_9 = __Pyx_PyIndex_AsSsize_t(__pyx_v_i); if (unlikely((__pyx_t_9 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 114, __pyx_L1_error)
       (__pyx_v_c_config.ignore_patterns[__pyx_t_9]) = __pyx_t_4;
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-      /* "src/core.pyx":114
+      /* "src/core.pyx":113
  *     if num_ignore > 0:
  *         c_config.ignore_patterns = <char**>malloc(num_ignore * sizeof(char*))
  *         for i in range(num_ignore):             # <<<<<<<<<<<<<<
@@ -3935,7 +3997,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
     }
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "src/core.pyx":112
+    /* "src/core.pyx":111
  *     cdef int num_ignore = len(py_config.ignore_patterns)
  *     c_config.num_ignore = num_ignore
  *     if num_ignore > 0:             # <<<<<<<<<<<<<<
@@ -3945,7 +4007,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
     goto __pyx_L4;
   }
 
-  /* "src/core.pyx":117
+  /* "src/core.pyx":116
  *             c_config.ignore_patterns[i] = make_c_string(py_config.ignore_patterns[i])
  *     else:
  *         c_config.ignore_patterns = <char**>NULL             # <<<<<<<<<<<<<<
@@ -3957,32 +4019,32 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
   }
   __pyx_L4:;
 
-  /* "src/core.pyx":120
+  /* "src/core.pyx":119
  * 
  *     # priority_rules
  *     if py_config.priority_rules is None:             # <<<<<<<<<<<<<<
  *         py_config.priority_rules = []
  *     cdef int num_rules = len(py_config.priority_rules)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_priority_rules); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 120, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_priority_rules); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 119, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_3 = (__pyx_t_1 == Py_None);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_3) {
 
-    /* "src/core.pyx":121
+    /* "src/core.pyx":120
  *     # priority_rules
  *     if py_config.priority_rules is None:
  *         py_config.priority_rules = []             # <<<<<<<<<<<<<<
  *     cdef int num_rules = len(py_config.priority_rules)
  *     c_config.num_priority_rules = num_rules
  */
-    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 121, __pyx_L1_error)
+    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 120, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (__Pyx_PyObject_SetAttrStr(__pyx_v_py_config, __pyx_n_s_priority_rules, __pyx_t_1) < 0) __PYX_ERR(0, 121, __pyx_L1_error)
+    if (__Pyx_PyObject_SetAttrStr(__pyx_v_py_config, __pyx_n_s_priority_rules, __pyx_t_1) < 0) __PYX_ERR(0, 120, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "src/core.pyx":120
+    /* "src/core.pyx":119
  * 
  *     # priority_rules
  *     if py_config.priority_rules is None:             # <<<<<<<<<<<<<<
@@ -3991,20 +4053,20 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
  */
   }
 
-  /* "src/core.pyx":122
+  /* "src/core.pyx":121
  *     if py_config.priority_rules is None:
  *         py_config.priority_rules = []
  *     cdef int num_rules = len(py_config.priority_rules)             # <<<<<<<<<<<<<<
  *     c_config.num_priority_rules = num_rules
  *     if num_rules > 0:
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_priority_rules); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 122, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_priority_rules); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 121, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_5 = PyObject_Length(__pyx_t_1); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 122, __pyx_L1_error)
+  __pyx_t_5 = PyObject_Length(__pyx_t_1); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 121, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_num_rules = __pyx_t_5;
 
-  /* "src/core.pyx":123
+  /* "src/core.pyx":122
  *         py_config.priority_rules = []
  *     cdef int num_rules = len(py_config.priority_rules)
  *     c_config.num_priority_rules = num_rules             # <<<<<<<<<<<<<<
@@ -4013,7 +4075,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
  */
   __pyx_v_c_config.num_priority_rules = __pyx_v_num_rules;
 
-  /* "src/core.pyx":124
+  /* "src/core.pyx":123
  *     cdef int num_rules = len(py_config.priority_rules)
  *     c_config.num_priority_rules = num_rules
  *     if num_rules > 0:             # <<<<<<<<<<<<<<
@@ -4023,7 +4085,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
   __pyx_t_3 = (__pyx_v_num_rules > 0);
   if (__pyx_t_3) {
 
-    /* "src/core.pyx":125
+    /* "src/core.pyx":124
  *     c_config.num_priority_rules = num_rules
  *     if num_rules > 0:
  *         c_config.priority_rules = <CPriorityRule*>malloc(num_rules * sizeof(CPriorityRule))             # <<<<<<<<<<<<<<
@@ -4032,7 +4094,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
  */
     __pyx_v_c_config.priority_rules = ((struct CPriorityRule *)malloc((__pyx_v_num_rules * (sizeof(struct CPriorityRule)))));
 
-    /* "src/core.pyx":126
+    /* "src/core.pyx":125
  *     if num_rules > 0:
  *         c_config.priority_rules = <CPriorityRule*>malloc(num_rules * sizeof(CPriorityRule))
  *         for i, rule in enumerate(py_config.priority_rules):             # <<<<<<<<<<<<<<
@@ -4041,16 +4103,16 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
  */
     __Pyx_INCREF(__pyx_int_0);
     __pyx_t_1 = __pyx_int_0;
-    __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_priority_rules); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_priority_rules); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 125, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     if (likely(PyList_CheckExact(__pyx_t_8)) || PyTuple_CheckExact(__pyx_t_8)) {
       __pyx_t_6 = __pyx_t_8; __Pyx_INCREF(__pyx_t_6);
       __pyx_t_5 = 0;
       __pyx_t_7 = NULL;
     } else {
-      __pyx_t_5 = -1; __pyx_t_6 = PyObject_GetIter(__pyx_t_8); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 126, __pyx_L1_error)
+      __pyx_t_5 = -1; __pyx_t_6 = PyObject_GetIter(__pyx_t_8); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 125, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_7 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 126, __pyx_L1_error)
+      __pyx_t_7 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 125, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
     for (;;) {
@@ -4059,28 +4121,28 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
           {
             Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_6);
             #if !CYTHON_ASSUME_SAFE_MACROS
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 126, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 125, __pyx_L1_error)
             #endif
             if (__pyx_t_5 >= __pyx_temp) break;
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_8 = PyList_GET_ITEM(__pyx_t_6, __pyx_t_5); __Pyx_INCREF(__pyx_t_8); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 126, __pyx_L1_error)
+          __pyx_t_8 = PyList_GET_ITEM(__pyx_t_6, __pyx_t_5); __Pyx_INCREF(__pyx_t_8); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 125, __pyx_L1_error)
           #else
-          __pyx_t_8 = __Pyx_PySequence_ITEM(__pyx_t_6, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 126, __pyx_L1_error)
+          __pyx_t_8 = __Pyx_PySequence_ITEM(__pyx_t_6, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 125, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_8);
           #endif
         } else {
           {
             Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_6);
             #if !CYTHON_ASSUME_SAFE_MACROS
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 126, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 125, __pyx_L1_error)
             #endif
             if (__pyx_t_5 >= __pyx_temp) break;
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_8 = PyTuple_GET_ITEM(__pyx_t_6, __pyx_t_5); __Pyx_INCREF(__pyx_t_8); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 126, __pyx_L1_error)
+          __pyx_t_8 = PyTuple_GET_ITEM(__pyx_t_6, __pyx_t_5); __Pyx_INCREF(__pyx_t_8); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 125, __pyx_L1_error)
           #else
-          __pyx_t_8 = __Pyx_PySequence_ITEM(__pyx_t_6, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 126, __pyx_L1_error)
+          __pyx_t_8 = __Pyx_PySequence_ITEM(__pyx_t_6, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 125, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_8);
           #endif
         }
@@ -4090,7 +4152,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else __PYX_ERR(0, 126, __pyx_L1_error)
+            else __PYX_ERR(0, 125, __pyx_L1_error)
           }
           break;
         }
@@ -4100,41 +4162,41 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
       __pyx_t_8 = 0;
       __Pyx_INCREF(__pyx_t_1);
       __Pyx_XDECREF_SET(__pyx_v_i, __pyx_t_1);
-      __pyx_t_8 = __Pyx_PyInt_AddObjC(__pyx_t_1, __pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 126, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_PyInt_AddObjC(__pyx_t_1, __pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 125, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_DECREF(__pyx_t_1);
       __pyx_t_1 = __pyx_t_8;
       __pyx_t_8 = 0;
 
-      /* "src/core.pyx":127
+      /* "src/core.pyx":126
  *         c_config.priority_rules = <CPriorityRule*>malloc(num_rules * sizeof(CPriorityRule))
  *         for i, rule in enumerate(py_config.priority_rules):
  *             c_config.priority_rules[i].pattern = make_c_string(rule.pattern)             # <<<<<<<<<<<<<<
  *             c_config.priority_rules[i].score = rule.score
  *     else:
  */
-      __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_rule, __pyx_n_s_pattern); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 127, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_rule, __pyx_n_s_pattern); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 126, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
-      __pyx_t_4 = __pyx_f_3src_4core_make_c_string(__pyx_t_8); if (unlikely(__pyx_t_4 == ((char *)NULL))) __PYX_ERR(0, 127, __pyx_L1_error)
-      __pyx_t_9 = __Pyx_PyIndex_AsSsize_t(__pyx_v_i); if (unlikely((__pyx_t_9 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 127, __pyx_L1_error)
+      __pyx_t_4 = __pyx_f_3src_4core_make_c_string(__pyx_t_8); if (unlikely(__pyx_t_4 == ((char *)NULL))) __PYX_ERR(0, 126, __pyx_L1_error)
+      __pyx_t_9 = __Pyx_PyIndex_AsSsize_t(__pyx_v_i); if (unlikely((__pyx_t_9 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 126, __pyx_L1_error)
       (__pyx_v_c_config.priority_rules[__pyx_t_9]).pattern = __pyx_t_4;
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-      /* "src/core.pyx":128
+      /* "src/core.pyx":127
  *         for i, rule in enumerate(py_config.priority_rules):
  *             c_config.priority_rules[i].pattern = make_c_string(rule.pattern)
  *             c_config.priority_rules[i].score = rule.score             # <<<<<<<<<<<<<<
  *     else:
  *         c_config.priority_rules = <CPriorityRule*>NULL
  */
-      __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_rule, __pyx_n_s_score); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 128, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_rule, __pyx_n_s_score); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 127, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
-      __pyx_t_10 = __Pyx_PyInt_As_int(__pyx_t_8); if (unlikely((__pyx_t_10 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 128, __pyx_L1_error)
+      __pyx_t_10 = __Pyx_PyInt_As_int(__pyx_t_8); if (unlikely((__pyx_t_10 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 127, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-      __pyx_t_9 = __Pyx_PyIndex_AsSsize_t(__pyx_v_i); if (unlikely((__pyx_t_9 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 128, __pyx_L1_error)
+      __pyx_t_9 = __Pyx_PyIndex_AsSsize_t(__pyx_v_i); if (unlikely((__pyx_t_9 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 127, __pyx_L1_error)
       (__pyx_v_c_config.priority_rules[__pyx_t_9]).score = __pyx_t_10;
 
-      /* "src/core.pyx":126
+      /* "src/core.pyx":125
  *     if num_rules > 0:
  *         c_config.priority_rules = <CPriorityRule*>malloc(num_rules * sizeof(CPriorityRule))
  *         for i, rule in enumerate(py_config.priority_rules):             # <<<<<<<<<<<<<<
@@ -4145,7 +4207,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "src/core.pyx":124
+    /* "src/core.pyx":123
  *     cdef int num_rules = len(py_config.priority_rules)
  *     c_config.num_priority_rules = num_rules
  *     if num_rules > 0:             # <<<<<<<<<<<<<<
@@ -4155,7 +4217,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
     goto __pyx_L9;
   }
 
-  /* "src/core.pyx":130
+  /* "src/core.pyx":129
  *             c_config.priority_rules[i].score = rule.score
  *     else:
  *         c_config.priority_rules = <CPriorityRule*>NULL             # <<<<<<<<<<<<<<
@@ -4167,32 +4229,32 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
   }
   __pyx_L9:;
 
-  /* "src/core.pyx":133
+  /* "src/core.pyx":132
  * 
  *     # binary_exts
  *     if py_config.binary_extensions is None:             # <<<<<<<<<<<<<<
  *         py_config.binary_extensions = []
  *     cdef int num_exts = len(py_config.binary_extensions)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_binary_extensions); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 133, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_binary_extensions); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 132, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_3 = (__pyx_t_1 == Py_None);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_3) {
 
-    /* "src/core.pyx":134
+    /* "src/core.pyx":133
  *     # binary_exts
  *     if py_config.binary_extensions is None:
  *         py_config.binary_extensions = []             # <<<<<<<<<<<<<<
  *     cdef int num_exts = len(py_config.binary_extensions)
  *     c_config.num_binary_exts = num_exts
  */
-    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 134, __pyx_L1_error)
+    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 133, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (__Pyx_PyObject_SetAttrStr(__pyx_v_py_config, __pyx_n_s_binary_extensions, __pyx_t_1) < 0) __PYX_ERR(0, 134, __pyx_L1_error)
+    if (__Pyx_PyObject_SetAttrStr(__pyx_v_py_config, __pyx_n_s_binary_extensions, __pyx_t_1) < 0) __PYX_ERR(0, 133, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "src/core.pyx":133
+    /* "src/core.pyx":132
  * 
  *     # binary_exts
  *     if py_config.binary_extensions is None:             # <<<<<<<<<<<<<<
@@ -4201,20 +4263,20 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
  */
   }
 
-  /* "src/core.pyx":135
+  /* "src/core.pyx":134
  *     if py_config.binary_extensions is None:
  *         py_config.binary_extensions = []
  *     cdef int num_exts = len(py_config.binary_extensions)             # <<<<<<<<<<<<<<
  *     c_config.num_binary_exts = num_exts
  *     if num_exts > 0:
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_binary_extensions); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 135, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_binary_extensions); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 134, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_5 = PyObject_Length(__pyx_t_1); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 135, __pyx_L1_error)
+  __pyx_t_5 = PyObject_Length(__pyx_t_1); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 134, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_num_exts = __pyx_t_5;
 
-  /* "src/core.pyx":136
+  /* "src/core.pyx":135
  *         py_config.binary_extensions = []
  *     cdef int num_exts = len(py_config.binary_extensions)
  *     c_config.num_binary_exts = num_exts             # <<<<<<<<<<<<<<
@@ -4223,7 +4285,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
  */
   __pyx_v_c_config.num_binary_exts = __pyx_v_num_exts;
 
-  /* "src/core.pyx":137
+  /* "src/core.pyx":136
  *     cdef int num_exts = len(py_config.binary_extensions)
  *     c_config.num_binary_exts = num_exts
  *     if num_exts > 0:             # <<<<<<<<<<<<<<
@@ -4233,7 +4295,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
   __pyx_t_3 = (__pyx_v_num_exts > 0);
   if (__pyx_t_3) {
 
-    /* "src/core.pyx":138
+    /* "src/core.pyx":137
  *     c_config.num_binary_exts = num_exts
  *     if num_exts > 0:
  *         c_config.binary_exts = <char**>malloc(num_exts * sizeof(char*))             # <<<<<<<<<<<<<<
@@ -4242,16 +4304,16 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
  */
     __pyx_v_c_config.binary_exts = ((char **)malloc((__pyx_v_num_exts * (sizeof(char *)))));
 
-    /* "src/core.pyx":139
+    /* "src/core.pyx":138
  *     if num_exts > 0:
  *         c_config.binary_exts = <char**>malloc(num_exts * sizeof(char*))
  *         for i in range(num_exts):             # <<<<<<<<<<<<<<
  *             c_config.binary_exts[i] = make_c_string(py_config.binary_extensions[i])
  *     else:
  */
-    __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_num_exts); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 139, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_num_exts); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 138, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_builtin_range, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 139, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_builtin_range, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 138, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (likely(PyList_CheckExact(__pyx_t_6)) || PyTuple_CheckExact(__pyx_t_6)) {
@@ -4259,9 +4321,9 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
       __pyx_t_5 = 0;
       __pyx_t_7 = NULL;
     } else {
-      __pyx_t_5 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 139, __pyx_L1_error)
+      __pyx_t_5 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 138, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_7 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 139, __pyx_L1_error)
+      __pyx_t_7 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 138, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     for (;;) {
@@ -4270,28 +4332,28 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
           {
             Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_1);
             #if !CYTHON_ASSUME_SAFE_MACROS
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 139, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 138, __pyx_L1_error)
             #endif
             if (__pyx_t_5 >= __pyx_temp) break;
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_6 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_5); __Pyx_INCREF(__pyx_t_6); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 139, __pyx_L1_error)
+          __pyx_t_6 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_5); __Pyx_INCREF(__pyx_t_6); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 138, __pyx_L1_error)
           #else
-          __pyx_t_6 = __Pyx_PySequence_ITEM(__pyx_t_1, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 139, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PySequence_ITEM(__pyx_t_1, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 138, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
           #endif
         } else {
           {
             Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_1);
             #if !CYTHON_ASSUME_SAFE_MACROS
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 139, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 138, __pyx_L1_error)
             #endif
             if (__pyx_t_5 >= __pyx_temp) break;
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_6 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_5); __Pyx_INCREF(__pyx_t_6); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 139, __pyx_L1_error)
+          __pyx_t_6 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_5); __Pyx_INCREF(__pyx_t_6); __pyx_t_5++; if (unlikely((0 < 0))) __PYX_ERR(0, 138, __pyx_L1_error)
           #else
-          __pyx_t_6 = __Pyx_PySequence_ITEM(__pyx_t_1, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 139, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PySequence_ITEM(__pyx_t_1, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 138, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_6);
           #endif
         }
@@ -4301,7 +4363,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else __PYX_ERR(0, 139, __pyx_L1_error)
+            else __PYX_ERR(0, 138, __pyx_L1_error)
           }
           break;
         }
@@ -4310,24 +4372,24 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
       __Pyx_XDECREF_SET(__pyx_v_i, __pyx_t_6);
       __pyx_t_6 = 0;
 
-      /* "src/core.pyx":140
+      /* "src/core.pyx":139
  *         c_config.binary_exts = <char**>malloc(num_exts * sizeof(char*))
  *         for i in range(num_exts):
  *             c_config.binary_exts[i] = make_c_string(py_config.binary_extensions[i])             # <<<<<<<<<<<<<<
  *     else:
  *         c_config.binary_exts = <char**>NULL
  */
-      __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_binary_extensions); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 140, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_py_config, __pyx_n_s_binary_extensions); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 139, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_8 = __Pyx_PyObject_GetItem(__pyx_t_6, __pyx_v_i); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 140, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_PyObject_GetItem(__pyx_t_6, __pyx_v_i); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 139, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-      __pyx_t_4 = __pyx_f_3src_4core_make_c_string(__pyx_t_8); if (unlikely(__pyx_t_4 == ((char *)NULL))) __PYX_ERR(0, 140, __pyx_L1_error)
-      __pyx_t_9 = __Pyx_PyIndex_AsSsize_t(__pyx_v_i); if (unlikely((__pyx_t_9 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 140, __pyx_L1_error)
+      __pyx_t_4 = __pyx_f_3src_4core_make_c_string(__pyx_t_8); if (unlikely(__pyx_t_4 == ((char *)NULL))) __PYX_ERR(0, 139, __pyx_L1_error)
+      __pyx_t_9 = __Pyx_PyIndex_AsSsize_t(__pyx_v_i); if (unlikely((__pyx_t_9 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 139, __pyx_L1_error)
       (__pyx_v_c_config.binary_exts[__pyx_t_9]) = __pyx_t_4;
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-      /* "src/core.pyx":139
+      /* "src/core.pyx":138
  *     if num_exts > 0:
  *         c_config.binary_exts = <char**>malloc(num_exts * sizeof(char*))
  *         for i in range(num_exts):             # <<<<<<<<<<<<<<
@@ -4337,7 +4399,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
     }
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "src/core.pyx":137
+    /* "src/core.pyx":136
  *     cdef int num_exts = len(py_config.binary_extensions)
  *     c_config.num_binary_exts = num_exts
  *     if num_exts > 0:             # <<<<<<<<<<<<<<
@@ -4347,7 +4409,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
     goto __pyx_L14;
   }
 
-  /* "src/core.pyx":142
+  /* "src/core.pyx":141
  *             c_config.binary_exts[i] = make_c_string(py_config.binary_extensions[i])
  *     else:
  *         c_config.binary_exts = <char**>NULL             # <<<<<<<<<<<<<<
@@ -4359,7 +4421,7 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
   }
   __pyx_L14:;
 
-  /* "src/core.pyx":144
+  /* "src/core.pyx":143
  *         c_config.binary_exts = <char**>NULL
  * 
  *     return c_config             # <<<<<<<<<<<<<<
@@ -4369,8 +4431,8 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
   __pyx_r = __pyx_v_c_config;
   goto __pyx_L0;
 
-  /* "src/core.pyx":95
- * # 6. Convert from Python config -> CConfig
+  /* "src/core.pyx":94
+ * # 5. Convert from Python config -> CConfig
  * # --------------------------------------------------------------------------
  * cdef CConfig convert_to_cconfig(object py_config):             # <<<<<<<<<<<<<<
  *     """
@@ -4391,8 +4453,8 @@ static struct CConfig __pyx_f_3src_4core_convert_to_cconfig(PyObject *__pyx_v_py
   return __pyx_r;
 }
 
-/* "src/core.pyx":149
- * # 7. File reading helpers
+/* "src/core.pyx":148
+ * # 6. File reading helpers
  * # --------------------------------------------------------------------------
  * cdef char* read_file_contents(const char* path) except NULL:             # <<<<<<<<<<<<<<
  *     """
@@ -4409,7 +4471,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
   char *__pyx_r;
   int __pyx_t_1;
 
-  /* "src/core.pyx":155
+  /* "src/core.pyx":154
  *     Returns NULL on error (e.g., file doesn't exist).
  *     """
  *     cdef FILE* f = fopen(path, "rb")             # <<<<<<<<<<<<<<
@@ -4418,7 +4480,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
   __pyx_v_f = fopen(__pyx_v_path, ((char const *)"rb"));
 
-  /* "src/core.pyx":156
+  /* "src/core.pyx":155
  *     """
  *     cdef FILE* f = fopen(path, "rb")
  *     if not f:             # <<<<<<<<<<<<<<
@@ -4428,7 +4490,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
   __pyx_t_1 = (!(__pyx_v_f != 0));
   if (__pyx_t_1) {
 
-    /* "src/core.pyx":157
+    /* "src/core.pyx":156
  *     cdef FILE* f = fopen(path, "rb")
  *     if not f:
  *         return NULL             # <<<<<<<<<<<<<<
@@ -4438,7 +4500,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
     __pyx_r = NULL;
     goto __pyx_L0;
 
-    /* "src/core.pyx":156
+    /* "src/core.pyx":155
  *     """
  *     cdef FILE* f = fopen(path, "rb")
  *     if not f:             # <<<<<<<<<<<<<<
@@ -4447,7 +4509,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
   }
 
-  /* "src/core.pyx":159
+  /* "src/core.pyx":158
  *         return NULL
  * 
  *     cdef size_t chunk = 65536             # <<<<<<<<<<<<<<
@@ -4456,7 +4518,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
   __pyx_v_chunk = 0x10000;
 
-  /* "src/core.pyx":160
+  /* "src/core.pyx":159
  * 
  *     cdef size_t chunk = 65536
  *     cdef size_t used = 0             # <<<<<<<<<<<<<<
@@ -4465,7 +4527,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
   __pyx_v_used = 0;
 
-  /* "src/core.pyx":161
+  /* "src/core.pyx":160
  *     cdef size_t chunk = 65536
  *     cdef size_t used = 0
  *     cdef char* buf = <char*>malloc(chunk)             # <<<<<<<<<<<<<<
@@ -4474,7 +4536,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
   __pyx_v_buf = ((char *)malloc(__pyx_v_chunk));
 
-  /* "src/core.pyx":163
+  /* "src/core.pyx":162
  *     cdef char* buf = <char*>malloc(chunk)
  *     cdef char* new_buf
  *     if not buf:             # <<<<<<<<<<<<<<
@@ -4484,7 +4546,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
   __pyx_t_1 = (!(__pyx_v_buf != 0));
   if (__pyx_t_1) {
 
-    /* "src/core.pyx":164
+    /* "src/core.pyx":163
  *     cdef char* new_buf
  *     if not buf:
  *         fclose(f)             # <<<<<<<<<<<<<<
@@ -4493,7 +4555,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
     (void)(fclose(__pyx_v_f));
 
-    /* "src/core.pyx":165
+    /* "src/core.pyx":164
  *     if not buf:
  *         fclose(f)
  *         return NULL             # <<<<<<<<<<<<<<
@@ -4503,7 +4565,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
     __pyx_r = NULL;
     goto __pyx_L0;
 
-    /* "src/core.pyx":163
+    /* "src/core.pyx":162
  *     cdef char* buf = <char*>malloc(chunk)
  *     cdef char* new_buf
  *     if not buf:             # <<<<<<<<<<<<<<
@@ -4512,7 +4574,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
   }
 
-  /* "src/core.pyx":168
+  /* "src/core.pyx":167
  * 
  *     cdef size_t got
  *     while True:             # <<<<<<<<<<<<<<
@@ -4521,7 +4583,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
   while (1) {
 
-    /* "src/core.pyx":169
+    /* "src/core.pyx":168
  *     cdef size_t got
  *     while True:
  *         got = fread(buf + used, 1, chunk - used, f)             # <<<<<<<<<<<<<<
@@ -4530,7 +4592,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
     __pyx_v_got = fread((__pyx_v_buf + __pyx_v_used), 1, (__pyx_v_chunk - __pyx_v_used), __pyx_v_f);
 
-    /* "src/core.pyx":170
+    /* "src/core.pyx":169
  *     while True:
  *         got = fread(buf + used, 1, chunk - used, f)
  *         if got == 0:             # <<<<<<<<<<<<<<
@@ -4540,7 +4602,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
     __pyx_t_1 = (__pyx_v_got == 0);
     if (__pyx_t_1) {
 
-      /* "src/core.pyx":171
+      /* "src/core.pyx":170
  *         got = fread(buf + used, 1, chunk - used, f)
  *         if got == 0:
  *             break             # <<<<<<<<<<<<<<
@@ -4549,7 +4611,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
       goto __pyx_L6_break;
 
-      /* "src/core.pyx":170
+      /* "src/core.pyx":169
  *     while True:
  *         got = fread(buf + used, 1, chunk - used, f)
  *         if got == 0:             # <<<<<<<<<<<<<<
@@ -4558,7 +4620,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
     }
 
-    /* "src/core.pyx":172
+    /* "src/core.pyx":171
  *         if got == 0:
  *             break
  *         used += got             # <<<<<<<<<<<<<<
@@ -4567,7 +4629,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
     __pyx_v_used = (__pyx_v_used + __pyx_v_got);
 
-    /* "src/core.pyx":173
+    /* "src/core.pyx":172
  *             break
  *         used += got
  *         if used == chunk:             # <<<<<<<<<<<<<<
@@ -4577,7 +4639,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
     __pyx_t_1 = (__pyx_v_used == __pyx_v_chunk);
     if (__pyx_t_1) {
 
-      /* "src/core.pyx":174
+      /* "src/core.pyx":173
  *         used += got
  *         if used == chunk:
  *             chunk *= 2             # <<<<<<<<<<<<<<
@@ -4586,7 +4648,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
       __pyx_v_chunk = (__pyx_v_chunk * 2);
 
-      /* "src/core.pyx":175
+      /* "src/core.pyx":174
  *         if used == chunk:
  *             chunk *= 2
  *             new_buf = <char*>realloc(buf, chunk)             # <<<<<<<<<<<<<<
@@ -4595,7 +4657,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
       __pyx_v_new_buf = ((char *)realloc(__pyx_v_buf, __pyx_v_chunk));
 
-      /* "src/core.pyx":176
+      /* "src/core.pyx":175
  *             chunk *= 2
  *             new_buf = <char*>realloc(buf, chunk)
  *             if not new_buf:             # <<<<<<<<<<<<<<
@@ -4605,7 +4667,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
       __pyx_t_1 = (!(__pyx_v_new_buf != 0));
       if (__pyx_t_1) {
 
-        /* "src/core.pyx":177
+        /* "src/core.pyx":176
  *             new_buf = <char*>realloc(buf, chunk)
  *             if not new_buf:
  *                 free(buf)             # <<<<<<<<<<<<<<
@@ -4614,7 +4676,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
         free(__pyx_v_buf);
 
-        /* "src/core.pyx":178
+        /* "src/core.pyx":177
  *             if not new_buf:
  *                 free(buf)
  *                 fclose(f)             # <<<<<<<<<<<<<<
@@ -4623,7 +4685,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
         (void)(fclose(__pyx_v_f));
 
-        /* "src/core.pyx":179
+        /* "src/core.pyx":178
  *                 free(buf)
  *                 fclose(f)
  *                 return NULL             # <<<<<<<<<<<<<<
@@ -4633,7 +4695,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
         __pyx_r = NULL;
         goto __pyx_L0;
 
-        /* "src/core.pyx":176
+        /* "src/core.pyx":175
  *             chunk *= 2
  *             new_buf = <char*>realloc(buf, chunk)
  *             if not new_buf:             # <<<<<<<<<<<<<<
@@ -4642,7 +4704,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
       }
 
-      /* "src/core.pyx":180
+      /* "src/core.pyx":179
  *                 fclose(f)
  *                 return NULL
  *             buf = new_buf             # <<<<<<<<<<<<<<
@@ -4651,7 +4713,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
       __pyx_v_buf = __pyx_v_new_buf;
 
-      /* "src/core.pyx":173
+      /* "src/core.pyx":172
  *             break
  *         used += got
  *         if used == chunk:             # <<<<<<<<<<<<<<
@@ -4662,7 +4724,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
   }
   __pyx_L6_break:;
 
-  /* "src/core.pyx":182
+  /* "src/core.pyx":181
  *             buf = new_buf
  * 
  *     fclose(f)             # <<<<<<<<<<<<<<
@@ -4671,7 +4733,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
   (void)(fclose(__pyx_v_f));
 
-  /* "src/core.pyx":183
+  /* "src/core.pyx":182
  * 
  *     fclose(f)
  *     buf[used] = b'\0'             # <<<<<<<<<<<<<<
@@ -4680,7 +4742,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
  */
   (__pyx_v_buf[__pyx_v_used]) = '\x00';
 
-  /* "src/core.pyx":184
+  /* "src/core.pyx":183
  *     fclose(f)
  *     buf[used] = b'\0'
  *     return buf             # <<<<<<<<<<<<<<
@@ -4690,8 +4752,8 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
   __pyx_r = __pyx_v_buf;
   goto __pyx_L0;
 
-  /* "src/core.pyx":149
- * # 7. File reading helpers
+  /* "src/core.pyx":148
+ * # 6. File reading helpers
  * # --------------------------------------------------------------------------
  * cdef char* read_file_contents(const char* path) except NULL:             # <<<<<<<<<<<<<<
  *     """
@@ -4703,7 +4765,7 @@ static char *__pyx_f_3src_4core_read_file_contents(char const *__pyx_v_path) {
   return __pyx_r;
 }
 
-/* "src/core.pyx":186
+/* "src/core.pyx":185
  *     return buf
  * 
  * cdef size_t count_tokens(const char* text):             # <<<<<<<<<<<<<<
@@ -4723,7 +4785,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
   size_t __pyx_t_3;
   size_t __pyx_t_4;
 
-  /* "src/core.pyx":190
+  /* "src/core.pyx":189
  *     Quick 'word-like token' counter. Splits on whitespace.
  *     """
  *     if text == NULL:             # <<<<<<<<<<<<<<
@@ -4733,7 +4795,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
   __pyx_t_1 = (__pyx_v_text == NULL);
   if (__pyx_t_1) {
 
-    /* "src/core.pyx":191
+    /* "src/core.pyx":190
  *     """
  *     if text == NULL:
  *         return 0             # <<<<<<<<<<<<<<
@@ -4743,7 +4805,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
     __pyx_r = 0;
     goto __pyx_L0;
 
-    /* "src/core.pyx":190
+    /* "src/core.pyx":189
  *     Quick 'word-like token' counter. Splits on whitespace.
  *     """
  *     if text == NULL:             # <<<<<<<<<<<<<<
@@ -4752,7 +4814,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
  */
   }
 
-  /* "src/core.pyx":193
+  /* "src/core.pyx":192
  *         return 0
  *     cdef:
  *         size_t length = strlen(text)             # <<<<<<<<<<<<<<
@@ -4761,7 +4823,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
  */
   __pyx_v_length = strlen(__pyx_v_text);
 
-  /* "src/core.pyx":194
+  /* "src/core.pyx":193
  *     cdef:
  *         size_t length = strlen(text)
  *         size_t i = 0             # <<<<<<<<<<<<<<
@@ -4770,7 +4832,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
  */
   __pyx_v_i = 0;
 
-  /* "src/core.pyx":195
+  /* "src/core.pyx":194
  *         size_t length = strlen(text)
  *         size_t i = 0
  *         size_t count = 0             # <<<<<<<<<<<<<<
@@ -4779,7 +4841,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
  */
   __pyx_v_count = 0;
 
-  /* "src/core.pyx":196
+  /* "src/core.pyx":195
  *         size_t i = 0
  *         size_t count = 0
  *         bint in_space = True             # <<<<<<<<<<<<<<
@@ -4788,7 +4850,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
  */
   __pyx_v_in_space = 1;
 
-  /* "src/core.pyx":199
+  /* "src/core.pyx":198
  *         char c
  * 
  *     for i in range(length):             # <<<<<<<<<<<<<<
@@ -4800,7 +4862,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "src/core.pyx":200
+    /* "src/core.pyx":199
  * 
  *     for i in range(length):
  *         c = text[i]             # <<<<<<<<<<<<<<
@@ -4809,7 +4871,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
  */
     __pyx_v_c = (__pyx_v_text[__pyx_v_i]);
 
-    /* "src/core.pyx":201
+    /* "src/core.pyx":200
  *     for i in range(length):
  *         c = text[i]
  *         if c in [b' ', b'\t', b'\r', b'\n', b'\f', b'\v']:             # <<<<<<<<<<<<<<
@@ -4824,7 +4886,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
       case '\x0C':
       case '\x0B':
 
-      /* "src/core.pyx":202
+      /* "src/core.pyx":201
  *         c = text[i]
  *         if c in [b' ', b'\t', b'\r', b'\n', b'\f', b'\v']:
  *             in_space = True             # <<<<<<<<<<<<<<
@@ -4833,7 +4895,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
  */
       __pyx_v_in_space = 1;
 
-      /* "src/core.pyx":201
+      /* "src/core.pyx":200
  *     for i in range(length):
  *         c = text[i]
  *         if c in [b' ', b'\t', b'\r', b'\n', b'\f', b'\v']:             # <<<<<<<<<<<<<<
@@ -4843,7 +4905,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
       break;
       default:
 
-      /* "src/core.pyx":204
+      /* "src/core.pyx":203
  *             in_space = True
  *         else:
  *             if in_space:             # <<<<<<<<<<<<<<
@@ -4852,7 +4914,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
  */
       if (__pyx_v_in_space) {
 
-        /* "src/core.pyx":205
+        /* "src/core.pyx":204
  *         else:
  *             if in_space:
  *                 count += 1             # <<<<<<<<<<<<<<
@@ -4861,7 +4923,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
  */
         __pyx_v_count = (__pyx_v_count + 1);
 
-        /* "src/core.pyx":204
+        /* "src/core.pyx":203
  *             in_space = True
  *         else:
  *             if in_space:             # <<<<<<<<<<<<<<
@@ -4870,7 +4932,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
  */
       }
 
-      /* "src/core.pyx":206
+      /* "src/core.pyx":205
  *             if in_space:
  *                 count += 1
  *             in_space = False             # <<<<<<<<<<<<<<
@@ -4882,7 +4944,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
     }
   }
 
-  /* "src/core.pyx":207
+  /* "src/core.pyx":206
  *                 count += 1
  *             in_space = False
  *     return count             # <<<<<<<<<<<<<<
@@ -4892,7 +4954,7 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
   __pyx_r = __pyx_v_count;
   goto __pyx_L0;
 
-  /* "src/core.pyx":186
+  /* "src/core.pyx":185
  *     return buf
  * 
  * cdef size_t count_tokens(const char* text):             # <<<<<<<<<<<<<<
@@ -4905,8 +4967,8 @@ static size_t __pyx_f_3src_4core_count_tokens(char const *__pyx_v_text) {
   return __pyx_r;
 }
 
-/* "src/core.pyx":212
- * # 8. Directory / ignoring stubs (placeholders)
+/* "src/core.pyx":211
+ * # 7. Directory / ignoring stubs (placeholders)
  * # --------------------------------------------------------------------------
  * cdef char* get_relative_path(const char* fullpath, const char* base_path) except NULL:             # <<<<<<<<<<<<<<
  *     """
@@ -4919,7 +4981,7 @@ static char *__pyx_f_3src_4core_get_relative_path(char const *__pyx_v_fullpath, 
   char *__pyx_r;
   int __pyx_t_1;
 
-  /* "src/core.pyx":216
+  /* "src/core.pyx":215
  *     Placeholder for your real 'relative path' logic.
  *     """
  *     cdef size_t length = strlen(fullpath)             # <<<<<<<<<<<<<<
@@ -4928,7 +4990,7 @@ static char *__pyx_f_3src_4core_get_relative_path(char const *__pyx_v_fullpath, 
  */
   __pyx_v_length = strlen(__pyx_v_fullpath);
 
-  /* "src/core.pyx":217
+  /* "src/core.pyx":216
  *     """
  *     cdef size_t length = strlen(fullpath)
  *     cdef char* out = <char*>malloc(length + 1)             # <<<<<<<<<<<<<<
@@ -4937,7 +4999,7 @@ static char *__pyx_f_3src_4core_get_relative_path(char const *__pyx_v_fullpath, 
  */
   __pyx_v_out = ((char *)malloc((__pyx_v_length + 1)));
 
-  /* "src/core.pyx":218
+  /* "src/core.pyx":217
  *     cdef size_t length = strlen(fullpath)
  *     cdef char* out = <char*>malloc(length + 1)
  *     if not out:             # <<<<<<<<<<<<<<
@@ -4947,7 +5009,7 @@ static char *__pyx_f_3src_4core_get_relative_path(char const *__pyx_v_fullpath, 
   __pyx_t_1 = (!(__pyx_v_out != 0));
   if (__pyx_t_1) {
 
-    /* "src/core.pyx":219
+    /* "src/core.pyx":218
  *     cdef char* out = <char*>malloc(length + 1)
  *     if not out:
  *         return NULL             # <<<<<<<<<<<<<<
@@ -4957,7 +5019,7 @@ static char *__pyx_f_3src_4core_get_relative_path(char const *__pyx_v_fullpath, 
     __pyx_r = NULL;
     goto __pyx_L0;
 
-    /* "src/core.pyx":218
+    /* "src/core.pyx":217
  *     cdef size_t length = strlen(fullpath)
  *     cdef char* out = <char*>malloc(length + 1)
  *     if not out:             # <<<<<<<<<<<<<<
@@ -4966,7 +5028,7 @@ static char *__pyx_f_3src_4core_get_relative_path(char const *__pyx_v_fullpath, 
  */
   }
 
-  /* "src/core.pyx":220
+  /* "src/core.pyx":219
  *     if not out:
  *         return NULL
  *     strcpy(out, fullpath)             # <<<<<<<<<<<<<<
@@ -4975,7 +5037,7 @@ static char *__pyx_f_3src_4core_get_relative_path(char const *__pyx_v_fullpath, 
  */
   (void)(strcpy(__pyx_v_out, __pyx_v_fullpath));
 
-  /* "src/core.pyx":221
+  /* "src/core.pyx":220
  *         return NULL
  *     strcpy(out, fullpath)
  *     return out             # <<<<<<<<<<<<<<
@@ -4985,8 +5047,8 @@ static char *__pyx_f_3src_4core_get_relative_path(char const *__pyx_v_fullpath, 
   __pyx_r = __pyx_v_out;
   goto __pyx_L0;
 
-  /* "src/core.pyx":212
- * # 8. Directory / ignoring stubs (placeholders)
+  /* "src/core.pyx":211
+ * # 7. Directory / ignoring stubs (placeholders)
  * # --------------------------------------------------------------------------
  * cdef char* get_relative_path(const char* fullpath, const char* base_path) except NULL:             # <<<<<<<<<<<<<<
  *     """
@@ -4998,7 +5060,7 @@ static char *__pyx_f_3src_4core_get_relative_path(char const *__pyx_v_fullpath, 
   return __pyx_r;
 }
 
-/* "src/core.pyx":223
+/* "src/core.pyx":222
  *     return out
  * 
  * cdef bint should_ignore(const char* rel_path, CConfig* config):             # <<<<<<<<<<<<<<
@@ -5009,7 +5071,7 @@ static char *__pyx_f_3src_4core_get_relative_path(char const *__pyx_v_fullpath, 
 static int __pyx_f_3src_4core_should_ignore(CYTHON_UNUSED char const *__pyx_v_rel_path, CYTHON_UNUSED struct CConfig *__pyx_v_config) {
   int __pyx_r;
 
-  /* "src/core.pyx":227
+  /* "src/core.pyx":226
  *     Placeholder for your 'ignore' logic, e.g. matching rel_path to patterns.
  *     """
  *     return False             # <<<<<<<<<<<<<<
@@ -5019,7 +5081,7 @@ static int __pyx_f_3src_4core_should_ignore(CYTHON_UNUSED char const *__pyx_v_re
   __pyx_r = 0;
   goto __pyx_L0;
 
-  /* "src/core.pyx":223
+  /* "src/core.pyx":222
  *     return out
  * 
  * cdef bint should_ignore(const char* rel_path, CConfig* config):             # <<<<<<<<<<<<<<
@@ -5032,7 +5094,7 @@ static int __pyx_f_3src_4core_should_ignore(CYTHON_UNUSED char const *__pyx_v_re
   return __pyx_r;
 }
 
-/* "src/core.pyx":229
+/* "src/core.pyx":228
  *     return False
  * 
  * cdef int calculate_priority(const char* rel_path, CConfig* config):             # <<<<<<<<<<<<<<
@@ -5043,7 +5105,7 @@ static int __pyx_f_3src_4core_should_ignore(CYTHON_UNUSED char const *__pyx_v_re
 static int __pyx_f_3src_4core_calculate_priority(CYTHON_UNUSED char const *__pyx_v_rel_path, CYTHON_UNUSED struct CConfig *__pyx_v_config) {
   int __pyx_r;
 
-  /* "src/core.pyx":233
+  /* "src/core.pyx":232
  *     Placeholder for your real scoring logic.
  *     """
  *     return 0             # <<<<<<<<<<<<<<
@@ -5053,7 +5115,7 @@ static int __pyx_f_3src_4core_calculate_priority(CYTHON_UNUSED char const *__pyx
   __pyx_r = 0;
   goto __pyx_L0;
 
-  /* "src/core.pyx":229
+  /* "src/core.pyx":228
  *     return False
  * 
  * cdef int calculate_priority(const char* rel_path, CConfig* config):             # <<<<<<<<<<<<<<
@@ -5066,7 +5128,7 @@ static int __pyx_f_3src_4core_calculate_priority(CYTHON_UNUSED char const *__pyx
   return __pyx_r;
 }
 
-/* "src/core.pyx":245
+/* "src/core.pyx":244
  *     cdef list processed_files
  * 
  *     def __cinit__(self, object py_config):             # <<<<<<<<<<<<<<
@@ -5110,12 +5172,12 @@ static int __pyx_pw_3src_4core_7Chunker_1__cinit__(PyObject *__pyx_v_self, PyObj
           (void)__Pyx_Arg_NewRef_VARARGS(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 245, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 244, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "__cinit__") < 0)) __PYX_ERR(0, 245, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "__cinit__") < 0)) __PYX_ERR(0, 244, __pyx_L3_error)
       }
     } else if (unlikely(__pyx_nargs != 1)) {
       goto __pyx_L5_argtuple_error;
@@ -5126,7 +5188,7 @@ static int __pyx_pw_3src_4core_7Chunker_1__cinit__(PyObject *__pyx_v_self, PyObj
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 245, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 244, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -5167,53 +5229,53 @@ static int __pyx_pf_3src_4core_7Chunker___cinit__(struct __pyx_obj_3src_4core_Ch
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__cinit__", 1);
 
-  /* "src/core.pyx":246
+  /* "src/core.pyx":245
  * 
  *     def __cinit__(self, object py_config):
  *         from src.config import KomodoConfig             # <<<<<<<<<<<<<<
  *         if not isinstance(py_config, KomodoConfig):
  *             raise TypeError("Chunker requires a KomodoConfig")
  */
-  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 246, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 245, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_n_s_KomodoConfig);
   __Pyx_GIVEREF(__pyx_n_s_KomodoConfig);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_KomodoConfig)) __PYX_ERR(0, 246, __pyx_L1_error);
-  __pyx_t_2 = __Pyx_Import(__pyx_n_s_src_config, __pyx_t_1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 246, __pyx_L1_error)
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_KomodoConfig)) __PYX_ERR(0, 245, __pyx_L1_error);
+  __pyx_t_2 = __Pyx_Import(__pyx_n_s_src_config, __pyx_t_1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 245, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_KomodoConfig); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 246, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_KomodoConfig); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 245, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_t_1);
   __pyx_v_KomodoConfig = __pyx_t_1;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "src/core.pyx":247
+  /* "src/core.pyx":246
  *     def __cinit__(self, object py_config):
  *         from src.config import KomodoConfig
  *         if not isinstance(py_config, KomodoConfig):             # <<<<<<<<<<<<<<
  *             raise TypeError("Chunker requires a KomodoConfig")
  * 
  */
-  __pyx_t_3 = PyObject_IsInstance(__pyx_v_py_config, __pyx_v_KomodoConfig); if (unlikely(__pyx_t_3 == ((int)-1))) __PYX_ERR(0, 247, __pyx_L1_error)
+  __pyx_t_3 = PyObject_IsInstance(__pyx_v_py_config, __pyx_v_KomodoConfig); if (unlikely(__pyx_t_3 == ((int)-1))) __PYX_ERR(0, 246, __pyx_L1_error)
   __pyx_t_4 = (!__pyx_t_3);
   if (unlikely(__pyx_t_4)) {
 
-    /* "src/core.pyx":248
+    /* "src/core.pyx":247
  *         from src.config import KomodoConfig
  *         if not isinstance(py_config, KomodoConfig):
  *             raise TypeError("Chunker requires a KomodoConfig")             # <<<<<<<<<<<<<<
  * 
  *         self.c_config = convert_to_cconfig(py_config)
  */
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 248, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 247, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_Raise(__pyx_t_2, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __PYX_ERR(0, 248, __pyx_L1_error)
+    __PYX_ERR(0, 247, __pyx_L1_error)
 
-    /* "src/core.pyx":247
+    /* "src/core.pyx":246
  *     def __cinit__(self, object py_config):
  *         from src.config import KomodoConfig
  *         if not isinstance(py_config, KomodoConfig):             # <<<<<<<<<<<<<<
@@ -5222,24 +5284,24 @@ static int __pyx_pf_3src_4core_7Chunker___cinit__(struct __pyx_obj_3src_4core_Ch
  */
   }
 
-  /* "src/core.pyx":250
+  /* "src/core.pyx":249
  *             raise TypeError("Chunker requires a KomodoConfig")
  * 
  *         self.c_config = convert_to_cconfig(py_config)             # <<<<<<<<<<<<<<
  *         self.processed_files = []
  * 
  */
-  __pyx_t_5 = __pyx_f_3src_4core_convert_to_cconfig(__pyx_v_py_config); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 250, __pyx_L1_error)
+  __pyx_t_5 = __pyx_f_3src_4core_convert_to_cconfig(__pyx_v_py_config); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 249, __pyx_L1_error)
   __pyx_v_self->c_config = __pyx_t_5;
 
-  /* "src/core.pyx":251
+  /* "src/core.pyx":250
  * 
  *         self.c_config = convert_to_cconfig(py_config)
  *         self.processed_files = []             # <<<<<<<<<<<<<<
  * 
  *     def add_file(self, rel_path: str, content: str, priority: int):
  */
-  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 251, __pyx_L1_error)
+  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 250, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_2);
   __Pyx_GOTREF(__pyx_v_self->processed_files);
@@ -5247,7 +5309,7 @@ static int __pyx_pf_3src_4core_7Chunker___cinit__(struct __pyx_obj_3src_4core_Ch
   __pyx_v_self->processed_files = ((PyObject*)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "src/core.pyx":245
+  /* "src/core.pyx":244
  *     cdef list processed_files
  * 
  *     def __cinit__(self, object py_config):             # <<<<<<<<<<<<<<
@@ -5269,7 +5331,7 @@ static int __pyx_pf_3src_4core_7Chunker___cinit__(struct __pyx_obj_3src_4core_Ch
   return __pyx_r;
 }
 
-/* "src/core.pyx":253
+/* "src/core.pyx":252
  *         self.processed_files = []
  * 
  *     def add_file(self, rel_path: str, content: str, priority: int):             # <<<<<<<<<<<<<<
@@ -5337,7 +5399,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 253, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 252, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
@@ -5345,9 +5407,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[1]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 253, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 252, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("add_file", 1, 3, 3, 1); __PYX_ERR(0, 253, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("add_file", 1, 3, 3, 1); __PYX_ERR(0, 252, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
@@ -5355,14 +5417,14 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[2]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 253, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 252, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("add_file", 1, 3, 3, 2); __PYX_ERR(0, 253, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("add_file", 1, 3, 3, 2); __PYX_ERR(0, 252, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "add_file") < 0)) __PYX_ERR(0, 253, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "add_file") < 0)) __PYX_ERR(0, 252, __pyx_L3_error)
       }
     } else if (unlikely(__pyx_nargs != 3)) {
       goto __pyx_L5_argtuple_error;
@@ -5377,7 +5439,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("add_file", 1, 3, 3, __pyx_nargs); __PYX_ERR(0, 253, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("add_file", 1, 3, 3, __pyx_nargs); __PYX_ERR(0, 252, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -5391,9 +5453,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_rel_path), (&PyUnicode_Type), 0, "rel_path", 1))) __PYX_ERR(0, 253, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_content), (&PyUnicode_Type), 0, "content", 1))) __PYX_ERR(0, 253, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_priority), (&PyInt_Type), 0, "priority", 1))) __PYX_ERR(0, 253, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_rel_path), (&PyUnicode_Type), 0, "rel_path", 1))) __PYX_ERR(0, 252, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_content), (&PyUnicode_Type), 0, "content", 1))) __PYX_ERR(0, 252, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_priority), (&PyInt_Type), 0, "priority", 1))) __PYX_ERR(0, 252, __pyx_L1_error)
   __pyx_r = __pyx_pf_3src_4core_7Chunker_2add_file(((struct __pyx_obj_3src_4core_Chunker *)__pyx_v_self), __pyx_v_rel_path, __pyx_v_content, __pyx_v_priority);
 
   /* function exit code */
@@ -5424,37 +5486,37 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_2add_file(struct __pyx_obj_3src_4c
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("add_file", 1);
 
-  /* "src/core.pyx":258
+  /* "src/core.pyx":257
  *         """
  *         cdef ProcessedFile pf
  *         pf.rel_path = make_c_string(rel_path)             # <<<<<<<<<<<<<<
  *         pf.content = make_c_string(content)
  *         pf.priority = priority
  */
-  __pyx_t_1 = __pyx_f_3src_4core_make_c_string(__pyx_v_rel_path); if (unlikely(__pyx_t_1 == ((char *)NULL))) __PYX_ERR(0, 258, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_3src_4core_make_c_string(__pyx_v_rel_path); if (unlikely(__pyx_t_1 == ((char *)NULL))) __PYX_ERR(0, 257, __pyx_L1_error)
   __pyx_v_pf.rel_path = __pyx_t_1;
 
-  /* "src/core.pyx":259
+  /* "src/core.pyx":258
  *         cdef ProcessedFile pf
  *         pf.rel_path = make_c_string(rel_path)
  *         pf.content = make_c_string(content)             # <<<<<<<<<<<<<<
  *         pf.priority = priority
  *         self.processed_files.append(pf)
  */
-  __pyx_t_1 = __pyx_f_3src_4core_make_c_string(__pyx_v_content); if (unlikely(__pyx_t_1 == ((char *)NULL))) __PYX_ERR(0, 259, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_3src_4core_make_c_string(__pyx_v_content); if (unlikely(__pyx_t_1 == ((char *)NULL))) __PYX_ERR(0, 258, __pyx_L1_error)
   __pyx_v_pf.content = __pyx_t_1;
 
-  /* "src/core.pyx":260
+  /* "src/core.pyx":259
  *         pf.rel_path = make_c_string(rel_path)
  *         pf.content = make_c_string(content)
  *         pf.priority = priority             # <<<<<<<<<<<<<<
  *         self.processed_files.append(pf)
  * 
  */
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_v_priority); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 260, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_v_priority); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 259, __pyx_L1_error)
   __pyx_v_pf.priority = __pyx_t_2;
 
-  /* "src/core.pyx":261
+  /* "src/core.pyx":260
  *         pf.content = make_c_string(content)
  *         pf.priority = priority
  *         self.processed_files.append(pf)             # <<<<<<<<<<<<<<
@@ -5463,14 +5525,14 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_2add_file(struct __pyx_obj_3src_4c
  */
   if (unlikely(__pyx_v_self->processed_files == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "append");
-    __PYX_ERR(0, 261, __pyx_L1_error)
+    __PYX_ERR(0, 260, __pyx_L1_error)
   }
-  __pyx_t_3 = __pyx_convert__to_py_struct__ProcessedFile(__pyx_v_pf); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 261, __pyx_L1_error)
+  __pyx_t_3 = __pyx_convert__to_py_struct__ProcessedFile(__pyx_v_pf); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 260, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyList_Append(__pyx_v_self->processed_files, __pyx_t_3); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(0, 261, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyList_Append(__pyx_v_self->processed_files, __pyx_t_3); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(0, 260, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "src/core.pyx":253
+  /* "src/core.pyx":252
  *         self.processed_files = []
  * 
  *     def add_file(self, rel_path: str, content: str, priority: int):             # <<<<<<<<<<<<<<
@@ -5491,7 +5553,7 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_2add_file(struct __pyx_obj_3src_4c
   return __pyx_r;
 }
 
-/* "src/core.pyx":263
+/* "src/core.pyx":262
  *         self.processed_files.append(pf)
  * 
  *     def write_chunks(self):             # <<<<<<<<<<<<<<
@@ -5541,7 +5603,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-/* "src/core.pyx":273
+/* "src/core.pyx":272
  *             size_t entry_size
  * 
  *         self.processed_files.sort(key=lambda x: x.priority, reverse=True)             # <<<<<<<<<<<<<<
@@ -5602,12 +5664,12 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 273, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 272, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "lambda") < 0)) __PYX_ERR(0, 273, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "lambda") < 0)) __PYX_ERR(0, 272, __pyx_L3_error)
       }
     } else if (unlikely(__pyx_nargs != 1)) {
       goto __pyx_L5_argtuple_error;
@@ -5618,7 +5680,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("lambda", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 273, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("lambda", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 272, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -5654,7 +5716,7 @@ static PyObject *__pyx_lambda_funcdef_lambda(CYTHON_UNUSED PyObject *__pyx_self,
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("lambda", 1);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_priority); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 273, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_priority); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 272, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -5671,7 +5733,7 @@ static PyObject *__pyx_lambda_funcdef_lambda(CYTHON_UNUSED PyObject *__pyx_self,
   return __pyx_r;
 }
 
-/* "src/core.pyx":263
+/* "src/core.pyx":262
  *         self.processed_files.append(pf)
  * 
  *     def write_chunks(self):             # <<<<<<<<<<<<<<
@@ -5701,7 +5763,7 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_4write_chunks(struct __pyx_obj_3sr
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("write_chunks", 1);
 
-  /* "src/core.pyx":268
+  /* "src/core.pyx":267
  *         """
  *         cdef:
  *             size_t current_size = 0             # <<<<<<<<<<<<<<
@@ -5710,19 +5772,19 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_4write_chunks(struct __pyx_obj_3sr
  */
   __pyx_v_current_size = 0;
 
-  /* "src/core.pyx":269
+  /* "src/core.pyx":268
  *         cdef:
  *             size_t current_size = 0
  *             list current_chunk = []             # <<<<<<<<<<<<<<
  *             int chunk_idx = 0
  *             size_t entry_size
  */
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 269, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 268, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_current_chunk = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "src/core.pyx":270
+  /* "src/core.pyx":269
  *             size_t current_size = 0
  *             list current_chunk = []
  *             int chunk_idx = 0             # <<<<<<<<<<<<<<
@@ -5731,29 +5793,29 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_4write_chunks(struct __pyx_obj_3sr
  */
   __pyx_v_chunk_idx = 0;
 
-  /* "src/core.pyx":273
+  /* "src/core.pyx":272
  *             size_t entry_size
  * 
  *         self.processed_files.sort(key=lambda x: x.priority, reverse=True)             # <<<<<<<<<<<<<<
  * 
  *         for pf in self.processed_files:
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_self->processed_files, __pyx_n_s_sort); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 273, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_self->processed_files, __pyx_n_s_sort); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 272, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 273, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 272, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_7Chunker_12write_chunks_lambda, 0, __pyx_n_s_write_chunks_locals_lambda, NULL, __pyx_n_s_src_core, __pyx_d, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 273, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_7Chunker_12write_chunks_lambda, 0, __pyx_n_s_write_chunks_locals_lambda, NULL, __pyx_n_s_src_core, __pyx_d, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 272, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_key, __pyx_t_3) < 0) __PYX_ERR(0, 273, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_key, __pyx_t_3) < 0) __PYX_ERR(0, 272, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_reverse, Py_True) < 0) __PYX_ERR(0, 273, __pyx_L1_error)
-  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 273, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_reverse, Py_True) < 0) __PYX_ERR(0, 272, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 272, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "src/core.pyx":275
+  /* "src/core.pyx":274
  *         self.processed_files.sort(key=lambda x: x.priority, reverse=True)
  * 
  *         for pf in self.processed_files:             # <<<<<<<<<<<<<<
@@ -5762,7 +5824,7 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_4write_chunks(struct __pyx_obj_3sr
  */
   if (unlikely(__pyx_v_self->processed_files == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 275, __pyx_L1_error)
+    __PYX_ERR(0, 274, __pyx_L1_error)
   }
   __pyx_t_3 = __pyx_v_self->processed_files; __Pyx_INCREF(__pyx_t_3);
   __pyx_t_4 = 0;
@@ -5770,31 +5832,31 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_4write_chunks(struct __pyx_obj_3sr
     {
       Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_3);
       #if !CYTHON_ASSUME_SAFE_MACROS
-      if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 275, __pyx_L1_error)
+      if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 274, __pyx_L1_error)
       #endif
       if (__pyx_t_4 >= __pyx_temp) break;
     }
     #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-    __pyx_t_2 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_4); __Pyx_INCREF(__pyx_t_2); __pyx_t_4++; if (unlikely((0 < 0))) __PYX_ERR(0, 275, __pyx_L1_error)
+    __pyx_t_2 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_4); __Pyx_INCREF(__pyx_t_2); __pyx_t_4++; if (unlikely((0 < 0))) __PYX_ERR(0, 274, __pyx_L1_error)
     #else
-    __pyx_t_2 = __Pyx_PySequence_ITEM(__pyx_t_3, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 275, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PySequence_ITEM(__pyx_t_3, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 274, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     #endif
     __Pyx_XDECREF_SET(__pyx_v_pf, __pyx_t_2);
     __pyx_t_2 = 0;
 
-    /* "src/core.pyx":276
+    /* "src/core.pyx":275
  * 
  *         for pf in self.processed_files:
  *             entry_size = self._calculate_entry_size(pf)             # <<<<<<<<<<<<<<
  *             if current_size + entry_size > self.c_config.max_size and current_chunk:
  *                 self._flush_chunk(current_chunk, chunk_idx)
  */
-    __pyx_t_5 = __pyx_convert__from_py_struct__ProcessedFile(__pyx_v_pf); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 276, __pyx_L1_error)
-    __pyx_t_6 = ((struct __pyx_vtabstruct_3src_4core_Chunker *)__pyx_v_self->__pyx_vtab)->_calculate_entry_size(__pyx_v_self, __pyx_t_5); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 276, __pyx_L1_error)
+    __pyx_t_5 = __pyx_convert__from_py_struct__ProcessedFile(__pyx_v_pf); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 275, __pyx_L1_error)
+    __pyx_t_6 = ((struct __pyx_vtabstruct_3src_4core_Chunker *)__pyx_v_self->__pyx_vtab)->_calculate_entry_size(__pyx_v_self, __pyx_t_5); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 275, __pyx_L1_error)
     __pyx_v_entry_size = __pyx_t_6;
 
-    /* "src/core.pyx":277
+    /* "src/core.pyx":276
  *         for pf in self.processed_files:
  *             entry_size = self._calculate_entry_size(pf)
  *             if current_size + entry_size > self.c_config.max_size and current_chunk:             # <<<<<<<<<<<<<<
@@ -5812,16 +5874,16 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_4write_chunks(struct __pyx_obj_3sr
     __pyx_L6_bool_binop_done:;
     if (__pyx_t_7) {
 
-      /* "src/core.pyx":278
+      /* "src/core.pyx":277
  *             entry_size = self._calculate_entry_size(pf)
  *             if current_size + entry_size > self.c_config.max_size and current_chunk:
  *                 self._flush_chunk(current_chunk, chunk_idx)             # <<<<<<<<<<<<<<
  *                 chunk_idx += 1
  *                 current_size = 0
  */
-      ((struct __pyx_vtabstruct_3src_4core_Chunker *)__pyx_v_self->__pyx_vtab)->_flush_chunk(__pyx_v_self, __pyx_v_current_chunk, __pyx_v_chunk_idx); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 278, __pyx_L1_error)
+      ((struct __pyx_vtabstruct_3src_4core_Chunker *)__pyx_v_self->__pyx_vtab)->_flush_chunk(__pyx_v_self, __pyx_v_current_chunk, __pyx_v_chunk_idx); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 277, __pyx_L1_error)
 
-      /* "src/core.pyx":279
+      /* "src/core.pyx":278
  *             if current_size + entry_size > self.c_config.max_size and current_chunk:
  *                 self._flush_chunk(current_chunk, chunk_idx)
  *                 chunk_idx += 1             # <<<<<<<<<<<<<<
@@ -5830,7 +5892,7 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_4write_chunks(struct __pyx_obj_3sr
  */
       __pyx_v_chunk_idx = (__pyx_v_chunk_idx + 1);
 
-      /* "src/core.pyx":280
+      /* "src/core.pyx":279
  *                 self._flush_chunk(current_chunk, chunk_idx)
  *                 chunk_idx += 1
  *                 current_size = 0             # <<<<<<<<<<<<<<
@@ -5839,19 +5901,19 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_4write_chunks(struct __pyx_obj_3sr
  */
       __pyx_v_current_size = 0;
 
-      /* "src/core.pyx":281
+      /* "src/core.pyx":280
  *                 chunk_idx += 1
  *                 current_size = 0
  *                 current_chunk = []             # <<<<<<<<<<<<<<
  * 
  *             current_chunk.append(pf)
  */
-      __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 281, __pyx_L1_error)
+      __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 280, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF_SET(__pyx_v_current_chunk, ((PyObject*)__pyx_t_2));
       __pyx_t_2 = 0;
 
-      /* "src/core.pyx":277
+      /* "src/core.pyx":276
  *         for pf in self.processed_files:
  *             entry_size = self._calculate_entry_size(pf)
  *             if current_size + entry_size > self.c_config.max_size and current_chunk:             # <<<<<<<<<<<<<<
@@ -5860,16 +5922,16 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_4write_chunks(struct __pyx_obj_3sr
  */
     }
 
-    /* "src/core.pyx":283
+    /* "src/core.pyx":282
  *                 current_chunk = []
  * 
  *             current_chunk.append(pf)             # <<<<<<<<<<<<<<
  *             current_size += entry_size
  * 
  */
-    __pyx_t_9 = __Pyx_PyList_Append(__pyx_v_current_chunk, __pyx_v_pf); if (unlikely(__pyx_t_9 == ((int)-1))) __PYX_ERR(0, 283, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyList_Append(__pyx_v_current_chunk, __pyx_v_pf); if (unlikely(__pyx_t_9 == ((int)-1))) __PYX_ERR(0, 282, __pyx_L1_error)
 
-    /* "src/core.pyx":284
+    /* "src/core.pyx":283
  * 
  *             current_chunk.append(pf)
  *             current_size += entry_size             # <<<<<<<<<<<<<<
@@ -5878,7 +5940,7 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_4write_chunks(struct __pyx_obj_3sr
  */
     __pyx_v_current_size = (__pyx_v_current_size + __pyx_v_entry_size);
 
-    /* "src/core.pyx":275
+    /* "src/core.pyx":274
  *         self.processed_files.sort(key=lambda x: x.priority, reverse=True)
  * 
  *         for pf in self.processed_files:             # <<<<<<<<<<<<<<
@@ -5888,7 +5950,7 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_4write_chunks(struct __pyx_obj_3sr
   }
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "src/core.pyx":286
+  /* "src/core.pyx":285
  *             current_size += entry_size
  * 
  *         if current_chunk:             # <<<<<<<<<<<<<<
@@ -5898,16 +5960,16 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_4write_chunks(struct __pyx_obj_3sr
   __pyx_t_7 = (PyList_GET_SIZE(__pyx_v_current_chunk) != 0);
   if (__pyx_t_7) {
 
-    /* "src/core.pyx":287
+    /* "src/core.pyx":286
  * 
  *         if current_chunk:
  *             self._flush_chunk(current_chunk, chunk_idx)             # <<<<<<<<<<<<<<
  * 
  *     cdef size_t _calculate_entry_size(self, ProcessedFile pf):
  */
-    ((struct __pyx_vtabstruct_3src_4core_Chunker *)__pyx_v_self->__pyx_vtab)->_flush_chunk(__pyx_v_self, __pyx_v_current_chunk, __pyx_v_chunk_idx); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 287, __pyx_L1_error)
+    ((struct __pyx_vtabstruct_3src_4core_Chunker *)__pyx_v_self->__pyx_vtab)->_flush_chunk(__pyx_v_self, __pyx_v_current_chunk, __pyx_v_chunk_idx); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 286, __pyx_L1_error)
 
-    /* "src/core.pyx":286
+    /* "src/core.pyx":285
  *             current_size += entry_size
  * 
  *         if current_chunk:             # <<<<<<<<<<<<<<
@@ -5916,7 +5978,7 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_4write_chunks(struct __pyx_obj_3sr
  */
   }
 
-  /* "src/core.pyx":263
+  /* "src/core.pyx":262
  *         self.processed_files.append(pf)
  * 
  *     def write_chunks(self):             # <<<<<<<<<<<<<<
@@ -5941,7 +6003,7 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_4write_chunks(struct __pyx_obj_3sr
   return __pyx_r;
 }
 
-/* "src/core.pyx":289
+/* "src/core.pyx":288
  *             self._flush_chunk(current_chunk, chunk_idx)
  * 
  *     cdef size_t _calculate_entry_size(self, ProcessedFile pf):             # <<<<<<<<<<<<<<
@@ -5957,7 +6019,7 @@ static size_t __pyx_f_3src_4core_7Chunker__calculate_entry_size(struct __pyx_obj
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "src/core.pyx":290
+  /* "src/core.pyx":289
  * 
  *     cdef size_t _calculate_entry_size(self, ProcessedFile pf):
  *         if self.c_config.token_mode:             # <<<<<<<<<<<<<<
@@ -5966,18 +6028,18 @@ static size_t __pyx_f_3src_4core_7Chunker__calculate_entry_size(struct __pyx_obj
  */
   if (__pyx_v_self->c_config.token_mode) {
 
-    /* "src/core.pyx":291
+    /* "src/core.pyx":290
  *     cdef size_t _calculate_entry_size(self, ProcessedFile pf):
  *         if self.c_config.token_mode:
  *             return count_tokens(pf.content)             # <<<<<<<<<<<<<<
  *         else:
  *             return strlen(pf.content) if pf.content else 0
  */
-    __pyx_t_1 = __pyx_f_3src_4core_count_tokens(__pyx_v_pf.content); if (unlikely(__pyx_t_1 == ((size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 291, __pyx_L1_error)
+    __pyx_t_1 = __pyx_f_3src_4core_count_tokens(__pyx_v_pf.content); if (unlikely(__pyx_t_1 == ((size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 290, __pyx_L1_error)
     __pyx_r = __pyx_t_1;
     goto __pyx_L0;
 
-    /* "src/core.pyx":290
+    /* "src/core.pyx":289
  * 
  *     cdef size_t _calculate_entry_size(self, ProcessedFile pf):
  *         if self.c_config.token_mode:             # <<<<<<<<<<<<<<
@@ -5986,7 +6048,7 @@ static size_t __pyx_f_3src_4core_7Chunker__calculate_entry_size(struct __pyx_obj
  */
   }
 
-  /* "src/core.pyx":293
+  /* "src/core.pyx":292
  *             return count_tokens(pf.content)
  *         else:
  *             return strlen(pf.content) if pf.content else 0             # <<<<<<<<<<<<<<
@@ -6004,7 +6066,7 @@ static size_t __pyx_f_3src_4core_7Chunker__calculate_entry_size(struct __pyx_obj
     goto __pyx_L0;
   }
 
-  /* "src/core.pyx":289
+  /* "src/core.pyx":288
  *             self._flush_chunk(current_chunk, chunk_idx)
  * 
  *     cdef size_t _calculate_entry_size(self, ProcessedFile pf):             # <<<<<<<<<<<<<<
@@ -6020,7 +6082,7 @@ static size_t __pyx_f_3src_4core_7Chunker__calculate_entry_size(struct __pyx_obj
   return __pyx_r;
 }
 
-/* "src/core.pyx":295
+/* "src/core.pyx":294
  *             return strlen(pf.content) if pf.content else 0
  * 
  *     cdef void _flush_chunk(self, list chunk_files, int chunk_idx):             # <<<<<<<<<<<<<<
@@ -6247,8 +6309,8 @@ static PyObject *__pyx_pf_3src_4core_7Chunker_8__setstate_cython__(CYTHON_UNUSED
   return __pyx_r;
 }
 
-/* "src/core.pyx":304
- * # 10. Additional Global Functions
+/* "src/core.pyx":303
+ * # 9. Additional Global Functions
  * # --------------------------------------------------------------------------
  * cdef bint is_binary_file(const char* path, const char** exts, size_t num_exts):             # <<<<<<<<<<<<<<
  *     """
@@ -6267,7 +6329,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
   size_t __pyx_t_3;
   int __pyx_t_4;
 
-  /* "src/core.pyx":310
+  /* "src/core.pyx":309
  *     """
  *     cdef:
  *         const char* ext = strrchr(path, b'.')             # <<<<<<<<<<<<<<
@@ -6276,7 +6338,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
  */
   __pyx_v_ext = strrchr(__pyx_v_path, '.');
 
-  /* "src/core.pyx":316
+  /* "src/core.pyx":315
  *         int i
  * 
  *     if ext != NULL:             # <<<<<<<<<<<<<<
@@ -6286,7 +6348,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
   __pyx_t_1 = (__pyx_v_ext != NULL);
   if (__pyx_t_1) {
 
-    /* "src/core.pyx":317
+    /* "src/core.pyx":316
  * 
  *     if ext != NULL:
  *         ext += 1  # skip the '.'             # <<<<<<<<<<<<<<
@@ -6295,7 +6357,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
  */
     __pyx_v_ext = (__pyx_v_ext + 1);
 
-    /* "src/core.pyx":318
+    /* "src/core.pyx":317
  *     if ext != NULL:
  *         ext += 1  # skip the '.'
  *         for i in range(num_exts):             # <<<<<<<<<<<<<<
@@ -6307,7 +6369,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
     for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
       __pyx_v_i = __pyx_t_4;
 
-      /* "src/core.pyx":319
+      /* "src/core.pyx":318
  *         ext += 1  # skip the '.'
  *         for i in range(num_exts):
  *             if strcasecmp(ext, exts[i]) == 0:             # <<<<<<<<<<<<<<
@@ -6317,7 +6379,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
       __pyx_t_1 = (strcasecmp(__pyx_v_ext, (__pyx_v_exts[__pyx_v_i])) == 0);
       if (__pyx_t_1) {
 
-        /* "src/core.pyx":320
+        /* "src/core.pyx":319
  *         for i in range(num_exts):
  *             if strcasecmp(ext, exts[i]) == 0:
  *                 return True             # <<<<<<<<<<<<<<
@@ -6327,7 +6389,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
         __pyx_r = 1;
         goto __pyx_L0;
 
-        /* "src/core.pyx":319
+        /* "src/core.pyx":318
  *         ext += 1  # skip the '.'
  *         for i in range(num_exts):
  *             if strcasecmp(ext, exts[i]) == 0:             # <<<<<<<<<<<<<<
@@ -6337,7 +6399,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
       }
     }
 
-    /* "src/core.pyx":316
+    /* "src/core.pyx":315
  *         int i
  * 
  *     if ext != NULL:             # <<<<<<<<<<<<<<
@@ -6346,7 +6408,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
  */
   }
 
-  /* "src/core.pyx":323
+  /* "src/core.pyx":322
  * 
  *     # read first 512 bytes & check for NUL
  *     fp = fopen(path, "rb")             # <<<<<<<<<<<<<<
@@ -6355,7 +6417,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
  */
   __pyx_v_fp = fopen(__pyx_v_path, ((char const *)"rb"));
 
-  /* "src/core.pyx":324
+  /* "src/core.pyx":323
  *     # read first 512 bytes & check for NUL
  *     fp = fopen(path, "rb")
  *     if not fp:             # <<<<<<<<<<<<<<
@@ -6365,7 +6427,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
   __pyx_t_1 = (!(__pyx_v_fp != 0));
   if (__pyx_t_1) {
 
-    /* "src/core.pyx":325
+    /* "src/core.pyx":324
  *     fp = fopen(path, "rb")
  *     if not fp:
  *         return True  # if unreadable, treat as binary or do something else             # <<<<<<<<<<<<<<
@@ -6375,7 +6437,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
     __pyx_r = 1;
     goto __pyx_L0;
 
-    /* "src/core.pyx":324
+    /* "src/core.pyx":323
  *     # read first 512 bytes & check for NUL
  *     fp = fopen(path, "rb")
  *     if not fp:             # <<<<<<<<<<<<<<
@@ -6384,7 +6446,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
  */
   }
 
-  /* "src/core.pyx":327
+  /* "src/core.pyx":326
  *         return True  # if unreadable, treat as binary or do something else
  * 
  *     nread = fread(buffer, 1, 512, fp)             # <<<<<<<<<<<<<<
@@ -6393,7 +6455,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
  */
   __pyx_v_nread = fread(__pyx_v_buffer, 1, 0x200, __pyx_v_fp);
 
-  /* "src/core.pyx":328
+  /* "src/core.pyx":327
  * 
  *     nread = fread(buffer, 1, 512, fp)
  *     fclose(fp)             # <<<<<<<<<<<<<<
@@ -6402,7 +6464,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
  */
   (void)(fclose(__pyx_v_fp));
 
-  /* "src/core.pyx":329
+  /* "src/core.pyx":328
  *     nread = fread(buffer, 1, 512, fp)
  *     fclose(fp)
  *     if memchr(buffer, 0, nread) != NULL:             # <<<<<<<<<<<<<<
@@ -6412,7 +6474,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
   __pyx_t_1 = (memchr(__pyx_v_buffer, 0, __pyx_v_nread) != NULL);
   if (__pyx_t_1) {
 
-    /* "src/core.pyx":330
+    /* "src/core.pyx":329
  *     fclose(fp)
  *     if memchr(buffer, 0, nread) != NULL:
  *         return True             # <<<<<<<<<<<<<<
@@ -6422,7 +6484,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
     __pyx_r = 1;
     goto __pyx_L0;
 
-    /* "src/core.pyx":329
+    /* "src/core.pyx":328
  *     nread = fread(buffer, 1, 512, fp)
  *     fclose(fp)
  *     if memchr(buffer, 0, nread) != NULL:             # <<<<<<<<<<<<<<
@@ -6431,7 +6493,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
  */
   }
 
-  /* "src/core.pyx":332
+  /* "src/core.pyx":331
  *         return True
  * 
  *     return False             # <<<<<<<<<<<<<<
@@ -6441,8 +6503,8 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
   __pyx_r = 0;
   goto __pyx_L0;
 
-  /* "src/core.pyx":304
- * # 10. Additional Global Functions
+  /* "src/core.pyx":303
+ * # 9. Additional Global Functions
  * # --------------------------------------------------------------------------
  * cdef bint is_binary_file(const char* path, const char** exts, size_t num_exts):             # <<<<<<<<<<<<<<
  *     """
@@ -6454,7 +6516,7 @@ static int __pyx_f_3src_4core_is_binary_file(char const *__pyx_v_path, char cons
   return __pyx_r;
 }
 
-/* "src/core.pyx":334
+/* "src/core.pyx":333
  *     return False
  * 
  * def py_is_binary(path: str, binary_exts: list) -> bool:             # <<<<<<<<<<<<<<
@@ -6519,7 +6581,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 334, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 333, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
@@ -6527,14 +6589,14 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[1]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 334, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 333, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("py_is_binary", 1, 2, 2, 1); __PYX_ERR(0, 334, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("py_is_binary", 1, 2, 2, 1); __PYX_ERR(0, 333, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "py_is_binary") < 0)) __PYX_ERR(0, 334, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "py_is_binary") < 0)) __PYX_ERR(0, 333, __pyx_L3_error)
       }
     } else if (unlikely(__pyx_nargs != 2)) {
       goto __pyx_L5_argtuple_error;
@@ -6547,7 +6609,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("py_is_binary", 1, 2, 2, __pyx_nargs); __PYX_ERR(0, 334, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("py_is_binary", 1, 2, 2, __pyx_nargs); __PYX_ERR(0, 333, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -6561,8 +6623,8 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_path), (&PyUnicode_Type), 0, "path", 1))) __PYX_ERR(0, 334, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_binary_exts), (&PyList_Type), 0, "binary_exts", 1))) __PYX_ERR(0, 334, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_path), (&PyUnicode_Type), 0, "path", 1))) __PYX_ERR(0, 333, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_binary_exts), (&PyList_Type), 0, "binary_exts", 1))) __PYX_ERR(0, 333, __pyx_L1_error)
   __pyx_r = __pyx_pf_3src_4core_py_is_binary(__pyx_self, __pyx_v_path, __pyx_v_binary_exts);
 
   /* function exit code */
@@ -6601,29 +6663,29 @@ static PyObject *__pyx_pf_3src_4core_py_is_binary(CYTHON_UNUSED PyObject *__pyx_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("py_is_binary", 1);
 
-  /* "src/core.pyx":339
+  /* "src/core.pyx":338
  *     """
  *     cdef:
  *         bytes b_path = path.encode()             # <<<<<<<<<<<<<<
  *         size_t num_exts = len(binary_exts)
  *         const char** c_exts = <const char**>malloc(num_exts * sizeof(char*))
  */
-  __pyx_t_1 = PyUnicode_AsEncodedString(__pyx_v_path, NULL, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 339, __pyx_L1_error)
+  __pyx_t_1 = PyUnicode_AsEncodedString(__pyx_v_path, NULL, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 338, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_b_path = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "src/core.pyx":340
+  /* "src/core.pyx":339
  *     cdef:
  *         bytes b_path = path.encode()
  *         size_t num_exts = len(binary_exts)             # <<<<<<<<<<<<<<
  *         const char** c_exts = <const char**>malloc(num_exts * sizeof(char*))
  *         bint result
  */
-  __pyx_t_2 = __Pyx_PyList_GET_SIZE(__pyx_v_binary_exts); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 340, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyList_GET_SIZE(__pyx_v_binary_exts); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 339, __pyx_L1_error)
   __pyx_v_num_exts = __pyx_t_2;
 
-  /* "src/core.pyx":341
+  /* "src/core.pyx":340
  *         bytes b_path = path.encode()
  *         size_t num_exts = len(binary_exts)
  *         const char** c_exts = <const char**>malloc(num_exts * sizeof(char*))             # <<<<<<<<<<<<<<
@@ -6632,7 +6694,7 @@ static PyObject *__pyx_pf_3src_4core_py_is_binary(CYTHON_UNUSED PyObject *__pyx_
  */
   __pyx_v_c_exts = ((char const **)malloc((__pyx_v_num_exts * (sizeof(char *)))));
 
-  /* "src/core.pyx":345
+  /* "src/core.pyx":344
  *         int i
  * 
  *     if not c_exts:             # <<<<<<<<<<<<<<
@@ -6642,20 +6704,20 @@ static PyObject *__pyx_pf_3src_4core_py_is_binary(CYTHON_UNUSED PyObject *__pyx_
   __pyx_t_3 = (!(__pyx_v_c_exts != 0));
   if (unlikely(__pyx_t_3)) {
 
-    /* "src/core.pyx":346
+    /* "src/core.pyx":345
  * 
  *     if not c_exts:
  *         raise MemoryError("Failed to allocate c_exts")             # <<<<<<<<<<<<<<
  * 
  *     for i in range(num_exts):
  */
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 346, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 345, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_Raise(__pyx_t_1, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __PYX_ERR(0, 346, __pyx_L1_error)
+    __PYX_ERR(0, 345, __pyx_L1_error)
 
-    /* "src/core.pyx":345
+    /* "src/core.pyx":344
  *         int i
  * 
  *     if not c_exts:             # <<<<<<<<<<<<<<
@@ -6664,7 +6726,7 @@ static PyObject *__pyx_pf_3src_4core_py_is_binary(CYTHON_UNUSED PyObject *__pyx_
  */
   }
 
-  /* "src/core.pyx":348
+  /* "src/core.pyx":347
  *         raise MemoryError("Failed to allocate c_exts")
  * 
  *     for i in range(num_exts):             # <<<<<<<<<<<<<<
@@ -6676,21 +6738,21 @@ static PyObject *__pyx_pf_3src_4core_py_is_binary(CYTHON_UNUSED PyObject *__pyx_
   for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
     __pyx_v_i = __pyx_t_6;
 
-    /* "src/core.pyx":349
+    /* "src/core.pyx":348
  * 
  *     for i in range(num_exts):
  *         c_exts[i] = make_c_string(binary_exts[i])             # <<<<<<<<<<<<<<
  * 
  *     result = is_binary_file(b_path, c_exts, num_exts)
  */
-    __pyx_t_1 = __Pyx_GetItemInt_List(__pyx_v_binary_exts, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 349, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetItemInt_List(__pyx_v_binary_exts, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 348, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_7 = __pyx_f_3src_4core_make_c_string(__pyx_t_1); if (unlikely(__pyx_t_7 == ((char *)NULL))) __PYX_ERR(0, 349, __pyx_L1_error)
+    __pyx_t_7 = __pyx_f_3src_4core_make_c_string(__pyx_t_1); if (unlikely(__pyx_t_7 == ((char *)NULL))) __PYX_ERR(0, 348, __pyx_L1_error)
     (__pyx_v_c_exts[__pyx_v_i]) = __pyx_t_7;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
 
-  /* "src/core.pyx":351
+  /* "src/core.pyx":350
  *         c_exts[i] = make_c_string(binary_exts[i])
  * 
  *     result = is_binary_file(b_path, c_exts, num_exts)             # <<<<<<<<<<<<<<
@@ -6699,13 +6761,13 @@ static PyObject *__pyx_pf_3src_4core_py_is_binary(CYTHON_UNUSED PyObject *__pyx_
  */
   if (unlikely(__pyx_v_b_path == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
-    __PYX_ERR(0, 351, __pyx_L1_error)
+    __PYX_ERR(0, 350, __pyx_L1_error)
   }
-  __pyx_t_8 = __Pyx_PyBytes_AsString(__pyx_v_b_path); if (unlikely((!__pyx_t_8) && PyErr_Occurred())) __PYX_ERR(0, 351, __pyx_L1_error)
-  __pyx_t_3 = __pyx_f_3src_4core_is_binary_file(__pyx_t_8, __pyx_v_c_exts, __pyx_v_num_exts); if (unlikely(__pyx_t_3 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 351, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyBytes_AsString(__pyx_v_b_path); if (unlikely((!__pyx_t_8) && PyErr_Occurred())) __PYX_ERR(0, 350, __pyx_L1_error)
+  __pyx_t_3 = __pyx_f_3src_4core_is_binary_file(__pyx_t_8, __pyx_v_c_exts, __pyx_v_num_exts); if (unlikely(__pyx_t_3 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 350, __pyx_L1_error)
   __pyx_v_result = __pyx_t_3;
 
-  /* "src/core.pyx":354
+  /* "src/core.pyx":353
  * 
  *     # each allocated extension string shall be FREEEEEE
  *     for i in range(num_exts):             # <<<<<<<<<<<<<<
@@ -6717,7 +6779,7 @@ static PyObject *__pyx_pf_3src_4core_py_is_binary(CYTHON_UNUSED PyObject *__pyx_
   for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
     __pyx_v_i = __pyx_t_6;
 
-    /* "src/core.pyx":355
+    /* "src/core.pyx":354
  *     # each allocated extension string shall be FREEEEEE
  *     for i in range(num_exts):
  *         if c_exts[i] != NULL:             # <<<<<<<<<<<<<<
@@ -6727,7 +6789,7 @@ static PyObject *__pyx_pf_3src_4core_py_is_binary(CYTHON_UNUSED PyObject *__pyx_
     __pyx_t_3 = ((__pyx_v_c_exts[__pyx_v_i]) != NULL);
     if (__pyx_t_3) {
 
-      /* "src/core.pyx":356
+      /* "src/core.pyx":355
  *     for i in range(num_exts):
  *         if c_exts[i] != NULL:
  *             free(c_exts[i])             # <<<<<<<<<<<<<<
@@ -6736,7 +6798,7 @@ static PyObject *__pyx_pf_3src_4core_py_is_binary(CYTHON_UNUSED PyObject *__pyx_
  */
       free((__pyx_v_c_exts[__pyx_v_i]));
 
-      /* "src/core.pyx":355
+      /* "src/core.pyx":354
  *     # each allocated extension string shall be FREEEEEE
  *     for i in range(num_exts):
  *         if c_exts[i] != NULL:             # <<<<<<<<<<<<<<
@@ -6746,7 +6808,7 @@ static PyObject *__pyx_pf_3src_4core_py_is_binary(CYTHON_UNUSED PyObject *__pyx_
     }
   }
 
-  /* "src/core.pyx":357
+  /* "src/core.pyx":356
  *         if c_exts[i] != NULL:
  *             free(c_exts[i])
  *     free(c_exts)             # <<<<<<<<<<<<<<
@@ -6755,22 +6817,22 @@ static PyObject *__pyx_pf_3src_4core_py_is_binary(CYTHON_UNUSED PyObject *__pyx_
  */
   free(__pyx_v_c_exts);
 
-  /* "src/core.pyx":359
+  /* "src/core.pyx":358
  *     free(c_exts)
  * 
  *     return bool(result)             # <<<<<<<<<<<<<<
  * 
- * def process_directory(str start_path, object py_config):
+ * cdef extern from "thread_pool.h":
  */
   __Pyx_XDECREF(__pyx_r);
   __pyx_t_3 = __pyx_v_result;
-  __pyx_t_1 = __Pyx_PyBool_FromLong((!(!__pyx_t_3))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 359, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBool_FromLong((!(!__pyx_t_3))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 358, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "src/core.pyx":334
+  /* "src/core.pyx":333
  *     return False
  * 
  * def py_is_binary(path: str, binary_exts: list) -> bool:             # <<<<<<<<<<<<<<
@@ -6790,44 +6852,37 @@ static PyObject *__pyx_pf_3src_4core_py_is_binary(CYTHON_UNUSED PyObject *__pyx_
   return __pyx_r;
 }
 
-/* "src/core.pyx":361
- *     return bool(result)
+/* "src/core.pyx":399
+ *     cdef CConfig c_config
  * 
- * def process_directory(str start_path, object py_config):             # <<<<<<<<<<<<<<
- *     """
- *     Example directory walker that uses readdir to find files,
+ *     def __enter__(self):             # <<<<<<<<<<<<<<
+ *         return self
+ * 
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_3src_4core_3process_directory(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_3src_4core_15ParallelChunker_1__enter__(PyObject *__pyx_v_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-PyDoc_STRVAR(__pyx_doc_3src_4core_2process_directory, "\n    Example directory walker that uses readdir to find files,\n    reads each file, and adds to a Chunker instance.\n    ");
-static PyMethodDef __pyx_mdef_3src_4core_3process_directory = {"process_directory", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_3process_directory, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_3src_4core_2process_directory};
-static PyObject *__pyx_pw_3src_4core_3process_directory(PyObject *__pyx_self, 
+static PyMethodDef __pyx_mdef_3src_4core_15ParallelChunker_1__enter__ = {"__enter__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_15ParallelChunker_1__enter__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_3src_4core_15ParallelChunker_1__enter__(PyObject *__pyx_v_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ) {
-  PyObject *__pyx_v_start_path = 0;
-  PyObject *__pyx_v_py_config = 0;
   #if !CYTHON_METH_FASTCALL
   CYTHON_UNUSED Py_ssize_t __pyx_nargs;
   #endif
   CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
-  PyObject* values[2] = {0,0};
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("process_directory (wrapper)", 0);
+  __Pyx_RefNannySetupContext("__enter__ (wrapper)", 0);
   #if !CYTHON_METH_FASTCALL
   #if CYTHON_ASSUME_SAFE_MACROS
   __pyx_nargs = PyTuple_GET_SIZE(__pyx_args);
@@ -6836,422 +6891,50 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   #endif
   #endif
   __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
-  {
-    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_start_path,&__pyx_n_s_py_config,0};
-    if (__pyx_kwds) {
-      Py_ssize_t kw_args;
-      switch (__pyx_nargs) {
-        case  2: values[1] = __Pyx_Arg_FASTCALL(__pyx_args, 1);
-        CYTHON_FALLTHROUGH;
-        case  1: values[0] = __Pyx_Arg_FASTCALL(__pyx_args, 0);
-        CYTHON_FALLTHROUGH;
-        case  0: break;
-        default: goto __pyx_L5_argtuple_error;
-      }
-      kw_args = __Pyx_NumKwargs_FASTCALL(__pyx_kwds);
-      switch (__pyx_nargs) {
-        case  0:
-        if (likely((values[0] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_start_path)) != 0)) {
-          (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
-          kw_args--;
-        }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 361, __pyx_L3_error)
-        else goto __pyx_L5_argtuple_error;
-        CYTHON_FALLTHROUGH;
-        case  1:
-        if (likely((values[1] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_py_config)) != 0)) {
-          (void)__Pyx_Arg_NewRef_FASTCALL(values[1]);
-          kw_args--;
-        }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 361, __pyx_L3_error)
-        else {
-          __Pyx_RaiseArgtupleInvalid("process_directory", 1, 2, 2, 1); __PYX_ERR(0, 361, __pyx_L3_error)
-        }
-      }
-      if (unlikely(kw_args > 0)) {
-        const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "process_directory") < 0)) __PYX_ERR(0, 361, __pyx_L3_error)
-      }
-    } else if (unlikely(__pyx_nargs != 2)) {
-      goto __pyx_L5_argtuple_error;
-    } else {
-      values[0] = __Pyx_Arg_FASTCALL(__pyx_args, 0);
-      values[1] = __Pyx_Arg_FASTCALL(__pyx_args, 1);
-    }
-    __pyx_v_start_path = ((PyObject*)values[0]);
-    __pyx_v_py_config = values[1];
-  }
-  goto __pyx_L6_skip;
-  __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("process_directory", 1, 2, 2, __pyx_nargs); __PYX_ERR(0, 361, __pyx_L3_error)
-  __pyx_L6_skip:;
-  goto __pyx_L4_argument_unpacking_done;
-  __pyx_L3_error:;
-  {
-    Py_ssize_t __pyx_temp;
-    for (__pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
-      __Pyx_Arg_XDECREF_FASTCALL(values[__pyx_temp]);
-    }
-  }
-  __Pyx_AddTraceback("src.core.process_directory", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __Pyx_RefNannyFinishContext();
-  return NULL;
-  __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_start_path), (&PyUnicode_Type), 1, "start_path", 1))) __PYX_ERR(0, 361, __pyx_L1_error)
-  __pyx_r = __pyx_pf_3src_4core_2process_directory(__pyx_self, __pyx_v_start_path, __pyx_v_py_config);
+  if (unlikely(__pyx_nargs > 0)) {
+    __Pyx_RaiseArgtupleInvalid("__enter__", 1, 0, 0, __pyx_nargs); return NULL;}
+  if (unlikely(__pyx_kwds) && __Pyx_NumKwargs_FASTCALL(__pyx_kwds) && unlikely(!__Pyx_CheckKeywordStrings(__pyx_kwds, "__enter__", 0))) return NULL;
+  __pyx_r = __pyx_pf_3src_4core_15ParallelChunker___enter__(((struct __pyx_obj_3src_4core_ParallelChunker *)__pyx_v_self));
 
   /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __pyx_r = NULL;
-  __pyx_L0:;
-  {
-    Py_ssize_t __pyx_temp;
-    for (__pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
-      __Pyx_Arg_XDECREF_FASTCALL(values[__pyx_temp]);
-    }
-  }
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_3src_4core_2process_directory(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_start_path, PyObject *__pyx_v_py_config) {
-  struct __pyx_obj_3src_4core_Chunker *__pyx_v_chunk = 0;
-  char *__pyx_v_cpath;
-  struct DIR *__pyx_v_dirp;
-  struct dirent *__pyx_v_entry;
-  char __pyx_v_fullpath[0x400];
-  char *__pyx_v_contents;
+static PyObject *__pyx_pf_3src_4core_15ParallelChunker___enter__(struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
-  char *__pyx_t_2;
-  int __pyx_t_3;
-  PyObject *__pyx_t_4 = NULL;
-  Py_ssize_t __pyx_t_5;
-  PyObject *__pyx_t_6 = NULL;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("process_directory", 1);
+  __Pyx_RefNannySetupContext("__enter__", 1);
 
-  /* "src/core.pyx":373
- *     cdef char* contents
+  /* "src/core.pyx":400
  * 
- *     chunk = Chunker(py_config)             # <<<<<<<<<<<<<<
- *     cpath = make_c_string(start_path)
+ *     def __enter__(self):
+ *         return self             # <<<<<<<<<<<<<<
  * 
- */
-  __pyx_t_1 = __Pyx_PyObject_CallOneArg(((PyObject *)__pyx_ptype_3src_4core_Chunker), __pyx_v_py_config); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 373, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_v_chunk = ((struct __pyx_obj_3src_4core_Chunker *)__pyx_t_1);
-  __pyx_t_1 = 0;
-
-  /* "src/core.pyx":374
- * 
- *     chunk = Chunker(py_config)
- *     cpath = make_c_string(start_path)             # <<<<<<<<<<<<<<
- * 
- *     dirp = opendir(cpath)
- */
-  __pyx_t_2 = __pyx_f_3src_4core_make_c_string(__pyx_v_start_path); if (unlikely(__pyx_t_2 == ((char *)NULL))) __PYX_ERR(0, 374, __pyx_L1_error)
-  __pyx_v_cpath = __pyx_t_2;
-
-  /* "src/core.pyx":376
- *     cpath = make_c_string(start_path)
- * 
- *     dirp = opendir(cpath)             # <<<<<<<<<<<<<<
- *     if not dirp:
- *         free(cpath)
- */
-  __pyx_v_dirp = opendir(__pyx_v_cpath);
-
-  /* "src/core.pyx":377
- * 
- *     dirp = opendir(cpath)
- *     if not dirp:             # <<<<<<<<<<<<<<
- *         free(cpath)
- *         return chunk
- */
-  __pyx_t_3 = (!(__pyx_v_dirp != 0));
-  if (__pyx_t_3) {
-
-    /* "src/core.pyx":378
- *     dirp = opendir(cpath)
- *     if not dirp:
- *         free(cpath)             # <<<<<<<<<<<<<<
- *         return chunk
- * 
- */
-    free(__pyx_v_cpath);
-
-    /* "src/core.pyx":379
- *     if not dirp:
- *         free(cpath)
- *         return chunk             # <<<<<<<<<<<<<<
- * 
- *     while True:
- */
-    __Pyx_XDECREF(__pyx_r);
-    __Pyx_INCREF((PyObject *)__pyx_v_chunk);
-    __pyx_r = ((PyObject *)__pyx_v_chunk);
-    goto __pyx_L0;
-
-    /* "src/core.pyx":377
- * 
- *     dirp = opendir(cpath)
- *     if not dirp:             # <<<<<<<<<<<<<<
- *         free(cpath)
- *         return chunk
- */
-  }
-
-  /* "src/core.pyx":381
- *         return chunk
- * 
- *     while True:             # <<<<<<<<<<<<<<
- *         entry = readdir(dirp)
- *         if not entry:
- */
-  while (1) {
-
-    /* "src/core.pyx":382
- * 
- *     while True:
- *         entry = readdir(dirp)             # <<<<<<<<<<<<<<
- *         if not entry:
- *             break
- */
-    __pyx_v_entry = readdir(__pyx_v_dirp);
-
-    /* "src/core.pyx":383
- *     while True:
- *         entry = readdir(dirp)
- *         if not entry:             # <<<<<<<<<<<<<<
- *             break
- * 
- */
-    __pyx_t_3 = (!(__pyx_v_entry != 0));
-    if (__pyx_t_3) {
-
-      /* "src/core.pyx":384
- *         entry = readdir(dirp)
- *         if not entry:
- *             break             # <<<<<<<<<<<<<<
- * 
- *         # IGNORE all hidden dot files
- */
-      goto __pyx_L5_break;
-
-      /* "src/core.pyx":383
- *     while True:
- *         entry = readdir(dirp)
- *         if not entry:             # <<<<<<<<<<<<<<
- *             break
- * 
- */
-    }
-
-    /* "src/core.pyx":387
- * 
- *         # IGNORE all hidden dot files
- *         if entry.d_name[0] == b'.':             # <<<<<<<<<<<<<<
- *             continue
- * 
- */
-    __pyx_t_3 = ((__pyx_v_entry->d_name[0]) == '.');
-    if (__pyx_t_3) {
-
-      /* "src/core.pyx":388
- *         # IGNORE all hidden dot files
- *         if entry.d_name[0] == b'.':
- *             continue             # <<<<<<<<<<<<<<
- * 
- *         snprintf(fullpath, 1024, b"%s/%s", cpath, entry.d_name)
- */
-      goto __pyx_L4_continue;
-
-      /* "src/core.pyx":387
- * 
- *         # IGNORE all hidden dot files
- *         if entry.d_name[0] == b'.':             # <<<<<<<<<<<<<<
- *             continue
- * 
- */
-    }
-
-    /* "src/core.pyx":390
- *             continue
- * 
- *         snprintf(fullpath, 1024, b"%s/%s", cpath, entry.d_name)             # <<<<<<<<<<<<<<
- * 
- *         if entry.d_type == DT_DIR:
- */
-    (void)(snprintf(__pyx_v_fullpath, 0x400, ((char const *)"%s/%s"), __pyx_v_cpath, __pyx_v_entry->d_name));
-
-    /* "src/core.pyx":392
- *         snprintf(fullpath, 1024, b"%s/%s", cpath, entry.d_name)
- * 
- *         if entry.d_type == DT_DIR:             # <<<<<<<<<<<<<<
- *             # You could recurse here if desired
- *             pass
- */
-    __pyx_t_3 = (__pyx_v_entry->d_type == __pyx_v_3src_4core_DT_DIR);
-    if (__pyx_t_3) {
-      goto __pyx_L8;
-    }
-
-    /* "src/core.pyx":396
- *             pass
- *         else:
- *             contents = read_file_contents(fullpath)             # <<<<<<<<<<<<<<
- *             if contents:
- *                 chunk.add_file(
- */
-    /*else*/ {
-      __pyx_t_2 = __pyx_f_3src_4core_read_file_contents(__pyx_v_fullpath); if (unlikely(__pyx_t_2 == ((char *)NULL))) __PYX_ERR(0, 396, __pyx_L1_error)
-      __pyx_v_contents = __pyx_t_2;
-
-      /* "src/core.pyx":397
- *         else:
- *             contents = read_file_contents(fullpath)
- *             if contents:             # <<<<<<<<<<<<<<
- *                 chunk.add_file(
- *                     rel_path=entry.d_name.decode(),
- */
-      __pyx_t_3 = (__pyx_v_contents != 0);
-      if (__pyx_t_3) {
-
-        /* "src/core.pyx":398
- *             contents = read_file_contents(fullpath)
- *             if contents:
- *                 chunk.add_file(             # <<<<<<<<<<<<<<
- *                     rel_path=entry.d_name.decode(),
- *                     content=contents.decode(),
- */
-        __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_chunk), __pyx_n_s_add_file); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 398, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_1);
-
-        /* "src/core.pyx":399
- *             if contents:
- *                 chunk.add_file(
- *                     rel_path=entry.d_name.decode(),             # <<<<<<<<<<<<<<
- *                     content=contents.decode(),
- *                     priority=0
- */
-        __pyx_t_4 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 399, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_4);
-        __pyx_t_2 = __pyx_v_entry->d_name;
-        __pyx_t_5 = __Pyx_ssize_strlen(__pyx_t_2); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 399, __pyx_L1_error)
-        __pyx_t_6 = __Pyx_decode_c_string(__pyx_t_2, 0, __pyx_t_5, NULL, NULL, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 399, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_6);
-        if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_rel_path, __pyx_t_6) < 0) __PYX_ERR(0, 399, __pyx_L1_error)
-        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-
-        /* "src/core.pyx":400
- *                 chunk.add_file(
- *                     rel_path=entry.d_name.decode(),
- *                     content=contents.decode(),             # <<<<<<<<<<<<<<
- *                     priority=0
- *                 )
- */
-        __pyx_t_5 = __Pyx_ssize_strlen(__pyx_v_contents); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 400, __pyx_L1_error)
-        __pyx_t_6 = __Pyx_decode_c_string(__pyx_v_contents, 0, __pyx_t_5, NULL, NULL, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 400, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_6);
-        if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_content, __pyx_t_6) < 0) __PYX_ERR(0, 399, __pyx_L1_error)
-        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-        if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_priority, __pyx_int_0) < 0) __PYX_ERR(0, 399, __pyx_L1_error)
-
-        /* "src/core.pyx":398
- *             contents = read_file_contents(fullpath)
- *             if contents:
- *                 chunk.add_file(             # <<<<<<<<<<<<<<
- *                     rel_path=entry.d_name.decode(),
- *                     content=contents.decode(),
- */
-        __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 398, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_6);
-        __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-        __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-
-        /* "src/core.pyx":403
- *                     priority=0
- *                 )
- *                 free(contents)             # <<<<<<<<<<<<<<
- * 
- *     closedir(dirp)
- */
-        free(__pyx_v_contents);
-
-        /* "src/core.pyx":397
- *         else:
- *             contents = read_file_contents(fullpath)
- *             if contents:             # <<<<<<<<<<<<<<
- *                 chunk.add_file(
- *                     rel_path=entry.d_name.decode(),
- */
-      }
-    }
-    __pyx_L8:;
-    __pyx_L4_continue:;
-  }
-  __pyx_L5_break:;
-
-  /* "src/core.pyx":405
- *                 free(contents)
- * 
- *     closedir(dirp)             # <<<<<<<<<<<<<<
- *     free(cpath)
- *     return chunk
- */
-  (void)(closedir(__pyx_v_dirp));
-
-  /* "src/core.pyx":406
- * 
- *     closedir(dirp)
- *     free(cpath)             # <<<<<<<<<<<<<<
- *     return chunk
- * 
- */
-  free(__pyx_v_cpath);
-
-  /* "src/core.pyx":407
- *     closedir(dirp)
- *     free(cpath)
- *     return chunk             # <<<<<<<<<<<<<<
- * 
- * cdef extern from "thread_pool.h":
+ *     def __cinit__(self, object py_config, int num_threads=16):
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_INCREF((PyObject *)__pyx_v_chunk);
-  __pyx_r = ((PyObject *)__pyx_v_chunk);
+  __Pyx_INCREF((PyObject *)__pyx_v_self);
+  __pyx_r = ((PyObject *)__pyx_v_self);
   goto __pyx_L0;
 
-  /* "src/core.pyx":361
- *     return bool(result)
+  /* "src/core.pyx":399
+ *     cdef CConfig c_config
  * 
- * def process_directory(str start_path, object py_config):             # <<<<<<<<<<<<<<
- *     """
- *     Example directory walker that uses readdir to find files,
+ *     def __enter__(self):             # <<<<<<<<<<<<<<
+ *         return self
+ * 
  */
 
   /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_AddTraceback("src.core.process_directory", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = NULL;
   __pyx_L0:;
-  __Pyx_XDECREF((PyObject *)__pyx_v_chunk);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "src/core.pyx":444
- *     cdef CConfig c_config
+/* "src/core.pyx":402
+ *         return self
  * 
  *     def __cinit__(self, object py_config, int num_threads=16):             # <<<<<<<<<<<<<<
  *         self.c_config = convert_to_cconfig(py_config)
@@ -7259,8 +6942,8 @@ static PyObject *__pyx_pf_3src_4core_2process_directory(CYTHON_UNUSED PyObject *
  */
 
 /* Python wrapper */
-static int __pyx_pw_3src_4core_15ParallelChunker_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static int __pyx_pw_3src_4core_15ParallelChunker_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static int __pyx_pw_3src_4core_15ParallelChunker_3__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static int __pyx_pw_3src_4core_15ParallelChunker_3__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_py_config = 0;
   int __pyx_v_num_threads;
   CYTHON_UNUSED Py_ssize_t __pyx_nargs;
@@ -7297,19 +6980,19 @@ static int __pyx_pw_3src_4core_15ParallelChunker_1__cinit__(PyObject *__pyx_v_se
           (void)__Pyx_Arg_NewRef_VARARGS(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 444, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 402, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_VARARGS(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_num_threads);
           if (value) { values[1] = __Pyx_Arg_NewRef_VARARGS(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 444, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 402, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "__cinit__") < 0)) __PYX_ERR(0, 444, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "__cinit__") < 0)) __PYX_ERR(0, 402, __pyx_L3_error)
       }
     } else {
       switch (__pyx_nargs) {
@@ -7322,14 +7005,14 @@ static int __pyx_pw_3src_4core_15ParallelChunker_1__cinit__(PyObject *__pyx_v_se
     }
     __pyx_v_py_config = values[0];
     if (values[1]) {
-      __pyx_v_num_threads = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_num_threads == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 444, __pyx_L3_error)
+      __pyx_v_num_threads = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_num_threads == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 402, __pyx_L3_error)
     } else {
       __pyx_v_num_threads = ((int)16);
     }
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 1, 2, __pyx_nargs); __PYX_ERR(0, 444, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 1, 2, __pyx_nargs); __PYX_ERR(0, 402, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -7343,7 +7026,7 @@ static int __pyx_pw_3src_4core_15ParallelChunker_1__cinit__(PyObject *__pyx_v_se
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_3src_4core_15ParallelChunker___cinit__(((struct __pyx_obj_3src_4core_ParallelChunker *)__pyx_v_self), __pyx_v_py_config, __pyx_v_num_threads);
+  __pyx_r = __pyx_pf_3src_4core_15ParallelChunker_2__cinit__(((struct __pyx_obj_3src_4core_ParallelChunker *)__pyx_v_self), __pyx_v_py_config, __pyx_v_num_threads);
 
   /* function exit code */
   {
@@ -7356,34 +7039,34 @@ static int __pyx_pw_3src_4core_15ParallelChunker_1__cinit__(PyObject *__pyx_v_se
   return __pyx_r;
 }
 
-static int __pyx_pf_3src_4core_15ParallelChunker___cinit__(struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self, PyObject *__pyx_v_py_config, int __pyx_v_num_threads) {
+static int __pyx_pf_3src_4core_15ParallelChunker_2__cinit__(struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self, PyObject *__pyx_v_py_config, int __pyx_v_num_threads) {
   int __pyx_r;
   struct CConfig __pyx_t_1;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "src/core.pyx":445
+  /* "src/core.pyx":403
  * 
  *     def __cinit__(self, object py_config, int num_threads=16):
  *         self.c_config = convert_to_cconfig(py_config)             # <<<<<<<<<<<<<<
  *         self.pool = create_thread_pool(num_threads, ".", &self.c_config)
  * 
  */
-  __pyx_t_1 = __pyx_f_3src_4core_convert_to_cconfig(__pyx_v_py_config); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 445, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_3src_4core_convert_to_cconfig(__pyx_v_py_config); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 403, __pyx_L1_error)
   __pyx_v_self->c_config = __pyx_t_1;
 
-  /* "src/core.pyx":446
+  /* "src/core.pyx":404
  *     def __cinit__(self, object py_config, int num_threads=16):
  *         self.c_config = convert_to_cconfig(py_config)
  *         self.pool = create_thread_pool(num_threads, ".", &self.c_config)             # <<<<<<<<<<<<<<
  * 
- *     def __dealloc__(self):
+ *     def __exit__(self, exc_type, exc_val, exc_tb):
  */
   __pyx_v_self->pool = create_thread_pool(__pyx_v_num_threads, ((char const *)"."), (&__pyx_v_self->c_config));
 
-  /* "src/core.pyx":444
- *     cdef CConfig c_config
+  /* "src/core.pyx":402
+ *         return self
  * 
  *     def __cinit__(self, object py_config, int num_threads=16):             # <<<<<<<<<<<<<<
  *         self.c_config = convert_to_cconfig(py_config)
@@ -7400,87 +7083,228 @@ static int __pyx_pf_3src_4core_15ParallelChunker___cinit__(struct __pyx_obj_3src
   return __pyx_r;
 }
 
-/* "src/core.pyx":448
+/* "src/core.pyx":406
  *         self.pool = create_thread_pool(num_threads, ".", &self.c_config)
  * 
- *     def __dealloc__(self):             # <<<<<<<<<<<<<<
+ *     def __exit__(self, exc_type, exc_val, exc_tb):             # <<<<<<<<<<<<<<
  *         if self.pool:
  *             destroy_thread_pool(self.pool)
  */
 
 /* Python wrapper */
-static void __pyx_pw_3src_4core_15ParallelChunker_3__dealloc__(PyObject *__pyx_v_self); /*proto*/
-static void __pyx_pw_3src_4core_15ParallelChunker_3__dealloc__(PyObject *__pyx_v_self) {
-  CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
-  __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("__dealloc__ (wrapper)", 0);
-  __pyx_kwvalues = __Pyx_KwValues_VARARGS(__pyx_args, __pyx_nargs);
-  __pyx_pf_3src_4core_15ParallelChunker_2__dealloc__(((struct __pyx_obj_3src_4core_ParallelChunker *)__pyx_v_self));
-
-  /* function exit code */
-  __Pyx_RefNannyFinishContext();
-}
-
-static void __pyx_pf_3src_4core_15ParallelChunker_2__dealloc__(struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self) {
-  int __pyx_t_1;
-
-  /* "src/core.pyx":449
- * 
- *     def __dealloc__(self):
- *         if self.pool:             # <<<<<<<<<<<<<<
- *             destroy_thread_pool(self.pool)
- * 
- */
-  __pyx_t_1 = (__pyx_v_self->pool != 0);
-  if (__pyx_t_1) {
-
-    /* "src/core.pyx":450
- *     def __dealloc__(self):
- *         if self.pool:
- *             destroy_thread_pool(self.pool)             # <<<<<<<<<<<<<<
- * 
- *     def process_directory(self, str path):
- */
-    destroy_thread_pool(__pyx_v_self->pool);
-
-    /* "src/core.pyx":449
- * 
- *     def __dealloc__(self):
- *         if self.pool:             # <<<<<<<<<<<<<<
- *             destroy_thread_pool(self.pool)
- * 
- */
-  }
-
-  /* "src/core.pyx":448
- *         self.pool = create_thread_pool(num_threads, ".", &self.c_config)
- * 
- *     def __dealloc__(self):             # <<<<<<<<<<<<<<
- *         if self.pool:
- *             destroy_thread_pool(self.pool)
- */
-
-  /* function exit code */
-}
-
-/* "src/core.pyx":452
- *             destroy_thread_pool(self.pool)
- * 
- *     def process_directory(self, str path):             # <<<<<<<<<<<<<<
- *         cdef char* c_path = make_c_string(path)
- *         thread_pool_process_directory(self.pool)
- */
-
-/* Python wrapper */
-static PyObject *__pyx_pw_3src_4core_15ParallelChunker_5process_directory(PyObject *__pyx_v_self, 
+static PyObject *__pyx_pw_3src_4core_15ParallelChunker_5__exit__(PyObject *__pyx_v_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-static PyMethodDef __pyx_mdef_3src_4core_15ParallelChunker_5process_directory = {"process_directory", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_15ParallelChunker_5process_directory, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_3src_4core_15ParallelChunker_5process_directory(PyObject *__pyx_v_self, 
+static PyMethodDef __pyx_mdef_3src_4core_15ParallelChunker_5__exit__ = {"__exit__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_15ParallelChunker_5__exit__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_3src_4core_15ParallelChunker_5__exit__(PyObject *__pyx_v_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+) {
+  CYTHON_UNUSED PyObject *__pyx_v_exc_type = 0;
+  CYTHON_UNUSED PyObject *__pyx_v_exc_val = 0;
+  CYTHON_UNUSED PyObject *__pyx_v_exc_tb = 0;
+  #if !CYTHON_METH_FASTCALL
+  CYTHON_UNUSED Py_ssize_t __pyx_nargs;
+  #endif
+  CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
+  PyObject* values[3] = {0,0,0};
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__exit__ (wrapper)", 0);
+  #if !CYTHON_METH_FASTCALL
+  #if CYTHON_ASSUME_SAFE_MACROS
+  __pyx_nargs = PyTuple_GET_SIZE(__pyx_args);
+  #else
+  __pyx_nargs = PyTuple_Size(__pyx_args); if (unlikely(__pyx_nargs < 0)) return NULL;
+  #endif
+  #endif
+  __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
+  {
+    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_exc_type,&__pyx_n_s_exc_val,&__pyx_n_s_exc_tb,0};
+    if (__pyx_kwds) {
+      Py_ssize_t kw_args;
+      switch (__pyx_nargs) {
+        case  3: values[2] = __Pyx_Arg_FASTCALL(__pyx_args, 2);
+        CYTHON_FALLTHROUGH;
+        case  2: values[1] = __Pyx_Arg_FASTCALL(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = __Pyx_Arg_FASTCALL(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = __Pyx_NumKwargs_FASTCALL(__pyx_kwds);
+      switch (__pyx_nargs) {
+        case  0:
+        if (likely((values[0] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_exc_type)) != 0)) {
+          (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
+          kw_args--;
+        }
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 406, __pyx_L3_error)
+        else goto __pyx_L5_argtuple_error;
+        CYTHON_FALLTHROUGH;
+        case  1:
+        if (likely((values[1] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_exc_val)) != 0)) {
+          (void)__Pyx_Arg_NewRef_FASTCALL(values[1]);
+          kw_args--;
+        }
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 406, __pyx_L3_error)
+        else {
+          __Pyx_RaiseArgtupleInvalid("__exit__", 1, 3, 3, 1); __PYX_ERR(0, 406, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  2:
+        if (likely((values[2] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_exc_tb)) != 0)) {
+          (void)__Pyx_Arg_NewRef_FASTCALL(values[2]);
+          kw_args--;
+        }
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 406, __pyx_L3_error)
+        else {
+          __Pyx_RaiseArgtupleInvalid("__exit__", 1, 3, 3, 2); __PYX_ERR(0, 406, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        const Py_ssize_t kwd_pos_args = __pyx_nargs;
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "__exit__") < 0)) __PYX_ERR(0, 406, __pyx_L3_error)
+      }
+    } else if (unlikely(__pyx_nargs != 3)) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = __Pyx_Arg_FASTCALL(__pyx_args, 0);
+      values[1] = __Pyx_Arg_FASTCALL(__pyx_args, 1);
+      values[2] = __Pyx_Arg_FASTCALL(__pyx_args, 2);
+    }
+    __pyx_v_exc_type = values[0];
+    __pyx_v_exc_val = values[1];
+    __pyx_v_exc_tb = values[2];
+  }
+  goto __pyx_L6_skip;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("__exit__", 1, 3, 3, __pyx_nargs); __PYX_ERR(0, 406, __pyx_L3_error)
+  __pyx_L6_skip:;
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L3_error:;
+  {
+    Py_ssize_t __pyx_temp;
+    for (__pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+      __Pyx_Arg_XDECREF_FASTCALL(values[__pyx_temp]);
+    }
+  }
+  __Pyx_AddTraceback("src.core.ParallelChunker.__exit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_3src_4core_15ParallelChunker_4__exit__(((struct __pyx_obj_3src_4core_ParallelChunker *)__pyx_v_self), __pyx_v_exc_type, __pyx_v_exc_val, __pyx_v_exc_tb);
+
+  /* function exit code */
+  {
+    Py_ssize_t __pyx_temp;
+    for (__pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+      __Pyx_Arg_XDECREF_FASTCALL(values[__pyx_temp]);
+    }
+  }
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_3src_4core_15ParallelChunker_4__exit__(struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v_exc_type, CYTHON_UNUSED PyObject *__pyx_v_exc_val, CYTHON_UNUSED PyObject *__pyx_v_exc_tb) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  int __pyx_t_1;
+  __Pyx_RefNannySetupContext("__exit__", 1);
+
+  /* "src/core.pyx":407
+ * 
+ *     def __exit__(self, exc_type, exc_val, exc_tb):
+ *         if self.pool:             # <<<<<<<<<<<<<<
+ *             destroy_thread_pool(self.pool)
+ *             self.pool = NULL
+ */
+  __pyx_t_1 = (__pyx_v_self->pool != 0);
+  if (__pyx_t_1) {
+
+    /* "src/core.pyx":408
+ *     def __exit__(self, exc_type, exc_val, exc_tb):
+ *         if self.pool:
+ *             destroy_thread_pool(self.pool)             # <<<<<<<<<<<<<<
+ *             self.pool = NULL
+ *         return False
+ */
+    destroy_thread_pool(__pyx_v_self->pool);
+
+    /* "src/core.pyx":409
+ *         if self.pool:
+ *             destroy_thread_pool(self.pool)
+ *             self.pool = NULL             # <<<<<<<<<<<<<<
+ *         return False
+ * 
+ */
+    __pyx_v_self->pool = NULL;
+
+    /* "src/core.pyx":407
+ * 
+ *     def __exit__(self, exc_type, exc_val, exc_tb):
+ *         if self.pool:             # <<<<<<<<<<<<<<
+ *             destroy_thread_pool(self.pool)
+ *             self.pool = NULL
+ */
+  }
+
+  /* "src/core.pyx":410
+ *             destroy_thread_pool(self.pool)
+ *             self.pool = NULL
+ *         return False             # <<<<<<<<<<<<<<
+ * 
+ *     def process_directory(self, str path):
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(Py_False);
+  __pyx_r = Py_False;
+  goto __pyx_L0;
+
+  /* "src/core.pyx":406
+ *         self.pool = create_thread_pool(num_threads, ".", &self.c_config)
+ * 
+ *     def __exit__(self, exc_type, exc_val, exc_tb):             # <<<<<<<<<<<<<<
+ *         if self.pool:
+ *             destroy_thread_pool(self.pool)
+ */
+
+  /* function exit code */
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "src/core.pyx":412
+ *         return False
+ * 
+ *     def process_directory(self, str path):             # <<<<<<<<<<<<<<
+ *         if not os.path.exists(path):
+ *             raise ValueError(f"Directory does not exist: {path}")
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_3src_4core_15ParallelChunker_7process_directory(PyObject *__pyx_v_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+); /*proto*/
+static PyMethodDef __pyx_mdef_3src_4core_15ParallelChunker_7process_directory = {"process_directory", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_15ParallelChunker_7process_directory, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_3src_4core_15ParallelChunker_7process_directory(PyObject *__pyx_v_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -7524,12 +7348,12 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 452, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 412, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "process_directory") < 0)) __PYX_ERR(0, 452, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "process_directory") < 0)) __PYX_ERR(0, 412, __pyx_L3_error)
       }
     } else if (unlikely(__pyx_nargs != 1)) {
       goto __pyx_L5_argtuple_error;
@@ -7540,7 +7364,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("process_directory", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 452, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("process_directory", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 412, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -7554,8 +7378,8 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_path), (&PyUnicode_Type), 1, "path", 1))) __PYX_ERR(0, 452, __pyx_L1_error)
-  __pyx_r = __pyx_pf_3src_4core_15ParallelChunker_4process_directory(((struct __pyx_obj_3src_4core_ParallelChunker *)__pyx_v_self), __pyx_v_path);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_path), (&PyUnicode_Type), 1, "path", 1))) __PYX_ERR(0, 412, __pyx_L1_error)
+  __pyx_r = __pyx_pf_3src_4core_15ParallelChunker_6process_directory(((struct __pyx_obj_3src_4core_ParallelChunker *)__pyx_v_self), __pyx_v_path);
 
   /* function exit code */
   goto __pyx_L0;
@@ -7572,56 +7396,311 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_3src_4core_15ParallelChunker_4process_directory(struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self, PyObject *__pyx_v_path) {
+static PyObject *__pyx_pf_3src_4core_15ParallelChunker_6process_directory(struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self, PyObject *__pyx_v_path) {
+  PyObject *__pyx_v_abs_path = NULL;
   char *__pyx_v_c_path;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
-  char *__pyx_t_1;
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  unsigned int __pyx_t_4;
+  int __pyx_t_5;
+  int __pyx_t_6;
+  char *__pyx_t_7;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("process_directory", 1);
 
-  /* "src/core.pyx":453
+  /* "src/core.pyx":413
  * 
  *     def process_directory(self, str path):
- *         cdef char* c_path = make_c_string(path)             # <<<<<<<<<<<<<<
- *         thread_pool_process_directory(self.pool)
- *         free(c_path)
+ *         if not os.path.exists(path):             # <<<<<<<<<<<<<<
+ *             raise ValueError(f"Directory does not exist: {path}")
+ *         if not os.path.isdir(path):
  */
-  __pyx_t_1 = __pyx_f_3src_4core_make_c_string(__pyx_v_path); if (unlikely(__pyx_t_1 == ((char *)NULL))) __PYX_ERR(0, 453, __pyx_L1_error)
-  __pyx_v_c_path = __pyx_t_1;
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_os); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 413, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_path); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 413, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_exists); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 413, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = NULL;
+  __pyx_t_4 = 0;
+  #if CYTHON_UNPACK_METHODS
+  if (likely(PyMethod_Check(__pyx_t_2))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_2, function);
+      __pyx_t_4 = 1;
+    }
+  }
+  #endif
+  {
+    PyObject *__pyx_callargs[2] = {__pyx_t_3, __pyx_v_path};
+    __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_2, __pyx_callargs+1-__pyx_t_4, 1+__pyx_t_4);
+    __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 413, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  }
+  __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely((__pyx_t_5 < 0))) __PYX_ERR(0, 413, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_6 = (!__pyx_t_5);
+  if (unlikely(__pyx_t_6)) {
 
-  /* "src/core.pyx":454
+    /* "src/core.pyx":414
  *     def process_directory(self, str path):
- *         cdef char* c_path = make_c_string(path)
+ *         if not os.path.exists(path):
+ *             raise ValueError(f"Directory does not exist: {path}")             # <<<<<<<<<<<<<<
+ *         if not os.path.isdir(path):
+ *             raise ValueError(f"Path is not a directory: {path}")
+ */
+    __pyx_t_1 = __Pyx_PyUnicode_Unicode(__pyx_v_path); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 414, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_2 = __Pyx_PyUnicode_Concat(__pyx_kp_u_Directory_does_not_exist, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 414, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_builtin_ValueError, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 414, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __Pyx_Raise(__pyx_t_1, 0, 0, 0);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __PYX_ERR(0, 414, __pyx_L1_error)
+
+    /* "src/core.pyx":413
+ * 
+ *     def process_directory(self, str path):
+ *         if not os.path.exists(path):             # <<<<<<<<<<<<<<
+ *             raise ValueError(f"Directory does not exist: {path}")
+ *         if not os.path.isdir(path):
+ */
+  }
+
+  /* "src/core.pyx":415
+ *         if not os.path.exists(path):
+ *             raise ValueError(f"Directory does not exist: {path}")
+ *         if not os.path.isdir(path):             # <<<<<<<<<<<<<<
+ *             raise ValueError(f"Path is not a directory: {path}")
+ * 
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_os); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 415, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_path); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 415, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_isdir); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 415, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = NULL;
+  __pyx_t_4 = 0;
+  #if CYTHON_UNPACK_METHODS
+  if (likely(PyMethod_Check(__pyx_t_2))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_2, function);
+      __pyx_t_4 = 1;
+    }
+  }
+  #endif
+  {
+    PyObject *__pyx_callargs[2] = {__pyx_t_3, __pyx_v_path};
+    __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_2, __pyx_callargs+1-__pyx_t_4, 1+__pyx_t_4);
+    __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 415, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  }
+  __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely((__pyx_t_6 < 0))) __PYX_ERR(0, 415, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_5 = (!__pyx_t_6);
+  if (unlikely(__pyx_t_5)) {
+
+    /* "src/core.pyx":416
+ *             raise ValueError(f"Directory does not exist: {path}")
+ *         if not os.path.isdir(path):
+ *             raise ValueError(f"Path is not a directory: {path}")             # <<<<<<<<<<<<<<
+ * 
+ *         abs_path = os.path.abspath(path)
+ */
+    __pyx_t_1 = __Pyx_PyUnicode_Unicode(__pyx_v_path); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 416, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_2 = __Pyx_PyUnicode_Concat(__pyx_kp_u_Path_is_not_a_directory, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 416, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_builtin_ValueError, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 416, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __Pyx_Raise(__pyx_t_1, 0, 0, 0);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __PYX_ERR(0, 416, __pyx_L1_error)
+
+    /* "src/core.pyx":415
+ *         if not os.path.exists(path):
+ *             raise ValueError(f"Directory does not exist: {path}")
+ *         if not os.path.isdir(path):             # <<<<<<<<<<<<<<
+ *             raise ValueError(f"Path is not a directory: {path}")
+ * 
+ */
+  }
+
+  /* "src/core.pyx":418
+ *             raise ValueError(f"Path is not a directory: {path}")
+ * 
+ *         abs_path = os.path.abspath(path)             # <<<<<<<<<<<<<<
+ *         if self.pool:
+ *             destroy_thread_pool(self.pool)
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_os); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 418, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_path); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 418, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_abspath); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 418, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = NULL;
+  __pyx_t_4 = 0;
+  #if CYTHON_UNPACK_METHODS
+  if (likely(PyMethod_Check(__pyx_t_2))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_2, function);
+      __pyx_t_4 = 1;
+    }
+  }
+  #endif
+  {
+    PyObject *__pyx_callargs[2] = {__pyx_t_3, __pyx_v_path};
+    __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_2, __pyx_callargs+1-__pyx_t_4, 1+__pyx_t_4);
+    __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 418, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  }
+  __pyx_v_abs_path = __pyx_t_1;
+  __pyx_t_1 = 0;
+
+  /* "src/core.pyx":419
+ * 
+ *         abs_path = os.path.abspath(path)
+ *         if self.pool:             # <<<<<<<<<<<<<<
+ *             destroy_thread_pool(self.pool)
+ *             self.pool = NULL
+ */
+  __pyx_t_5 = (__pyx_v_self->pool != 0);
+  if (__pyx_t_5) {
+
+    /* "src/core.pyx":420
+ *         abs_path = os.path.abspath(path)
+ *         if self.pool:
+ *             destroy_thread_pool(self.pool)             # <<<<<<<<<<<<<<
+ *             self.pool = NULL
+ * 
+ */
+    destroy_thread_pool(__pyx_v_self->pool);
+
+    /* "src/core.pyx":421
+ *         if self.pool:
+ *             destroy_thread_pool(self.pool)
+ *             self.pool = NULL             # <<<<<<<<<<<<<<
+ * 
+ *         cdef char* c_path = make_c_string(abs_path)
+ */
+    __pyx_v_self->pool = NULL;
+
+    /* "src/core.pyx":419
+ * 
+ *         abs_path = os.path.abspath(path)
+ *         if self.pool:             # <<<<<<<<<<<<<<
+ *             destroy_thread_pool(self.pool)
+ *             self.pool = NULL
+ */
+  }
+
+  /* "src/core.pyx":423
+ *             self.pool = NULL
+ * 
+ *         cdef char* c_path = make_c_string(abs_path)             # <<<<<<<<<<<<<<
+ *         self.pool = create_thread_pool(16, c_path, &self.c_config)
+ *         thread_pool_process_directory(self.pool)
+ */
+  __pyx_t_7 = __pyx_f_3src_4core_make_c_string(__pyx_v_abs_path); if (unlikely(__pyx_t_7 == ((char *)NULL))) __PYX_ERR(0, 423, __pyx_L1_error)
+  __pyx_v_c_path = __pyx_t_7;
+
+  /* "src/core.pyx":424
+ * 
+ *         cdef char* c_path = make_c_string(abs_path)
+ *         self.pool = create_thread_pool(16, c_path, &self.c_config)             # <<<<<<<<<<<<<<
+ *         thread_pool_process_directory(self.pool)
+ * 
+ */
+  __pyx_v_self->pool = create_thread_pool(16, __pyx_v_c_path, (&__pyx_v_self->c_config));
+
+  /* "src/core.pyx":425
+ *         cdef char* c_path = make_c_string(abs_path)
+ *         self.pool = create_thread_pool(16, c_path, &self.c_config)
  *         thread_pool_process_directory(self.pool)             # <<<<<<<<<<<<<<
- *         free(c_path)
+ * 
+ *         # +++ WAIT for queue empty & tasks done +++
  */
   thread_pool_process_directory(__pyx_v_self->pool);
 
-  /* "src/core.pyx":455
- *         cdef char* c_path = make_c_string(path)
- *         thread_pool_process_directory(self.pool)
+  /* "src/core.pyx":428
+ * 
+ *         # +++ WAIT for queue empty & tasks done +++
+ *         thread_pool_wait_until_done(self.pool)             # <<<<<<<<<<<<<<
+ * 
+ *         # Now chunk them
+ */
+  thread_pool_wait_until_done(__pyx_v_self->pool);
+
+  /* "src/core.pyx":431
+ * 
+ *         # Now chunk them
+ *         process_chunks(self.pool)             # <<<<<<<<<<<<<<
+ *         free(c_path)
+ */
+  process_chunks(__pyx_v_self->pool);
+
+  /* "src/core.pyx":432
+ *         # Now chunk them
+ *         process_chunks(self.pool)
  *         free(c_path)             # <<<<<<<<<<<<<<
  */
   free(__pyx_v_c_path);
 
-  /* "src/core.pyx":452
- *             destroy_thread_pool(self.pool)
+  /* "src/core.pyx":412
+ *         return False
  * 
  *     def process_directory(self, str path):             # <<<<<<<<<<<<<<
- *         cdef char* c_path = make_c_string(path)
- *         thread_pool_process_directory(self.pool)
+ *         if not os.path.exists(path):
+ *             raise ValueError(f"Directory does not exist: {path}")
  */
 
   /* function exit code */
   __pyx_r = Py_None; __Pyx_INCREF(Py_None);
   goto __pyx_L0;
   __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
   __Pyx_AddTraceback("src.core.ParallelChunker.process_directory", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_abs_path);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
@@ -7634,15 +7713,15 @@ static PyObject *__pyx_pf_3src_4core_15ParallelChunker_4process_directory(struct
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_3src_4core_15ParallelChunker_7__reduce_cython__(PyObject *__pyx_v_self, 
+static PyObject *__pyx_pw_3src_4core_15ParallelChunker_9__reduce_cython__(PyObject *__pyx_v_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-static PyMethodDef __pyx_mdef_3src_4core_15ParallelChunker_7__reduce_cython__ = {"__reduce_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_15ParallelChunker_7__reduce_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_3src_4core_15ParallelChunker_7__reduce_cython__(PyObject *__pyx_v_self, 
+static PyMethodDef __pyx_mdef_3src_4core_15ParallelChunker_9__reduce_cython__ = {"__reduce_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_15ParallelChunker_9__reduce_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_3src_4core_15ParallelChunker_9__reduce_cython__(PyObject *__pyx_v_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -7667,14 +7746,14 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   if (unlikely(__pyx_nargs > 0)) {
     __Pyx_RaiseArgtupleInvalid("__reduce_cython__", 1, 0, 0, __pyx_nargs); return NULL;}
   if (unlikely(__pyx_kwds) && __Pyx_NumKwargs_FASTCALL(__pyx_kwds) && unlikely(!__Pyx_CheckKeywordStrings(__pyx_kwds, "__reduce_cython__", 0))) return NULL;
-  __pyx_r = __pyx_pf_3src_4core_15ParallelChunker_6__reduce_cython__(((struct __pyx_obj_3src_4core_ParallelChunker *)__pyx_v_self));
+  __pyx_r = __pyx_pf_3src_4core_15ParallelChunker_8__reduce_cython__(((struct __pyx_obj_3src_4core_ParallelChunker *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_3src_4core_15ParallelChunker_6__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self) {
+static PyObject *__pyx_pf_3src_4core_15ParallelChunker_8__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_lineno = 0;
@@ -7714,15 +7793,15 @@ static PyObject *__pyx_pf_3src_4core_15ParallelChunker_6__reduce_cython__(CYTHON
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_3src_4core_15ParallelChunker_9__setstate_cython__(PyObject *__pyx_v_self, 
+static PyObject *__pyx_pw_3src_4core_15ParallelChunker_11__setstate_cython__(PyObject *__pyx_v_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-static PyMethodDef __pyx_mdef_3src_4core_15ParallelChunker_9__setstate_cython__ = {"__setstate_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_15ParallelChunker_9__setstate_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_3src_4core_15ParallelChunker_9__setstate_cython__(PyObject *__pyx_v_self, 
+static PyMethodDef __pyx_mdef_3src_4core_15ParallelChunker_11__setstate_cython__ = {"__setstate_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_15ParallelChunker_11__setstate_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_3src_4core_15ParallelChunker_11__setstate_cython__(PyObject *__pyx_v_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -7796,7 +7875,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_3src_4core_15ParallelChunker_8__setstate_cython__(((struct __pyx_obj_3src_4core_ParallelChunker *)__pyx_v_self), __pyx_v___pyx_state);
+  __pyx_r = __pyx_pf_3src_4core_15ParallelChunker_10__setstate_cython__(((struct __pyx_obj_3src_4core_ParallelChunker *)__pyx_v_self), __pyx_v___pyx_state);
 
   /* function exit code */
   {
@@ -7809,7 +7888,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_3src_4core_15ParallelChunker_8__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pf_3src_4core_15ParallelChunker_10__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_3src_4core_ParallelChunker *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_lineno = 0;
@@ -8029,7 +8108,7 @@ static PyObject *__pyx_tp_new_3src_4core_ParallelChunker(PyTypeObject *t, PyObje
   }
   if (unlikely(!o)) return 0;
   #endif
-  if (unlikely(__pyx_pw_3src_4core_15ParallelChunker_1__cinit__(o, a, k) < 0)) goto bad;
+  if (unlikely(__pyx_pw_3src_4core_15ParallelChunker_3__cinit__(o, a, k) < 0)) goto bad;
   return o;
   bad:
   Py_DECREF(o); o = 0;
@@ -8044,14 +8123,6 @@ static void __pyx_tp_dealloc_3src_4core_ParallelChunker(PyObject *o) {
     }
   }
   #endif
-  {
-    PyObject *etype, *eval, *etb;
-    PyErr_Fetch(&etype, &eval, &etb);
-    __Pyx_SET_REFCNT(o, Py_REFCNT(o) + 1);
-    __pyx_pw_3src_4core_15ParallelChunker_3__dealloc__(o);
-    __Pyx_SET_REFCNT(o, Py_REFCNT(o) - 1);
-    PyErr_Restore(etype, eval, etb);
-  }
   #if CYTHON_USE_TYPE_SLOTS || CYTHON_COMPILING_IN_PYPY
   (*Py_TYPE(o)->tp_free)(o);
   #else
@@ -8063,9 +8134,11 @@ static void __pyx_tp_dealloc_3src_4core_ParallelChunker(PyObject *o) {
 }
 
 static PyMethodDef __pyx_methods_3src_4core_ParallelChunker[] = {
-  {"process_directory", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_15ParallelChunker_5process_directory, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0},
-  {"__reduce_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_15ParallelChunker_7__reduce_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0},
-  {"__setstate_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_15ParallelChunker_9__setstate_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0},
+  {"__enter__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_15ParallelChunker_1__enter__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0},
+  {"__exit__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_15ParallelChunker_5__exit__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0},
+  {"process_directory", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_15ParallelChunker_7process_directory, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0},
+  {"__reduce_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_15ParallelChunker_9__reduce_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0},
+  {"__setstate_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_4core_15ParallelChunker_11__setstate_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0},
   {0, 0, 0, 0}
 };
 #if CYTHON_USE_TYPE_SPECS
@@ -8191,6 +8264,7 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_Chunker_add_file, __pyx_k_Chunker_add_file, sizeof(__pyx_k_Chunker_add_file), 0, 0, 1, 1},
     {&__pyx_kp_u_Chunker_requires_a_KomodoConfig, __pyx_k_Chunker_requires_a_KomodoConfig, sizeof(__pyx_k_Chunker_requires_a_KomodoConfig), 0, 1, 0, 0},
     {&__pyx_n_s_Chunker_write_chunks, __pyx_k_Chunker_write_chunks, sizeof(__pyx_k_Chunker_write_chunks), 0, 0, 1, 1},
+    {&__pyx_kp_u_Directory_does_not_exist, __pyx_k_Directory_does_not_exist, sizeof(__pyx_k_Directory_does_not_exist), 0, 1, 0, 0},
     {&__pyx_kp_u_Failed_to_allocate_c_exts, __pyx_k_Failed_to_allocate_c_exts, sizeof(__pyx_k_Failed_to_allocate_c_exts), 0, 1, 0, 0},
     {&__pyx_kp_u_Failed_to_allocate_for_string, __pyx_k_Failed_to_allocate_for_string, sizeof(__pyx_k_Failed_to_allocate_for_string), 0, 1, 0, 0},
     {&__pyx_n_s_KeyError, __pyx_k_KeyError, sizeof(__pyx_k_KeyError), 0, 0, 1, 1},
@@ -8199,15 +8273,21 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_kp_s_No_value_specified_for_struct_at, __pyx_k_No_value_specified_for_struct_at, sizeof(__pyx_k_No_value_specified_for_struct_at), 0, 0, 1, 0},
     {&__pyx_kp_s_No_value_specified_for_struct_at_2, __pyx_k_No_value_specified_for_struct_at_2, sizeof(__pyx_k_No_value_specified_for_struct_at_2), 0, 0, 1, 0},
     {&__pyx_kp_s_No_value_specified_for_struct_at_3, __pyx_k_No_value_specified_for_struct_at_3, sizeof(__pyx_k_No_value_specified_for_struct_at_3), 0, 0, 1, 0},
+    {&__pyx_kp_u_None, __pyx_k_None, sizeof(__pyx_k_None), 0, 1, 0, 0},
     {&__pyx_n_s_ParallelChunker, __pyx_k_ParallelChunker, sizeof(__pyx_k_ParallelChunker), 0, 0, 1, 1},
+    {&__pyx_n_s_ParallelChunker___enter, __pyx_k_ParallelChunker___enter, sizeof(__pyx_k_ParallelChunker___enter), 0, 0, 1, 1},
+    {&__pyx_n_s_ParallelChunker___exit, __pyx_k_ParallelChunker___exit, sizeof(__pyx_k_ParallelChunker___exit), 0, 0, 1, 1},
     {&__pyx_n_s_ParallelChunker___reduce_cython, __pyx_k_ParallelChunker___reduce_cython, sizeof(__pyx_k_ParallelChunker___reduce_cython), 0, 0, 1, 1},
     {&__pyx_n_s_ParallelChunker___setstate_cytho, __pyx_k_ParallelChunker___setstate_cytho, sizeof(__pyx_k_ParallelChunker___setstate_cytho), 0, 0, 1, 1},
     {&__pyx_n_s_ParallelChunker_process_director, __pyx_k_ParallelChunker_process_director, sizeof(__pyx_k_ParallelChunker_process_director), 0, 0, 1, 1},
+    {&__pyx_kp_u_Path_is_not_a_directory, __pyx_k_Path_is_not_a_directory, sizeof(__pyx_k_Path_is_not_a_directory), 0, 1, 0, 0},
     {&__pyx_n_s_TypeError, __pyx_k_TypeError, sizeof(__pyx_k_TypeError), 0, 0, 1, 1},
     {&__pyx_n_s_ValueError, __pyx_k_ValueError, sizeof(__pyx_k_ValueError), 0, 0, 1, 1},
-    {&__pyx_n_s__25, __pyx_k__25, sizeof(__pyx_k__25), 0, 0, 1, 1},
+    {&__pyx_n_s__26, __pyx_k__26, sizeof(__pyx_k__26), 0, 0, 1, 1},
     {&__pyx_kp_u__5, __pyx_k__5, sizeof(__pyx_k__5), 0, 1, 0, 0},
     {&__pyx_n_s__8, __pyx_k__8, sizeof(__pyx_k__8), 0, 0, 1, 1},
+    {&__pyx_n_s_abs_path, __pyx_k_abs_path, sizeof(__pyx_k_abs_path), 0, 0, 1, 1},
+    {&__pyx_n_s_abspath, __pyx_k_abspath, sizeof(__pyx_k_abspath), 0, 0, 1, 1},
     {&__pyx_n_s_add_file, __pyx_k_add_file, sizeof(__pyx_k_add_file), 0, 0, 1, 1},
     {&__pyx_n_s_asyncio_coroutines, __pyx_k_asyncio_coroutines, sizeof(__pyx_k_asyncio_coroutines), 0, 0, 1, 1},
     {&__pyx_n_s_b_path, __pyx_k_b_path, sizeof(__pyx_k_b_path), 0, 0, 1, 1},
@@ -8216,22 +8296,22 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_bool, __pyx_k_bool, sizeof(__pyx_k_bool), 0, 0, 1, 1},
     {&__pyx_n_s_c_exts, __pyx_k_c_exts, sizeof(__pyx_k_c_exts), 0, 0, 1, 1},
     {&__pyx_n_s_c_path, __pyx_k_c_path, sizeof(__pyx_k_c_path), 0, 0, 1, 1},
-    {&__pyx_n_s_chunk, __pyx_k_chunk, sizeof(__pyx_k_chunk), 0, 0, 1, 1},
     {&__pyx_n_s_chunk_idx, __pyx_k_chunk_idx, sizeof(__pyx_k_chunk_idx), 0, 0, 1, 1},
     {&__pyx_n_s_class_getitem, __pyx_k_class_getitem, sizeof(__pyx_k_class_getitem), 0, 0, 1, 1},
     {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
     {&__pyx_n_s_content, __pyx_k_content, sizeof(__pyx_k_content), 0, 0, 1, 1},
-    {&__pyx_n_s_contents, __pyx_k_contents, sizeof(__pyx_k_contents), 0, 0, 1, 1},
-    {&__pyx_n_s_cpath, __pyx_k_cpath, sizeof(__pyx_k_cpath), 0, 0, 1, 1},
     {&__pyx_n_s_current_chunk, __pyx_k_current_chunk, sizeof(__pyx_k_current_chunk), 0, 0, 1, 1},
     {&__pyx_n_s_current_size, __pyx_k_current_size, sizeof(__pyx_k_current_size), 0, 0, 1, 1},
-    {&__pyx_n_s_dirp, __pyx_k_dirp, sizeof(__pyx_k_dirp), 0, 0, 1, 1},
     {&__pyx_kp_u_disable, __pyx_k_disable, sizeof(__pyx_k_disable), 0, 1, 0, 0},
     {&__pyx_kp_u_enable, __pyx_k_enable, sizeof(__pyx_k_enable), 0, 1, 0, 0},
-    {&__pyx_n_s_entry, __pyx_k_entry, sizeof(__pyx_k_entry), 0, 0, 1, 1},
+    {&__pyx_n_s_enter, __pyx_k_enter, sizeof(__pyx_k_enter), 0, 0, 1, 1},
     {&__pyx_n_s_entry_size, __pyx_k_entry_size, sizeof(__pyx_k_entry_size), 0, 0, 1, 1},
     {&__pyx_n_s_enumerate, __pyx_k_enumerate, sizeof(__pyx_k_enumerate), 0, 0, 1, 1},
-    {&__pyx_n_s_fullpath, __pyx_k_fullpath, sizeof(__pyx_k_fullpath), 0, 0, 1, 1},
+    {&__pyx_n_s_exc_tb, __pyx_k_exc_tb, sizeof(__pyx_k_exc_tb), 0, 0, 1, 1},
+    {&__pyx_n_s_exc_type, __pyx_k_exc_type, sizeof(__pyx_k_exc_type), 0, 0, 1, 1},
+    {&__pyx_n_s_exc_val, __pyx_k_exc_val, sizeof(__pyx_k_exc_val), 0, 0, 1, 1},
+    {&__pyx_n_s_exists, __pyx_k_exists, sizeof(__pyx_k_exists), 0, 0, 1, 1},
+    {&__pyx_n_s_exit, __pyx_k_exit, sizeof(__pyx_k_exit), 0, 0, 1, 1},
     {&__pyx_kp_u_gc, __pyx_k_gc, sizeof(__pyx_k_gc), 0, 1, 0, 0},
     {&__pyx_n_s_getstate, __pyx_k_getstate, sizeof(__pyx_k_getstate), 0, 0, 1, 1},
     {&__pyx_n_s_i, __pyx_k_i, sizeof(__pyx_k_i), 0, 0, 1, 1},
@@ -8240,6 +8320,7 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_initializing, __pyx_k_initializing, sizeof(__pyx_k_initializing), 0, 0, 1, 1},
     {&__pyx_n_s_int, __pyx_k_int, sizeof(__pyx_k_int), 0, 0, 1, 1},
     {&__pyx_n_s_is_coroutine, __pyx_k_is_coroutine, sizeof(__pyx_k_is_coroutine), 0, 0, 1, 1},
+    {&__pyx_n_s_isdir, __pyx_k_isdir, sizeof(__pyx_k_isdir), 0, 0, 1, 1},
     {&__pyx_kp_u_isenabled, __pyx_k_isenabled, sizeof(__pyx_k_isenabled), 0, 1, 0, 0},
     {&__pyx_n_s_key, __pyx_k_key, sizeof(__pyx_k_key), 0, 0, 1, 1},
     {&__pyx_n_s_list, __pyx_k_list, sizeof(__pyx_k_list), 0, 0, 1, 1},
@@ -8249,6 +8330,7 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_kp_s_no_default___reduce___due_to_non, __pyx_k_no_default___reduce___due_to_non, sizeof(__pyx_k_no_default___reduce___due_to_non), 0, 0, 1, 0},
     {&__pyx_n_s_num_exts, __pyx_k_num_exts, sizeof(__pyx_k_num_exts), 0, 0, 1, 1},
     {&__pyx_n_s_num_threads, __pyx_k_num_threads, sizeof(__pyx_k_num_threads), 0, 0, 1, 1},
+    {&__pyx_n_s_os, __pyx_k_os, sizeof(__pyx_k_os), 0, 0, 1, 1},
     {&__pyx_n_s_output_dir, __pyx_k_output_dir, sizeof(__pyx_k_output_dir), 0, 0, 1, 1},
     {&__pyx_n_s_path, __pyx_k_path, sizeof(__pyx_k_path), 0, 0, 1, 1},
     {&__pyx_n_s_pattern, __pyx_k_pattern, sizeof(__pyx_k_pattern), 0, 0, 1, 1},
@@ -8277,7 +8359,6 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_src_config, __pyx_k_src_config, sizeof(__pyx_k_src_config), 0, 0, 1, 1},
     {&__pyx_n_s_src_core, __pyx_k_src_core, sizeof(__pyx_k_src_core), 0, 0, 1, 1},
     {&__pyx_kp_s_src_core_pyx, __pyx_k_src_core_pyx, sizeof(__pyx_k_src_core_pyx), 0, 0, 1, 0},
-    {&__pyx_n_s_start_path, __pyx_k_start_path, sizeof(__pyx_k_start_path), 0, 0, 1, 1},
     {&__pyx_n_s_str, __pyx_k_str, sizeof(__pyx_k_str), 0, 0, 1, 1},
     {&__pyx_n_s_stream, __pyx_k_stream, sizeof(__pyx_k_stream), 0, 0, 1, 1},
     {&__pyx_kp_s_stringsource, __pyx_k_stringsource, sizeof(__pyx_k_stringsource), 0, 0, 1, 0},
@@ -8293,12 +8374,12 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
 }
 /* #### Code section: cached_builtins ### */
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) __PYX_ERR(0, 87, __pyx_L1_error)
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 114, __pyx_L1_error)
-  __pyx_builtin_enumerate = __Pyx_GetBuiltinName(__pyx_n_s_enumerate); if (!__pyx_builtin_enumerate) __PYX_ERR(0, 126, __pyx_L1_error)
-  __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) __PYX_ERR(0, 248, __pyx_L1_error)
+  __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) __PYX_ERR(0, 86, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 113, __pyx_L1_error)
+  __pyx_builtin_enumerate = __Pyx_GetBuiltinName(__pyx_n_s_enumerate); if (!__pyx_builtin_enumerate) __PYX_ERR(0, 125, __pyx_L1_error)
+  __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) __PYX_ERR(0, 247, __pyx_L1_error)
+  __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(0, 414, __pyx_L1_error)
   __pyx_builtin_KeyError = __Pyx_GetBuiltinName(__pyx_n_s_KeyError); if (!__pyx_builtin_KeyError) __PYX_ERR(1, 19, __pyx_L1_error)
-  __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(1, 20, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -8342,62 +8423,62 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__3);
   __Pyx_GIVEREF(__pyx_tuple__3);
 
-  /* "src/core.pyx":87
+  /* "src/core.pyx":86
  *     cdef char* buf = <char*>malloc((length + 1) * sizeof(char))
  *     if not buf:
  *         raise MemoryError("Failed to allocate for string")             # <<<<<<<<<<<<<<
  * 
  *     strcpy(buf, py_bytes)
  */
-  __pyx_tuple__4 = PyTuple_Pack(1, __pyx_kp_u_Failed_to_allocate_for_string); if (unlikely(!__pyx_tuple__4)) __PYX_ERR(0, 87, __pyx_L1_error)
+  __pyx_tuple__4 = PyTuple_Pack(1, __pyx_kp_u_Failed_to_allocate_for_string); if (unlikely(!__pyx_tuple__4)) __PYX_ERR(0, 86, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__4);
   __Pyx_GIVEREF(__pyx_tuple__4);
 
-  /* "src/core.pyx":248
+  /* "src/core.pyx":247
  *         from src.config import KomodoConfig
  *         if not isinstance(py_config, KomodoConfig):
  *             raise TypeError("Chunker requires a KomodoConfig")             # <<<<<<<<<<<<<<
  * 
  *         self.c_config = convert_to_cconfig(py_config)
  */
-  __pyx_tuple__6 = PyTuple_Pack(1, __pyx_kp_u_Chunker_requires_a_KomodoConfig); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(0, 248, __pyx_L1_error)
+  __pyx_tuple__6 = PyTuple_Pack(1, __pyx_kp_u_Chunker_requires_a_KomodoConfig); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(0, 247, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__6);
   __Pyx_GIVEREF(__pyx_tuple__6);
 
-  /* "src/core.pyx":346
+  /* "src/core.pyx":345
  * 
  *     if not c_exts:
  *         raise MemoryError("Failed to allocate c_exts")             # <<<<<<<<<<<<<<
  * 
  *     for i in range(num_exts):
  */
-  __pyx_tuple__7 = PyTuple_Pack(1, __pyx_kp_u_Failed_to_allocate_c_exts); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 346, __pyx_L1_error)
+  __pyx_tuple__7 = PyTuple_Pack(1, __pyx_kp_u_Failed_to_allocate_c_exts); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 345, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__7);
   __Pyx_GIVEREF(__pyx_tuple__7);
 
-  /* "src/core.pyx":253
+  /* "src/core.pyx":252
  *         self.processed_files = []
  * 
  *     def add_file(self, rel_path: str, content: str, priority: int):             # <<<<<<<<<<<<<<
  *         """
  *         Store file info in a C struct and keep a Python list of them.
  */
-  __pyx_tuple__9 = PyTuple_Pack(5, __pyx_n_s_self, __pyx_n_s_rel_path, __pyx_n_s_content, __pyx_n_s_priority, __pyx_n_s_pf); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 253, __pyx_L1_error)
+  __pyx_tuple__9 = PyTuple_Pack(5, __pyx_n_s_self, __pyx_n_s_rel_path, __pyx_n_s_content, __pyx_n_s_priority, __pyx_n_s_pf); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 252, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__9);
   __Pyx_GIVEREF(__pyx_tuple__9);
-  __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(4, 0, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__9, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_core_pyx, __pyx_n_s_add_file, 253, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) __PYX_ERR(0, 253, __pyx_L1_error)
+  __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(4, 0, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__9, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_core_pyx, __pyx_n_s_add_file, 252, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) __PYX_ERR(0, 252, __pyx_L1_error)
 
-  /* "src/core.pyx":263
+  /* "src/core.pyx":262
  *         self.processed_files.append(pf)
  * 
  *     def write_chunks(self):             # <<<<<<<<<<<<<<
  *         """
  *         Example logic for chunking data up to c_config.max_size.
  */
-  __pyx_tuple__11 = PyTuple_Pack(6, __pyx_n_s_self, __pyx_n_s_current_size, __pyx_n_s_current_chunk, __pyx_n_s_chunk_idx, __pyx_n_s_entry_size, __pyx_n_s_pf); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(0, 263, __pyx_L1_error)
+  __pyx_tuple__11 = PyTuple_Pack(6, __pyx_n_s_self, __pyx_n_s_current_size, __pyx_n_s_current_chunk, __pyx_n_s_chunk_idx, __pyx_n_s_entry_size, __pyx_n_s_pf); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(0, 262, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__11);
   __Pyx_GIVEREF(__pyx_tuple__11);
-  __pyx_codeobj__12 = (PyObject*)__Pyx_PyCode_New(1, 0, 0, 6, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__11, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_core_pyx, __pyx_n_s_write_chunks, 263, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__12)) __PYX_ERR(0, 263, __pyx_L1_error)
+  __pyx_codeobj__12 = (PyObject*)__Pyx_PyCode_New(1, 0, 0, 6, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__11, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_core_pyx, __pyx_n_s_write_chunks, 262, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__12)) __PYX_ERR(0, 262, __pyx_L1_error)
 
   /* "(tree fragment)":1
  * def __reduce_cython__(self):             # <<<<<<<<<<<<<<
@@ -8420,48 +8501,57 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__15);
   __pyx_codeobj__16 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__15, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_setstate_cython, 3, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__16)) __PYX_ERR(1, 3, __pyx_L1_error)
 
-  /* "src/core.pyx":334
+  /* "src/core.pyx":333
  *     return False
  * 
  * def py_is_binary(path: str, binary_exts: list) -> bool:             # <<<<<<<<<<<<<<
  *     """
  *     Python wrapper for is_binary_file.
  */
-  __pyx_tuple__17 = PyTuple_Pack(7, __pyx_n_s_path, __pyx_n_s_binary_exts, __pyx_n_s_b_path, __pyx_n_s_num_exts, __pyx_n_s_c_exts, __pyx_n_s_result, __pyx_n_s_i); if (unlikely(!__pyx_tuple__17)) __PYX_ERR(0, 334, __pyx_L1_error)
+  __pyx_tuple__17 = PyTuple_Pack(7, __pyx_n_s_path, __pyx_n_s_binary_exts, __pyx_n_s_b_path, __pyx_n_s_num_exts, __pyx_n_s_c_exts, __pyx_n_s_result, __pyx_n_s_i); if (unlikely(!__pyx_tuple__17)) __PYX_ERR(0, 333, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__17);
   __Pyx_GIVEREF(__pyx_tuple__17);
-  __pyx_codeobj__18 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 7, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__17, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_core_pyx, __pyx_n_s_py_is_binary, 334, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__18)) __PYX_ERR(0, 334, __pyx_L1_error)
+  __pyx_codeobj__18 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 7, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__17, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_core_pyx, __pyx_n_s_py_is_binary, 333, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__18)) __PYX_ERR(0, 333, __pyx_L1_error)
 
-  /* "src/core.pyx":361
- *     return bool(result)
+  /* "src/core.pyx":399
+ *     cdef CConfig c_config
  * 
- * def process_directory(str start_path, object py_config):             # <<<<<<<<<<<<<<
- *     """
- *     Example directory walker that uses readdir to find files,
+ *     def __enter__(self):             # <<<<<<<<<<<<<<
+ *         return self
+ * 
  */
-  __pyx_tuple__19 = PyTuple_Pack(8, __pyx_n_s_start_path, __pyx_n_s_py_config, __pyx_n_s_chunk, __pyx_n_s_cpath, __pyx_n_s_dirp, __pyx_n_s_entry, __pyx_n_s_fullpath, __pyx_n_s_contents); if (unlikely(!__pyx_tuple__19)) __PYX_ERR(0, 361, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__19);
-  __Pyx_GIVEREF(__pyx_tuple__19);
-  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 8, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_core_pyx, __pyx_n_s_process_directory, 361, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) __PYX_ERR(0, 361, __pyx_L1_error)
+  __pyx_codeobj__19 = (PyObject*)__Pyx_PyCode_New(1, 0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__13, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_core_pyx, __pyx_n_s_enter, 399, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__19)) __PYX_ERR(0, 399, __pyx_L1_error)
 
-  /* "src/core.pyx":452
+  /* "src/core.pyx":406
+ *         self.pool = create_thread_pool(num_threads, ".", &self.c_config)
+ * 
+ *     def __exit__(self, exc_type, exc_val, exc_tb):             # <<<<<<<<<<<<<<
+ *         if self.pool:
  *             destroy_thread_pool(self.pool)
+ */
+  __pyx_tuple__20 = PyTuple_Pack(4, __pyx_n_s_self, __pyx_n_s_exc_type, __pyx_n_s_exc_val, __pyx_n_s_exc_tb); if (unlikely(!__pyx_tuple__20)) __PYX_ERR(0, 406, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__20);
+  __Pyx_GIVEREF(__pyx_tuple__20);
+  __pyx_codeobj__21 = (PyObject*)__Pyx_PyCode_New(4, 0, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__20, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_core_pyx, __pyx_n_s_exit, 406, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__21)) __PYX_ERR(0, 406, __pyx_L1_error)
+
+  /* "src/core.pyx":412
+ *         return False
  * 
  *     def process_directory(self, str path):             # <<<<<<<<<<<<<<
- *         cdef char* c_path = make_c_string(path)
- *         thread_pool_process_directory(self.pool)
+ *         if not os.path.exists(path):
+ *             raise ValueError(f"Directory does not exist: {path}")
  */
-  __pyx_tuple__21 = PyTuple_Pack(3, __pyx_n_s_self, __pyx_n_s_path, __pyx_n_s_c_path); if (unlikely(!__pyx_tuple__21)) __PYX_ERR(0, 452, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__21);
-  __Pyx_GIVEREF(__pyx_tuple__21);
-  __pyx_codeobj__22 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__21, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_core_pyx, __pyx_n_s_process_directory, 452, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__22)) __PYX_ERR(0, 452, __pyx_L1_error)
+  __pyx_tuple__22 = PyTuple_Pack(4, __pyx_n_s_self, __pyx_n_s_path, __pyx_n_s_abs_path, __pyx_n_s_c_path); if (unlikely(!__pyx_tuple__22)) __PYX_ERR(0, 412, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__22);
+  __Pyx_GIVEREF(__pyx_tuple__22);
+  __pyx_codeobj__23 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__22, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_core_pyx, __pyx_n_s_process_directory, 412, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__23)) __PYX_ERR(0, 412, __pyx_L1_error)
 
   /* "(tree fragment)":1
  * def __reduce_cython__(self):             # <<<<<<<<<<<<<<
  *     raise TypeError, "no default __reduce__ due to non-trivial __cinit__"
  * def __setstate_cython__(self, __pyx_state):
  */
-  __pyx_codeobj__23 = (PyObject*)__Pyx_PyCode_New(1, 0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__13, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_reduce_cython, 1, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__23)) __PYX_ERR(1, 1, __pyx_L1_error)
+  __pyx_codeobj__24 = (PyObject*)__Pyx_PyCode_New(1, 0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__13, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_reduce_cython, 1, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__24)) __PYX_ERR(1, 1, __pyx_L1_error)
 
   /* "(tree fragment)":3
  * def __reduce_cython__(self):
@@ -8469,7 +8559,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * def __setstate_cython__(self, __pyx_state):             # <<<<<<<<<<<<<<
  *     raise TypeError, "no default __reduce__ due to non-trivial __cinit__"
  */
-  __pyx_codeobj__24 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__15, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_setstate_cython, 3, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__24)) __PYX_ERR(1, 3, __pyx_L1_error)
+  __pyx_codeobj__25 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__15, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_setstate_cython, 3, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__25)) __PYX_ERR(1, 3, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -8536,15 +8626,15 @@ static int __Pyx_modinit_type_init_code(void) {
   __pyx_vtable_3src_4core_Chunker._calculate_entry_size = (size_t (*)(struct __pyx_obj_3src_4core_Chunker *, struct ProcessedFile))__pyx_f_3src_4core_7Chunker__calculate_entry_size;
   __pyx_vtable_3src_4core_Chunker._flush_chunk = (void (*)(struct __pyx_obj_3src_4core_Chunker *, PyObject *, int))__pyx_f_3src_4core_7Chunker__flush_chunk;
   #if CYTHON_USE_TYPE_SPECS
-  __pyx_ptype_3src_4core_Chunker = (PyTypeObject *) __Pyx_PyType_FromModuleAndSpec(__pyx_m, &__pyx_type_3src_4core_Chunker_spec, NULL); if (unlikely(!__pyx_ptype_3src_4core_Chunker)) __PYX_ERR(0, 238, __pyx_L1_error)
-  if (__Pyx_fix_up_extension_type_from_spec(&__pyx_type_3src_4core_Chunker_spec, __pyx_ptype_3src_4core_Chunker) < 0) __PYX_ERR(0, 238, __pyx_L1_error)
+  __pyx_ptype_3src_4core_Chunker = (PyTypeObject *) __Pyx_PyType_FromModuleAndSpec(__pyx_m, &__pyx_type_3src_4core_Chunker_spec, NULL); if (unlikely(!__pyx_ptype_3src_4core_Chunker)) __PYX_ERR(0, 237, __pyx_L1_error)
+  if (__Pyx_fix_up_extension_type_from_spec(&__pyx_type_3src_4core_Chunker_spec, __pyx_ptype_3src_4core_Chunker) < 0) __PYX_ERR(0, 237, __pyx_L1_error)
   #else
   __pyx_ptype_3src_4core_Chunker = &__pyx_type_3src_4core_Chunker;
   #endif
   #if !CYTHON_COMPILING_IN_LIMITED_API
   #endif
   #if !CYTHON_USE_TYPE_SPECS
-  if (__Pyx_PyType_Ready(__pyx_ptype_3src_4core_Chunker) < 0) __PYX_ERR(0, 238, __pyx_L1_error)
+  if (__Pyx_PyType_Ready(__pyx_ptype_3src_4core_Chunker) < 0) __PYX_ERR(0, 237, __pyx_L1_error)
   #endif
   #if PY_MAJOR_VERSION < 3
   __pyx_ptype_3src_4core_Chunker->tp_print = 0;
@@ -8554,24 +8644,24 @@ static int __Pyx_modinit_type_init_code(void) {
     __pyx_ptype_3src_4core_Chunker->tp_getattro = __Pyx_PyObject_GenericGetAttr;
   }
   #endif
-  if (__Pyx_SetVtable(__pyx_ptype_3src_4core_Chunker, __pyx_vtabptr_3src_4core_Chunker) < 0) __PYX_ERR(0, 238, __pyx_L1_error)
+  if (__Pyx_SetVtable(__pyx_ptype_3src_4core_Chunker, __pyx_vtabptr_3src_4core_Chunker) < 0) __PYX_ERR(0, 237, __pyx_L1_error)
   #if !CYTHON_COMPILING_IN_LIMITED_API
-  if (__Pyx_MergeVtables(__pyx_ptype_3src_4core_Chunker) < 0) __PYX_ERR(0, 238, __pyx_L1_error)
+  if (__Pyx_MergeVtables(__pyx_ptype_3src_4core_Chunker) < 0) __PYX_ERR(0, 237, __pyx_L1_error)
   #endif
-  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_Chunker, (PyObject *) __pyx_ptype_3src_4core_Chunker) < 0) __PYX_ERR(0, 238, __pyx_L1_error)
+  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_Chunker, (PyObject *) __pyx_ptype_3src_4core_Chunker) < 0) __PYX_ERR(0, 237, __pyx_L1_error)
   #if !CYTHON_COMPILING_IN_LIMITED_API
-  if (__Pyx_setup_reduce((PyObject *) __pyx_ptype_3src_4core_Chunker) < 0) __PYX_ERR(0, 238, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject *) __pyx_ptype_3src_4core_Chunker) < 0) __PYX_ERR(0, 237, __pyx_L1_error)
   #endif
   #if CYTHON_USE_TYPE_SPECS
-  __pyx_ptype_3src_4core_ParallelChunker = (PyTypeObject *) __Pyx_PyType_FromModuleAndSpec(__pyx_m, &__pyx_type_3src_4core_ParallelChunker_spec, NULL); if (unlikely(!__pyx_ptype_3src_4core_ParallelChunker)) __PYX_ERR(0, 440, __pyx_L1_error)
-  if (__Pyx_fix_up_extension_type_from_spec(&__pyx_type_3src_4core_ParallelChunker_spec, __pyx_ptype_3src_4core_ParallelChunker) < 0) __PYX_ERR(0, 440, __pyx_L1_error)
+  __pyx_ptype_3src_4core_ParallelChunker = (PyTypeObject *) __Pyx_PyType_FromModuleAndSpec(__pyx_m, &__pyx_type_3src_4core_ParallelChunker_spec, NULL); if (unlikely(!__pyx_ptype_3src_4core_ParallelChunker)) __PYX_ERR(0, 395, __pyx_L1_error)
+  if (__Pyx_fix_up_extension_type_from_spec(&__pyx_type_3src_4core_ParallelChunker_spec, __pyx_ptype_3src_4core_ParallelChunker) < 0) __PYX_ERR(0, 395, __pyx_L1_error)
   #else
   __pyx_ptype_3src_4core_ParallelChunker = &__pyx_type_3src_4core_ParallelChunker;
   #endif
   #if !CYTHON_COMPILING_IN_LIMITED_API
   #endif
   #if !CYTHON_USE_TYPE_SPECS
-  if (__Pyx_PyType_Ready(__pyx_ptype_3src_4core_ParallelChunker) < 0) __PYX_ERR(0, 440, __pyx_L1_error)
+  if (__Pyx_PyType_Ready(__pyx_ptype_3src_4core_ParallelChunker) < 0) __PYX_ERR(0, 395, __pyx_L1_error)
   #endif
   #if PY_MAJOR_VERSION < 3
   __pyx_ptype_3src_4core_ParallelChunker->tp_print = 0;
@@ -8581,9 +8671,9 @@ static int __Pyx_modinit_type_init_code(void) {
     __pyx_ptype_3src_4core_ParallelChunker->tp_getattro = __Pyx_PyObject_GenericGetAttr;
   }
   #endif
-  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_ParallelChunker, (PyObject *) __pyx_ptype_3src_4core_ParallelChunker) < 0) __PYX_ERR(0, 440, __pyx_L1_error)
+  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_ParallelChunker, (PyObject *) __pyx_ptype_3src_4core_ParallelChunker) < 0) __PYX_ERR(0, 395, __pyx_L1_error)
   #if !CYTHON_COMPILING_IN_LIMITED_API
-  if (__Pyx_setup_reduce((PyObject *) __pyx_ptype_3src_4core_ParallelChunker) < 0) __PYX_ERR(0, 440, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject *) __pyx_ptype_3src_4core_ParallelChunker) < 0) __PYX_ERR(0, 395, __pyx_L1_error)
   #endif
   __Pyx_RefNannyFinishContext();
   return 0;
@@ -8895,7 +8985,31 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "src/core.pyx":40
+  /* "src/core.pyx":5
+ * cimport cython
+ * from posix.unistd cimport access, F_OK  # better path checks
+ * import os             # <<<<<<<<<<<<<<
+ * import sys
+ * 
+ */
+  __pyx_t_2 = __Pyx_ImportDottedModule(__pyx_n_s_os, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 5, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_os, __pyx_t_2) < 0) __PYX_ERR(0, 5, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "src/core.pyx":6
+ * from posix.unistd cimport access, F_OK  # better path checks
+ * import os
+ * import sys             # <<<<<<<<<<<<<<
+ * 
+ * # --------------------------------------------------------------------------
+ */
+  __pyx_t_2 = __Pyx_ImportDottedModule(__pyx_n_s_sys, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 6, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_sys, __pyx_t_2) < 0) __PYX_ERR(0, 6, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "src/core.pyx":43
  *     int closedir(DIR* dirp)
  * 
  * cdef int DT_DIR = 4             # <<<<<<<<<<<<<<
@@ -8904,48 +9018,36 @@ if (!__Pyx_RefNanny) {
  */
   __pyx_v_3src_4core_DT_DIR = 4;
 
-  /* "src/core.pyx":70
- * # 4. Python imports
- * # --------------------------------------------------------------------------
- * import sys             # <<<<<<<<<<<<<<
- * 
- * # --------------------------------------------------------------------------
- */
-  __pyx_t_2 = __Pyx_ImportDottedModule(__pyx_n_s_sys, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 70, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_sys, __pyx_t_2) < 0) __PYX_ERR(0, 70, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-
-  /* "src/core.pyx":253
+  /* "src/core.pyx":252
  *         self.processed_files = []
  * 
  *     def add_file(self, rel_path: str, content: str, priority: int):             # <<<<<<<<<<<<<<
  *         """
  *         Store file info in a C struct and keep a Python list of them.
  */
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 253, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 252, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_rel_path, __pyx_n_s_str) < 0) __PYX_ERR(0, 253, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_content, __pyx_n_s_str) < 0) __PYX_ERR(0, 253, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_priority, __pyx_n_s_int) < 0) __PYX_ERR(0, 253, __pyx_L1_error)
-  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_7Chunker_3add_file, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_Chunker_add_file, NULL, __pyx_n_s_src_core, __pyx_d, ((PyObject *)__pyx_codeobj__10)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 253, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_rel_path, __pyx_n_s_str) < 0) __PYX_ERR(0, 252, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_content, __pyx_n_s_str) < 0) __PYX_ERR(0, 252, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_priority, __pyx_n_s_int) < 0) __PYX_ERR(0, 252, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_7Chunker_3add_file, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_Chunker_add_file, NULL, __pyx_n_s_src_core, __pyx_d, ((PyObject *)__pyx_codeobj__10)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 252, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_3, __pyx_t_2);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (__Pyx_SetItemOnTypeDict((PyObject *)__pyx_ptype_3src_4core_Chunker, __pyx_n_s_add_file, __pyx_t_3) < 0) __PYX_ERR(0, 253, __pyx_L1_error)
+  if (__Pyx_SetItemOnTypeDict((PyObject *)__pyx_ptype_3src_4core_Chunker, __pyx_n_s_add_file, __pyx_t_3) < 0) __PYX_ERR(0, 252, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   PyType_Modified(__pyx_ptype_3src_4core_Chunker);
 
-  /* "src/core.pyx":263
+  /* "src/core.pyx":262
  *         self.processed_files.append(pf)
  * 
  *     def write_chunks(self):             # <<<<<<<<<<<<<<
  *         """
  *         Example logic for chunking data up to c_config.max_size.
  */
-  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_7Chunker_5write_chunks, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_Chunker_write_chunks, NULL, __pyx_n_s_src_core, __pyx_d, ((PyObject *)__pyx_codeobj__12)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 263, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_7Chunker_5write_chunks, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_Chunker_write_chunks, NULL, __pyx_n_s_src_core, __pyx_d, ((PyObject *)__pyx_codeobj__12)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 262, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (__Pyx_SetItemOnTypeDict((PyObject *)__pyx_ptype_3src_4core_Chunker, __pyx_n_s_write_chunks, __pyx_t_3) < 0) __PYX_ERR(0, 263, __pyx_L1_error)
+  if (__Pyx_SetItemOnTypeDict((PyObject *)__pyx_ptype_3src_4core_Chunker, __pyx_n_s_write_chunks, __pyx_t_3) < 0) __PYX_ERR(0, 262, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   PyType_Modified(__pyx_ptype_3src_4core_Chunker);
 
@@ -8970,47 +9072,61 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_setstate_cython, __pyx_t_3) < 0) __PYX_ERR(1, 3, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "src/core.pyx":334
+  /* "src/core.pyx":333
  *     return False
  * 
  * def py_is_binary(path: str, binary_exts: list) -> bool:             # <<<<<<<<<<<<<<
  *     """
  *     Python wrapper for is_binary_file.
  */
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 334, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 333, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_path, __pyx_n_s_str) < 0) __PYX_ERR(0, 334, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_binary_exts, __pyx_n_s_list) < 0) __PYX_ERR(0, 334, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_return, __pyx_n_s_bool) < 0) __PYX_ERR(0, 334, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_1py_is_binary, 0, __pyx_n_s_py_is_binary, NULL, __pyx_n_s_src_core, __pyx_d, ((PyObject *)__pyx_codeobj__18)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 334, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_path, __pyx_n_s_str) < 0) __PYX_ERR(0, 333, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_binary_exts, __pyx_n_s_list) < 0) __PYX_ERR(0, 333, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_return, __pyx_n_s_bool) < 0) __PYX_ERR(0, 333, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_1py_is_binary, 0, __pyx_n_s_py_is_binary, NULL, __pyx_n_s_src_core, __pyx_d, ((PyObject *)__pyx_codeobj__18)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 333, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_2, __pyx_t_3);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_py_is_binary, __pyx_t_2) < 0) __PYX_ERR(0, 334, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_py_is_binary, __pyx_t_2) < 0) __PYX_ERR(0, 333, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "src/core.pyx":361
- *     return bool(result)
+  /* "src/core.pyx":399
+ *     cdef CConfig c_config
  * 
- * def process_directory(str start_path, object py_config):             # <<<<<<<<<<<<<<
- *     """
- *     Example directory walker that uses readdir to find files,
+ *     def __enter__(self):             # <<<<<<<<<<<<<<
+ *         return self
+ * 
  */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_3process_directory, 0, __pyx_n_s_process_directory, NULL, __pyx_n_s_src_core, __pyx_d, ((PyObject *)__pyx_codeobj__20)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 361, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_15ParallelChunker_1__enter__, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ParallelChunker___enter, NULL, __pyx_n_s_src_core, __pyx_d, ((PyObject *)__pyx_codeobj__19)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 399, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_process_directory, __pyx_t_2) < 0) __PYX_ERR(0, 361, __pyx_L1_error)
+  if (__Pyx_SetItemOnTypeDict((PyObject *)__pyx_ptype_3src_4core_ParallelChunker, __pyx_n_s_enter, __pyx_t_2) < 0) __PYX_ERR(0, 399, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  PyType_Modified(__pyx_ptype_3src_4core_ParallelChunker);
 
-  /* "src/core.pyx":452
+  /* "src/core.pyx":406
+ *         self.pool = create_thread_pool(num_threads, ".", &self.c_config)
+ * 
+ *     def __exit__(self, exc_type, exc_val, exc_tb):             # <<<<<<<<<<<<<<
+ *         if self.pool:
  *             destroy_thread_pool(self.pool)
+ */
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_15ParallelChunker_5__exit__, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ParallelChunker___exit, NULL, __pyx_n_s_src_core, __pyx_d, ((PyObject *)__pyx_codeobj__21)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 406, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (__Pyx_SetItemOnTypeDict((PyObject *)__pyx_ptype_3src_4core_ParallelChunker, __pyx_n_s_exit, __pyx_t_2) < 0) __PYX_ERR(0, 406, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  PyType_Modified(__pyx_ptype_3src_4core_ParallelChunker);
+
+  /* "src/core.pyx":412
+ *         return False
  * 
  *     def process_directory(self, str path):             # <<<<<<<<<<<<<<
- *         cdef char* c_path = make_c_string(path)
- *         thread_pool_process_directory(self.pool)
+ *         if not os.path.exists(path):
+ *             raise ValueError(f"Directory does not exist: {path}")
  */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_15ParallelChunker_5process_directory, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ParallelChunker_process_director, NULL, __pyx_n_s_src_core, __pyx_d, ((PyObject *)__pyx_codeobj__22)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 452, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_15ParallelChunker_7process_directory, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ParallelChunker_process_director, NULL, __pyx_n_s_src_core, __pyx_d, ((PyObject *)__pyx_codeobj__23)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 412, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (__Pyx_SetItemOnTypeDict((PyObject *)__pyx_ptype_3src_4core_ParallelChunker, __pyx_n_s_process_directory, __pyx_t_2) < 0) __PYX_ERR(0, 452, __pyx_L1_error)
+  if (__Pyx_SetItemOnTypeDict((PyObject *)__pyx_ptype_3src_4core_ParallelChunker, __pyx_n_s_process_directory, __pyx_t_2) < 0) __PYX_ERR(0, 412, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   PyType_Modified(__pyx_ptype_3src_4core_ParallelChunker);
 
@@ -9019,7 +9135,7 @@ if (!__Pyx_RefNanny) {
  *     raise TypeError, "no default __reduce__ due to non-trivial __cinit__"
  * def __setstate_cython__(self, __pyx_state):
  */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_15ParallelChunker_7__reduce_cython__, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ParallelChunker___reduce_cython, NULL, __pyx_n_s_src_core, __pyx_d, ((PyObject *)__pyx_codeobj__23)); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 1, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_15ParallelChunker_9__reduce_cython__, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ParallelChunker___reduce_cython, NULL, __pyx_n_s_src_core, __pyx_d, ((PyObject *)__pyx_codeobj__24)); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_reduce_cython, __pyx_t_2) < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -9030,7 +9146,7 @@ if (!__Pyx_RefNanny) {
  * def __setstate_cython__(self, __pyx_state):             # <<<<<<<<<<<<<<
  *     raise TypeError, "no default __reduce__ due to non-trivial __cinit__"
  */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_15ParallelChunker_9__setstate_cython__, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ParallelChunker___setstate_cytho, NULL, __pyx_n_s_src_core, __pyx_d, ((PyObject *)__pyx_codeobj__24)); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 3, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_4core_15ParallelChunker_11__setstate_cython__, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ParallelChunker___setstate_cytho, NULL, __pyx_n_s_src_core, __pyx_d, ((PyObject *)__pyx_codeobj__25)); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 3, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_setstate_cython, __pyx_t_2) < 0) __PYX_ERR(1, 3, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -12060,37 +12176,80 @@ static PyObject *__Pyx_CyFunction_New(PyMethodDef *ml, int flags, PyObject* qual
     return op;
 }
 
-/* decode_c_string */
-static CYTHON_INLINE PyObject* __Pyx_decode_c_string(
-         const char* cstring, Py_ssize_t start, Py_ssize_t stop,
-         const char* encoding, const char* errors,
-         PyObject* (*decode_func)(const char *s, Py_ssize_t size, const char *errors)) {
-    Py_ssize_t length;
-    if (unlikely((start < 0) | (stop < 0))) {
-        size_t slen = strlen(cstring);
-        if (unlikely(slen > (size_t) PY_SSIZE_T_MAX)) {
-            PyErr_SetString(PyExc_OverflowError,
-                            "c-string too long to convert to Python");
-            return NULL;
-        }
-        length = (Py_ssize_t) slen;
-        if (start < 0) {
-            start += length;
-            if (start < 0)
-                start = 0;
-        }
-        if (stop < 0)
-            stop += length;
+/* PyDictVersioning */
+#if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_TYPE_SLOTS
+static CYTHON_INLINE PY_UINT64_T __Pyx_get_tp_dict_version(PyObject *obj) {
+    PyObject *dict = Py_TYPE(obj)->tp_dict;
+    return likely(dict) ? __PYX_GET_DICT_VERSION(dict) : 0;
+}
+static CYTHON_INLINE PY_UINT64_T __Pyx_get_object_dict_version(PyObject *obj) {
+    PyObject **dictptr = NULL;
+    Py_ssize_t offset = Py_TYPE(obj)->tp_dictoffset;
+    if (offset) {
+#if CYTHON_COMPILING_IN_CPYTHON
+        dictptr = (likely(offset > 0)) ? (PyObject **) ((char *)obj + offset) : _PyObject_GetDictPtr(obj);
+#else
+        dictptr = _PyObject_GetDictPtr(obj);
+#endif
     }
-    if (unlikely(stop <= start))
-        return __Pyx_NewRef(__pyx_empty_unicode);
-    length = stop - start;
-    cstring += start;
-    if (decode_func) {
-        return decode_func(cstring, length, errors);
-    } else {
-        return PyUnicode_Decode(cstring, length, encoding, errors);
+    return (dictptr && *dictptr) ? __PYX_GET_DICT_VERSION(*dictptr) : 0;
+}
+static CYTHON_INLINE int __Pyx_object_dict_version_matches(PyObject* obj, PY_UINT64_T tp_dict_version, PY_UINT64_T obj_dict_version) {
+    PyObject *dict = Py_TYPE(obj)->tp_dict;
+    if (unlikely(!dict) || unlikely(tp_dict_version != __PYX_GET_DICT_VERSION(dict)))
+        return 0;
+    return obj_dict_version == __Pyx_get_object_dict_version(obj);
+}
+#endif
+
+/* GetModuleGlobalName */
+#if CYTHON_USE_DICT_VERSIONS
+static PyObject *__Pyx__GetModuleGlobalName(PyObject *name, PY_UINT64_T *dict_version, PyObject **dict_cached_value)
+#else
+static CYTHON_INLINE PyObject *__Pyx__GetModuleGlobalName(PyObject *name)
+#endif
+{
+    PyObject *result;
+#if !CYTHON_AVOID_BORROWED_REFS
+#if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX >= 0x030500A1 && PY_VERSION_HEX < 0x030d0000
+    result = _PyDict_GetItem_KnownHash(__pyx_d, name, ((PyASCIIObject *) name)->hash);
+    __PYX_UPDATE_DICT_CACHE(__pyx_d, result, *dict_cached_value, *dict_version)
+    if (likely(result)) {
+        return __Pyx_NewRef(result);
+    } else if (unlikely(PyErr_Occurred())) {
+        return NULL;
     }
+#elif CYTHON_COMPILING_IN_LIMITED_API
+    if (unlikely(!__pyx_m)) {
+        return NULL;
+    }
+    result = PyObject_GetAttr(__pyx_m, name);
+    if (likely(result)) {
+        return result;
+    }
+#else
+    result = PyDict_GetItem(__pyx_d, name);
+    __PYX_UPDATE_DICT_CACHE(__pyx_d, result, *dict_cached_value, *dict_version)
+    if (likely(result)) {
+        return __Pyx_NewRef(result);
+    }
+#endif
+#else
+    result = PyObject_GetItem(__pyx_d, name);
+    __PYX_UPDATE_DICT_CACHE(__pyx_d, result, *dict_cached_value, *dict_version)
+    if (likely(result)) {
+        return __Pyx_NewRef(result);
+    }
+    PyErr_Clear();
+#endif
+    return __Pyx_GetBuiltinName(name);
+}
+
+/* PyUnicode_Unicode */
+static CYTHON_INLINE PyObject* __Pyx_PyUnicode_Unicode(PyObject *obj) {
+    if (unlikely(obj == Py_None))
+        obj = __pyx_kp_u_None;
+    return __Pyx_NewRef(obj);
 }
 
 /* PyObjectCallNoArg */
@@ -12764,32 +12923,6 @@ static PyObject *__Pyx_ImportDottedModule(PyObject *name, PyObject *parts_tuple)
 #endif
     return __Pyx__ImportDottedModule(name, parts_tuple);
 }
-
-/* PyDictVersioning */
-#if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_TYPE_SLOTS
-static CYTHON_INLINE PY_UINT64_T __Pyx_get_tp_dict_version(PyObject *obj) {
-    PyObject *dict = Py_TYPE(obj)->tp_dict;
-    return likely(dict) ? __PYX_GET_DICT_VERSION(dict) : 0;
-}
-static CYTHON_INLINE PY_UINT64_T __Pyx_get_object_dict_version(PyObject *obj) {
-    PyObject **dictptr = NULL;
-    Py_ssize_t offset = Py_TYPE(obj)->tp_dictoffset;
-    if (offset) {
-#if CYTHON_COMPILING_IN_CPYTHON
-        dictptr = (likely(offset > 0)) ? (PyObject **) ((char *)obj + offset) : _PyObject_GetDictPtr(obj);
-#else
-        dictptr = _PyObject_GetDictPtr(obj);
-#endif
-    }
-    return (dictptr && *dictptr) ? __PYX_GET_DICT_VERSION(*dictptr) : 0;
-}
-static CYTHON_INLINE int __Pyx_object_dict_version_matches(PyObject* obj, PY_UINT64_T tp_dict_version, PY_UINT64_T obj_dict_version) {
-    PyObject *dict = Py_TYPE(obj)->tp_dict;
-    if (unlikely(!dict) || unlikely(tp_dict_version != __PYX_GET_DICT_VERSION(dict)))
-        return 0;
-    return obj_dict_version == __Pyx_get_object_dict_version(obj);
-}
-#endif
 
 /* CLineInTraceback */
 #ifndef CYTHON_CLINE_IN_TRACEBACK
@@ -13775,7 +13908,7 @@ __Pyx_PyType_GetName(PyTypeObject* tp)
     if (unlikely(name == NULL) || unlikely(!PyUnicode_Check(name))) {
         PyErr_Clear();
         Py_XDECREF(name);
-        name = __Pyx_NewRef(__pyx_n_s__25);
+        name = __Pyx_NewRef(__pyx_n_s__26);
     }
     return name;
 }

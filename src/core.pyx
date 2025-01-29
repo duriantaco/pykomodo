@@ -1,6 +1,9 @@
 # core.pyx
 
 cimport cython
+from posix.unistd cimport access, F_OK  # better path checks
+import os
+import sys
 
 # --------------------------------------------------------------------------
 # 1. Standard C imports & definitions
@@ -64,13 +67,9 @@ cdef extern from "myheader.h":
         char* content
         int priority
 
-# --------------------------------------------------------------------------
-# 4. Python imports
-# --------------------------------------------------------------------------
-import sys
 
 # --------------------------------------------------------------------------
-# 5. Helper: make_c_string
+# 4. Helper: make_c_string
 # --------------------------------------------------------------------------
 cdef char* make_c_string(object s) except NULL:
     """
@@ -90,7 +89,7 @@ cdef char* make_c_string(object s) except NULL:
     return buf
 
 # --------------------------------------------------------------------------
-# 6. Convert from Python config -> CConfig
+# 5. Convert from Python config -> CConfig
 # --------------------------------------------------------------------------
 cdef CConfig convert_to_cconfig(object py_config):
     """
@@ -144,7 +143,7 @@ cdef CConfig convert_to_cconfig(object py_config):
     return c_config
 
 # --------------------------------------------------------------------------
-# 7. File reading helpers
+# 6. File reading helpers
 # --------------------------------------------------------------------------
 cdef char* read_file_contents(const char* path) except NULL:
     """
@@ -207,7 +206,7 @@ cdef size_t count_tokens(const char* text):
     return count
 
 # --------------------------------------------------------------------------
-# 8. Directory / ignoring stubs (placeholders)
+# 7. Directory / ignoring stubs (placeholders)
 # --------------------------------------------------------------------------
 cdef char* get_relative_path(const char* fullpath, const char* base_path) except NULL:
     """
@@ -233,7 +232,7 @@ cdef int calculate_priority(const char* rel_path, CConfig* config):
     return 0
 
 # --------------------------------------------------------------------------
-# 9. The main Chunker class
+# 8. The main Chunker class
 # --------------------------------------------------------------------------
 cdef class Chunker:
     """
@@ -299,7 +298,7 @@ cdef class Chunker:
         pass
 
 # --------------------------------------------------------------------------
-# 10. Additional Global Functions
+# 9. Additional Global Functions
 # --------------------------------------------------------------------------
 cdef bint is_binary_file(const char* path, const char** exts, size_t num_exts):
     """
@@ -358,54 +357,6 @@ def py_is_binary(path: str, binary_exts: list) -> bool:
 
     return bool(result)
 
-def process_directory(str start_path, object py_config):
-    """
-    Example directory walker that uses readdir to find files,
-    reads each file, and adds to a Chunker instance.
-    """
-    cdef Chunker chunk
-    cdef char* cpath
-    cdef DIR* dirp
-    cdef dirent* entry
-    cdef char fullpath[1024]
-    cdef char* contents
-
-    chunk = Chunker(py_config)
-    cpath = make_c_string(start_path)
-
-    dirp = opendir(cpath)
-    if not dirp:
-        free(cpath)
-        return chunk
-
-    while True:
-        entry = readdir(dirp)
-        if not entry:
-            break
-
-        # IGNORE all hidden dot files
-        if entry.d_name[0] == b'.':
-            continue
-
-        snprintf(fullpath, 1024, b"%s/%s", cpath, entry.d_name)
-
-        if entry.d_type == DT_DIR:
-            # You could recurse here if desired
-            pass
-        else:
-            contents = read_file_contents(fullpath)
-            if contents:
-                chunk.add_file(
-                    rel_path=entry.d_name.decode(),
-                    content=contents.decode(),
-                    priority=0
-                )
-                free(contents)
-
-    closedir(dirp)
-    free(cpath)
-    return chunk
-
 cdef extern from "thread_pool.h":
     ctypedef struct FileEntry:
         char* path
@@ -436,20 +387,46 @@ cdef extern from "thread_pool.h":
     ThreadPool* create_thread_pool(size_t num_threads, const char* base_path, CConfig* config)
     void destroy_thread_pool(ThreadPool* pool)
     void thread_pool_process_directory(ThreadPool* pool)
+    void process_chunks(ThreadPool* pool)
+
+    void thread_pool_wait_until_done(ThreadPool* pool)
+
 
 cdef class ParallelChunker:
     cdef ThreadPool* pool
     cdef CConfig c_config
     
+    def __enter__(self):
+        return self
+    
     def __cinit__(self, object py_config, int num_threads=16):
         self.c_config = convert_to_cconfig(py_config)
         self.pool = create_thread_pool(num_threads, ".", &self.c_config)
-    
-    def __dealloc__(self):
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
         if self.pool:
             destroy_thread_pool(self.pool)
-            
+            self.pool = NULL
+        return False
+
     def process_directory(self, str path):
-        cdef char* c_path = make_c_string(path)
+        if not os.path.exists(path):
+            raise ValueError(f"Directory does not exist: {path}")
+        if not os.path.isdir(path):
+            raise ValueError(f"Path is not a directory: {path}")
+                
+        abs_path = os.path.abspath(path)
+        if self.pool:
+            destroy_thread_pool(self.pool)
+            self.pool = NULL
+
+        cdef char* c_path = make_c_string(abs_path)
+        self.pool = create_thread_pool(16, c_path, &self.c_config)
         thread_pool_process_directory(self.pool)
+
+        # +++ WAIT for queue empty & tasks done +++
+        thread_pool_wait_until_done(self.pool)
+
+        # Now chunk them
+        process_chunks(self.pool)
         free(c_path)

@@ -9,3 +9,4 @@ src/__init__.py
 src/config.py
 src/core.c
 src/thread_pool.c
+src/utils.c
