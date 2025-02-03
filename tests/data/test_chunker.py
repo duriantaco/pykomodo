@@ -3,7 +3,6 @@ import os
 import shutil
 import tempfile
 
-# Adjust these imports if your module/package structure differs
 from src.config import KomodoConfig
 from src.core import ParallelChunker
 

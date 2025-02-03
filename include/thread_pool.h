@@ -37,9 +37,10 @@ typedef struct {
 
 ThreadPool* create_thread_pool(size_t num_threads, const char* base_path, CConfig* config);
 void destroy_thread_pool(ThreadPool* pool);
-void thread_pool_process_directory(ThreadPool* pool);
 
+void thread_pool_process_directory(ThreadPool* pool, const char* dir_path);
 void process_chunks(ThreadPool* pool);
+
 static int compare_file_entries(const void* a, const void* b);
 static void write_chunk(const char* content, size_t size, int chunk_num, const CConfig* config);
 

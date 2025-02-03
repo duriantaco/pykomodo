@@ -1,6 +1,7 @@
 {
     "files.associations": {
-        "fnmatch.h": "c",
-        "stdio.h": "c"
-    }
+        "*.pyx": "cython",
+        "*.pxd": "cython"
+    },
+    "C_Cpp.errorSquiggles": "disabled" 
 }

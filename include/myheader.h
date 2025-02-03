@@ -14,9 +14,11 @@ typedef struct CConfig {
     char* output_dir;
     int stream;           
     char** ignore_patterns;
+    char** unignore_patterns;
     CPriorityRule* priority_rules;
     char** binary_exts;
     size_t num_ignore;
+    size_t num_unignore;
     size_t num_priority_rules;
     size_t num_binary_exts;
 } CConfig;

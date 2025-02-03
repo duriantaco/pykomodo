@@ -1,16 +1,18 @@
 # core.pyx
 
+# 1. Standard C imports & definitions
 cimport cython
-from posix.unistd cimport access, F_OK  # better path checks
+from posix.unistd cimport access, F_OK
 import os
 import sys
 
-# --------------------------------------------------------------------------
-# 1. Standard C imports & definitions
-# --------------------------------------------------------------------------
+from libc.stddef cimport size_t
 from libc.stdlib cimport malloc, free, realloc
 from libc.string cimport strcpy, strlen, strrchr, strcasecmp, memchr
 from libc.stdio cimport FILE, fopen, fread, fclose
+
+cdef extern from "fnmatch.h":
+    int fnmatch(const char *pattern, const char *string, int flags)
 
 cdef extern from "pthread.h":
     ctypedef struct pthread_mutex_t:
@@ -23,11 +25,7 @@ cdef extern from "pthread.h":
 cdef extern from "stdio.h":
     int snprintf(char* s, size_t n, const char* format, ...)
 
-from libc.stddef cimport size_t
-
-# --------------------------------------------------------------------------
 # 2. Dirent definitions
-# --------------------------------------------------------------------------
 cdef extern from "dirent.h":
     cdef struct DIR:
         pass
@@ -42,9 +40,7 @@ cdef extern from "dirent.h":
 
 cdef int DT_DIR = 4
 
-# --------------------------------------------------------------------------
-# 3. Our custom C structs (from an actual header file)
-# --------------------------------------------------------------------------
+# 3. Our custom C structs
 cdef extern from "myheader.h":
     cdef struct CPriorityRule:
         char* pattern
@@ -52,14 +48,16 @@ cdef extern from "myheader.h":
 
     cdef struct CConfig:
         size_t max_size
-        bint token_mode    
+        bint token_mode
         char* output_dir
-        bint stream       
+        bint stream
         char** ignore_patterns
-        CPriorityRule* priority_rules
-        char** binary_exts
+        char** unignore_patterns
         size_t num_ignore
+        size_t num_unignore
+        CPriorityRule* priority_rules
         size_t num_priority_rules
+        char** binary_exts
         size_t num_binary_exts
 
     cdef struct ProcessedFile:
@@ -67,14 +65,11 @@ cdef extern from "myheader.h":
         char* content
         int priority
 
-
-# --------------------------------------------------------------------------
 # 4. Helper: make_c_string
-# --------------------------------------------------------------------------
 cdef char* make_c_string(object s) except NULL:
     """
     Convert a Python string (or None) to a newly allocated C char*.
-    Caller must free() it later if non-null.
+    Caller must free() it later.
     """
     if s is None:
         return <char*>NULL
@@ -83,73 +78,52 @@ cdef char* make_c_string(object s) except NULL:
 
     cdef char* buf = <char*>malloc((length + 1) * sizeof(char))
     if not buf:
-        raise MemoryError("Failed to allocate for string")
+        raise MemoryError("Failed to allocate c string")
 
     strcpy(buf, py_bytes)
     return buf
 
-# --------------------------------------------------------------------------
-# 5. Convert from Python config -> CConfig
-# --------------------------------------------------------------------------
-cdef CConfig convert_to_cconfig(object py_config):
+# 5. should_ignore
+cdef bint should_ignore(const char* rel_path, CConfig* config):
     """
-    Convert a Python config object (with .max_size, .token_mode, etc.)
-    into a fully allocated CConfig struct.
+    Now also checks unignore patterns. If any unignore pattern matches => do NOT ignore.
+    Otherwise, if any ignore pattern matches => ignore.
     """
-    cdef CConfig c_config
+    cdef size_t i
 
-    c_config.max_size = py_config.max_size
-    c_config.token_mode = py_config.token_mode
-    c_config.stream = py_config.stream
-    c_config.output_dir = make_c_string(py_config.output_dir)
+    if config.unignore_patterns != NULL and config.num_unignore > 0:
+        for i in range(config.num_unignore):
+            if fnmatch(config.unignore_patterns[i], rel_path, 1 | 2 | 16) == 0:
+                return False
 
-    # ignore_patterns
-    if py_config.ignore_patterns is None:
-        py_config.ignore_patterns = []
-    cdef int num_ignore = len(py_config.ignore_patterns)
-    c_config.num_ignore = num_ignore
-    if num_ignore > 0:
-        c_config.ignore_patterns = <char**>malloc(num_ignore * sizeof(char*))
-        for i in range(num_ignore):
-            c_config.ignore_patterns[i] = make_c_string(py_config.ignore_patterns[i])
-    else:
-        c_config.ignore_patterns = <char**>NULL
+    if config.ignore_patterns != NULL and config.num_ignore > 0:
+        for i in range(config.num_ignore):
+            if fnmatch(config.ignore_patterns[i], rel_path, 1 | 2 | 16) == 0:
+                return True
 
-    # priority_rules
-    if py_config.priority_rules is None:
-        py_config.priority_rules = []
-    cdef int num_rules = len(py_config.priority_rules)
-    c_config.num_priority_rules = num_rules
-    if num_rules > 0:
-        c_config.priority_rules = <CPriorityRule*>malloc(num_rules * sizeof(CPriorityRule))
-        for i, rule in enumerate(py_config.priority_rules):
-            c_config.priority_rules[i].pattern = make_c_string(rule.pattern)
-            c_config.priority_rules[i].score = rule.score
-    else:
-        c_config.priority_rules = <CPriorityRule*>NULL
+    return False
 
-    # binary_exts
-    if py_config.binary_extensions is None:
-        py_config.binary_extensions = []
-    cdef int num_exts = len(py_config.binary_extensions)
-    c_config.num_binary_exts = num_exts
-    if num_exts > 0:
-        c_config.binary_exts = <char**>malloc(num_exts * sizeof(char*))
-        for i in range(num_exts):
-            c_config.binary_exts[i] = make_c_string(py_config.binary_extensions[i])
-    else:
-        c_config.binary_exts = <char**>NULL
+# 6. calculate_priority
+cdef int calculate_priority(const char* rel_path, CConfig* config):
+    """
+    Use fnmatch on each config.priority_rules. Return the highest matched score.
+    """
+    cdef int highest = 0
+    cdef int i
 
-    return c_config
+    for i in range(config.num_priority_rules):
+        if fnmatch(config.priority_rules[i].pattern, rel_path, 1 | 2 | 16) == 0:
+            if config.priority_rules[i].score > highest:
+                highest = config.priority_rules[i].score
+    return highest
 
-# --------------------------------------------------------------------------
-# 6. File reading helpers
-# --------------------------------------------------------------------------
+# 7. read_file_contents
 cdef char* read_file_contents(const char* path) except NULL:
     """
-    Read a file in binary mode and return a newly allocated buffer
-    containing the full contents, NUL-terminated. Caller must free().
-    Returns NULL on error (e.g., file doesn't exist).
+    Read entire file into a newly allocated buffer, or NULL on error.
+
+    NOTE: We must declare all cdef variables before we use them
+    in this function to avoid 'cdef statement not allowed here' errors.
     """
     cdef FILE* f = fopen(path, "rb")
     if not f:
@@ -158,17 +132,19 @@ cdef char* read_file_contents(const char* path) except NULL:
     cdef size_t chunk = 65536
     cdef size_t used = 0
     cdef char* buf = <char*>malloc(chunk)
-    cdef char* new_buf
     if not buf:
         fclose(f)
         return NULL
 
     cdef size_t got
+    cdef char* new_buf
+
     while True:
         got = fread(buf + used, 1, chunk - used, f)
         if got == 0:
             break
         used += got
+
         if used == chunk:
             chunk *= 2
             new_buf = <char*>realloc(buf, chunk)
@@ -184,16 +160,15 @@ cdef char* read_file_contents(const char* path) except NULL:
 
 cdef size_t count_tokens(const char* text):
     """
-    Quick 'word-like token' counter. Splits on whitespace.
+    Quick whitespace-based token counter.
     """
     if text == NULL:
         return 0
-    cdef:
-        size_t length = strlen(text)
-        size_t i = 0
-        size_t count = 0
-        bint in_space = True
-        char c
+    cdef size_t length = strlen(text)
+    cdef size_t i = 0
+    cdef size_t count = 0
+    cdef bint in_space = True
+    cdef char c
 
     for i in range(length):
         c = text[i]
@@ -205,123 +180,26 @@ cdef size_t count_tokens(const char* text):
             in_space = False
     return count
 
-# --------------------------------------------------------------------------
-# 7. Directory / ignoring stubs (placeholders)
-# --------------------------------------------------------------------------
-cdef char* get_relative_path(const char* fullpath, const char* base_path) except NULL:
-    """
-    Placeholder for your real 'relative path' logic.
-    """
-    cdef size_t length = strlen(fullpath)
-    cdef char* out = <char*>malloc(length + 1)
-    if not out:
-        return NULL
-    strcpy(out, fullpath)
-    return out
-
-cdef bint should_ignore(const char* rel_path, CConfig* config):
-    """
-    Placeholder for your 'ignore' logic, e.g. matching rel_path to patterns.
-    """
-    return False
-
-cdef int calculate_priority(const char* rel_path, CConfig* config):
-    """
-    Placeholder for your real scoring logic.
-    """
-    return 0
-
-# --------------------------------------------------------------------------
-# 8. The main Chunker class
-# --------------------------------------------------------------------------
-cdef class Chunker:
-    """
-    Example class that stores CConfig, processes files, and writes chunks.
-    """
-    cdef CConfig c_config
-    cdef list processed_files
-
-    def __cinit__(self, object py_config):
-        from src.config import KomodoConfig
-        if not isinstance(py_config, KomodoConfig):
-            raise TypeError("Chunker requires a KomodoConfig")
-
-        self.c_config = convert_to_cconfig(py_config)
-        self.processed_files = []
-
-    def add_file(self, rel_path: str, content: str, priority: int):
-        """
-        Store file info in a C struct and keep a Python list of them.
-        """
-        cdef ProcessedFile pf
-        pf.rel_path = make_c_string(rel_path)
-        pf.content = make_c_string(content)
-        pf.priority = priority
-        self.processed_files.append(pf)
-
-    def write_chunks(self):
-        """
-        Example logic for chunking data up to c_config.max_size.
-        """
-        cdef:
-            size_t current_size = 0
-            list current_chunk = []
-            int chunk_idx = 0
-            size_t entry_size
-
-        self.processed_files.sort(key=lambda x: x.priority, reverse=True)
-
-        for pf in self.processed_files:
-            entry_size = self._calculate_entry_size(pf)
-            if current_size + entry_size > self.c_config.max_size and current_chunk:
-                self._flush_chunk(current_chunk, chunk_idx)
-                chunk_idx += 1
-                current_size = 0
-                current_chunk = []
-
-            current_chunk.append(pf)
-            current_size += entry_size
-
-        if current_chunk:
-            self._flush_chunk(current_chunk, chunk_idx)
-
-    cdef size_t _calculate_entry_size(self, ProcessedFile pf):
-        if self.c_config.token_mode:
-            return count_tokens(pf.content)
-        else:
-            return strlen(pf.content) if pf.content else 0
-
-    cdef void _flush_chunk(self, list chunk_files, int chunk_idx):
-        """
-        Placeholder. Actually write out chunk_files to disk or something.
-        """
-        pass
-
-# --------------------------------------------------------------------------
-# 9. Additional Global Functions
-# --------------------------------------------------------------------------
+# 8. is_binary_file
 cdef bint is_binary_file(const char* path, const char** exts, size_t num_exts):
     """
-    Quick check: if file extension is in exts, or if we see a NUL byte
-    in first 512 bytes => treat as binary.
+    Quick check if file extension is in exts or if first 512 bytes have a null byte.
     """
-    cdef:
-        const char* ext = strrchr(path, b'.')
-        FILE* fp
-        char buffer[512]
-        size_t nread
-        int i
+    cdef const char* ext = strrchr(path, b'.')
+    cdef FILE* fp
+    cdef char buffer[512]
+    cdef size_t nread
+    cdef int i
 
     if ext != NULL:
-        ext += 1  # skip the '.'
+        ext += 1
         for i in range(num_exts):
             if strcasecmp(ext, exts[i]) == 0:
                 return True
 
-    # read first 512 bytes & check for NUL
     fp = fopen(path, "rb")
     if not fp:
-        return True  # if unreadable, treat as binary or do something else
+        return True
 
     nread = fread(buffer, 1, 512, fp)
     fclose(fp)
@@ -329,104 +207,3 @@ cdef bint is_binary_file(const char* path, const char** exts, size_t num_exts):
         return True
 
     return False
-
-def py_is_binary(path: str, binary_exts: list) -> bool:
-    """
-    Python wrapper for is_binary_file.
-    """
-    cdef:
-        bytes b_path = path.encode()
-        size_t num_exts = len(binary_exts)
-        const char** c_exts = <const char**>malloc(num_exts * sizeof(char*))
-        bint result
-        int i
-
-    if not c_exts:
-        raise MemoryError("Failed to allocate c_exts")
-
-    for i in range(num_exts):
-        c_exts[i] = make_c_string(binary_exts[i])
-
-    result = is_binary_file(b_path, c_exts, num_exts)
-
-    # each allocated extension string shall be FREEEEEE
-    for i in range(num_exts):
-        if c_exts[i] != NULL:
-            free(c_exts[i])
-    free(c_exts)
-
-    return bool(result)
-
-cdef extern from "thread_pool.h":
-    ctypedef struct FileEntry:
-        char* path
-        char* content
-        int priority
-        size_t size
-
-    ctypedef struct FileQueue:
-        FileEntry** entries
-        size_t count
-        size_t capacity
-        pthread_mutex_t mutex
-
-    ctypedef struct ThreadPool:
-        pthread_t* threads
-        size_t num_threads
-        FileQueue* queue
-        char* base_path
-        CConfig* config
-        int should_stop
-        pthread_mutex_t mutex
-        pthread_cond_t condition
-        FileEntry** processed_files
-        size_t processed_count
-        size_t processed_capacity
-        pthread_mutex_t processed_mutex
-
-    ThreadPool* create_thread_pool(size_t num_threads, const char* base_path, CConfig* config)
-    void destroy_thread_pool(ThreadPool* pool)
-    void thread_pool_process_directory(ThreadPool* pool)
-    void process_chunks(ThreadPool* pool)
-
-    void thread_pool_wait_until_done(ThreadPool* pool)
-
-
-cdef class ParallelChunker:
-    cdef ThreadPool* pool
-    cdef CConfig c_config
-    
-    def __enter__(self):
-        return self
-    
-    def __cinit__(self, object py_config, int num_threads=16):
-        self.c_config = convert_to_cconfig(py_config)
-        self.pool = create_thread_pool(num_threads, ".", &self.c_config)
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.pool:
-            destroy_thread_pool(self.pool)
-            self.pool = NULL
-        return False
-
-    def process_directory(self, str path):
-        if not os.path.exists(path):
-            raise ValueError(f"Directory does not exist: {path}")
-        if not os.path.isdir(path):
-            raise ValueError(f"Path is not a directory: {path}")
-                
-        abs_path = os.path.abspath(path)
-        if self.pool:
-            destroy_thread_pool(self.pool)
-            self.pool = NULL
-
-        cdef char* c_path = make_c_string(abs_path)
-        self.pool = create_thread_pool(16, c_path, &self.c_config)
-        thread_pool_process_directory(self.pool)
-
-        # +++ WAIT for queue empty & tasks done +++
-        thread_pool_wait_until_done(self.pool)
-
-        # Now chunk them
-        process_chunks(self.pool)
-        free(c_path)
