@@ -4,7 +4,7 @@ import shutil
 import tempfile
 
 from src.config import KomodoConfig
-from src.core import ParallelChunker
+from src.multi_dirs_chunker import ParallelChunker
 
 @pytest.fixture
 def sample_dir():

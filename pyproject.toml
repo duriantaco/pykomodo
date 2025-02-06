@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=64", "wheel", "Cython"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "komodo"
+version = "0.0.0"
+dependencies = ["pathspec"]
+
+[tool.setuptools]
+packages = ["src"]
+zip-safe = false

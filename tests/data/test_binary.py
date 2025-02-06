@@ -2,7 +2,7 @@ import os
 import shutil
 import tempfile
 from src.config import KomodoConfig
-from src.core import ParallelChunker
+from src.multi_dirs_chunker import ParallelChunker
 
 def test_parallel_chunker_binary():
     test_dir = os.path.join(os.path.dirname(__file__), "binary_test")

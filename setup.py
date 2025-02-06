@@ -14,7 +14,9 @@ extensions = [
     ),
     Extension(
         name="src.multi_dirs_chunker",  
-        sources=["src/multi_dirs_chunker.pyx"],
+        sources=["src/multi_dirs_chunker.pyx",         
+                 "src/dirent_wrapper.c", 
+        ],
         language="c",
         include_dirs=["./include"],
         extra_compile_args=['-pthread'],

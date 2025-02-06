@@ -3,7 +3,9 @@
 /* BEGIN: Cython Metadata
 {
     "distutils": {
-        "depends": [],
+        "depends": [
+            "include/dirent_wrapper.h"
+        ],
         "extra_compile_args": [
             "-pthread"
         ],
@@ -16,7 +18,8 @@
         "language": "c",
         "name": "src.multi_dirs_chunker",
         "sources": [
-            "src/multi_dirs_chunker.pyx"
+            "src/multi_dirs_chunker.pyx",
+            "src/dirent_wrapper.c"
         ]
     },
     "module_name": "src.multi_dirs_chunker"
@@ -1247,9 +1250,10 @@ static CYTHON_INLINE float __PYX_NAN() {
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "string.h"
+#include "dirent_wrapper.h"
 #include "sys/types.h"
 #include "fnmatch.h"
-#include "dirent.h"
 #include "pthread.h"
 #include "sys/stat.h"
 #include "stdio.h"
@@ -1522,7 +1526,7 @@ struct __pyx_t_3src_18multi_dirs_chunker_FileEntry;
 struct __pyx_t_3src_18multi_dirs_chunker_FileQueue;
 struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool;
 
-/* "src/multi_dirs_chunker.pyx":45
+/* "src/multi_dirs_chunker.pyx":48
  *     int pthread_join(pthread_t, void**)
  * 
  * cdef enum:             # <<<<<<<<<<<<<<
@@ -1533,7 +1537,7 @@ enum  {
   __pyx_e_3src_18multi_dirs_chunker_MAX_PATH_LEN = 0x1000
 };
 
-/* "src/multi_dirs_chunker.pyx":68
+/* "src/multi_dirs_chunker.pyx":70
  * cdef int INITIAL_QUEUE_SIZE = 1024
  * 
  * cdef struct CPriorityRule:             # <<<<<<<<<<<<<<
@@ -1545,7 +1549,7 @@ struct __pyx_t_3src_18multi_dirs_chunker_CPriorityRule {
   int score;
 };
 
-/* "src/multi_dirs_chunker.pyx":72
+/* "src/multi_dirs_chunker.pyx":74
  *     int score
  * 
  * cdef struct CConfig:             # <<<<<<<<<<<<<<
@@ -1568,8 +1572,8 @@ struct __pyx_t_3src_18multi_dirs_chunker_CConfig {
   int whole_chunk_mode;
 };
 
-/* "src/multi_dirs_chunker.pyx":90
- * 
+/* "src/multi_dirs_chunker.pyx":91
+ *     bint whole_chunk_mode
  * 
  * cdef struct FileEntry:             # <<<<<<<<<<<<<<
  *     char* path
@@ -1582,7 +1586,7 @@ struct __pyx_t_3src_18multi_dirs_chunker_FileEntry {
   size_t size;
 };
 
-/* "src/multi_dirs_chunker.pyx":96
+/* "src/multi_dirs_chunker.pyx":97
  *     size_t size
  * 
  * cdef struct FileQueue:             # <<<<<<<<<<<<<<
@@ -1596,7 +1600,7 @@ struct __pyx_t_3src_18multi_dirs_chunker_FileQueue {
   pthread_mutex_t mutex;
 };
 
-/* "src/multi_dirs_chunker.pyx":102
+/* "src/multi_dirs_chunker.pyx":103
  *     pthread_mutex_t mutex
  * 
  * cdef struct ThreadPool:             # <<<<<<<<<<<<<<
@@ -1619,12 +1623,12 @@ struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool {
   size_t active_count;
 };
 
-/* "src/multi_dirs_chunker.pyx":736
+/* "src/multi_dirs_chunker.pyx":899
  * ##################################################
  * 
  * cdef class ParallelChunker:             # <<<<<<<<<<<<<<
- *     cdef:
- *         ThreadPool* pool
+ *     """
+ *     Python-facing class that wraps the entire C-based pipeline.
  */
 struct __pyx_obj_3src_18multi_dirs_chunker_ParallelChunker {
   PyObject_HEAD
@@ -1789,28 +1793,6 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg
 /* RaiseException.proto */
 static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb, PyObject *cause);
 
-/* GetItemInt.proto */
-#define __Pyx_GetItemInt(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
-    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
-    __Pyx_GetItemInt_Fast(o, (Py_ssize_t)i, is_list, wraparound, boundscheck) :\
-    (is_list ? (PyErr_SetString(PyExc_IndexError, "list index out of range"), (PyObject*)NULL) :\
-               __Pyx_GetItemInt_Generic(o, to_py_func(i))))
-#define __Pyx_GetItemInt_List(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
-    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
-    __Pyx_GetItemInt_List_Fast(o, (Py_ssize_t)i, wraparound, boundscheck) :\
-    (PyErr_SetString(PyExc_IndexError, "list index out of range"), (PyObject*)NULL))
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_List_Fast(PyObject *o, Py_ssize_t i,
-                                                              int wraparound, int boundscheck);
-#define __Pyx_GetItemInt_Tuple(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
-    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
-    __Pyx_GetItemInt_Tuple_Fast(o, (Py_ssize_t)i, wraparound, boundscheck) :\
-    (PyErr_SetString(PyExc_IndexError, "tuple index out of range"), (PyObject*)NULL))
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Tuple_Fast(PyObject *o, Py_ssize_t i,
-                                                              int wraparound, int boundscheck);
-static PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j);
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i,
-                                                     int is_list, int wraparound, int boundscheck);
-
 /* PyFunctionFastCall.proto */
 #if CYTHON_FAST_PYCALL
 #if !CYTHON_VECTORCALL
@@ -1895,27 +1877,48 @@ static void __Pyx_WriteUnraisable(const char *name, int clineno,
                                   int lineno, const char *filename,
                                   int full_traceback, int nogil);
 
-/* PyObjectFormatSimple.proto */
-#if CYTHON_COMPILING_IN_PYPY
-    #define __Pyx_PyObject_FormatSimple(s, f) (\
-        likely(PyUnicode_CheckExact(s)) ? (Py_INCREF(s), s) :\
-        PyObject_Format(s, f))
-#elif PY_MAJOR_VERSION < 3
-    #define __Pyx_PyObject_FormatSimple(s, f) (\
-        likely(PyUnicode_CheckExact(s)) ? (Py_INCREF(s), s) :\
-        likely(PyString_CheckExact(s)) ? PyUnicode_FromEncodedObject(s, NULL, "strict") :\
-        PyObject_Format(s, f))
-#elif CYTHON_USE_TYPE_SLOTS
-    #define __Pyx_PyObject_FormatSimple(s, f) (\
-        likely(PyUnicode_CheckExact(s)) ? (Py_INCREF(s), s) :\
-        likely(PyLong_CheckExact(s)) ? PyLong_Type.tp_repr(s) :\
-        likely(PyFloat_CheckExact(s)) ? PyFloat_Type.tp_repr(s) :\
-        PyObject_Format(s, f))
+/* decode_c_string_utf16.proto */
+static CYTHON_INLINE PyObject *__Pyx_PyUnicode_DecodeUTF16(const char *s, Py_ssize_t size, const char *errors) {
+    int byteorder = 0;
+    return PyUnicode_DecodeUTF16(s, size, errors, &byteorder);
+}
+static CYTHON_INLINE PyObject *__Pyx_PyUnicode_DecodeUTF16LE(const char *s, Py_ssize_t size, const char *errors) {
+    int byteorder = -1;
+    return PyUnicode_DecodeUTF16(s, size, errors, &byteorder);
+}
+static CYTHON_INLINE PyObject *__Pyx_PyUnicode_DecodeUTF16BE(const char *s, Py_ssize_t size, const char *errors) {
+    int byteorder = 1;
+    return PyUnicode_DecodeUTF16(s, size, errors, &byteorder);
+}
+
+/* decode_c_bytes.proto */
+static CYTHON_INLINE PyObject* __Pyx_decode_c_bytes(
+         const char* cstring, Py_ssize_t length, Py_ssize_t start, Py_ssize_t stop,
+         const char* encoding, const char* errors,
+         PyObject* (*decode_func)(const char *s, Py_ssize_t size, const char *errors));
+
+/* decode_bytes.proto */
+static CYTHON_INLINE PyObject* __Pyx_decode_bytes(
+         PyObject* string, Py_ssize_t start, Py_ssize_t stop,
+         const char* encoding, const char* errors,
+         PyObject* (*decode_func)(const char *s, Py_ssize_t size, const char *errors)) {
+    char* as_c_string;
+    Py_ssize_t size;
+#if CYTHON_ASSUME_SAFE_MACROS
+    as_c_string = PyBytes_AS_STRING(string);
+    size = PyBytes_GET_SIZE(string);
 #else
-    #define __Pyx_PyObject_FormatSimple(s, f) (\
-        likely(PyUnicode_CheckExact(s)) ? (Py_INCREF(s), s) :\
-        PyObject_Format(s, f))
+    if (PyBytes_AsStringAndSize(string, &as_c_string, &size) < 0) {
+        return NULL;
+    }
 #endif
+    return __Pyx_decode_c_bytes(
+        as_c_string, size,
+        start, stop, encoding, errors, decode_func);
+}
+
+/* PyUnicode_Unicode.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyUnicode_Unicode(PyObject *obj);
 
 /* IncludeStringH.proto */
 #include <string.h>
@@ -1928,6 +1931,15 @@ static PyObject* __Pyx_PyUnicode_Join(PyObject* value_tuple, Py_ssize_t value_co
 #if CYTHON_COMPILING_IN_CPYTHON
 static CYTHON_INLINE PyObject* __Pyx_PyList_FromArray(PyObject *const *src, Py_ssize_t n);
 static CYTHON_INLINE PyObject* __Pyx_PyTuple_FromArray(PyObject *const *src, Py_ssize_t n);
+#endif
+
+/* SliceTupleAndList.proto */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyList_GetSlice(PyObject* src, Py_ssize_t start, Py_ssize_t stop);
+static CYTHON_INLINE PyObject* __Pyx_PyTuple_GetSlice(PyObject* src, Py_ssize_t start, Py_ssize_t stop);
+#else
+#define __Pyx_PyList_GetSlice(seq, start, stop)   PySequence_GetSlice(seq, start, stop)
+#define __Pyx_PyTuple_GetSlice(seq, start, stop)  PySequence_GetSlice(seq, start, stop)
 #endif
 
 /* BytesEquals.proto */
@@ -2003,6 +2015,28 @@ static void __Pyx_RaiseArgtupleInvalid(const char* func_name, int exact,
     ((likely(__Pyx_IS_TYPE(obj, type) | (none_allowed && (obj == Py_None)))) ? 1 :\
         __Pyx__ArgTypeTest(obj, type, name, exact))
 static int __Pyx__ArgTypeTest(PyObject *obj, PyTypeObject *type, const char *name, int exact);
+
+/* GetItemInt.proto */
+#define __Pyx_GetItemInt(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
+    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
+    __Pyx_GetItemInt_Fast(o, (Py_ssize_t)i, is_list, wraparound, boundscheck) :\
+    (is_list ? (PyErr_SetString(PyExc_IndexError, "list index out of range"), (PyObject*)NULL) :\
+               __Pyx_GetItemInt_Generic(o, to_py_func(i))))
+#define __Pyx_GetItemInt_List(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
+    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
+    __Pyx_GetItemInt_List_Fast(o, (Py_ssize_t)i, wraparound, boundscheck) :\
+    (PyErr_SetString(PyExc_IndexError, "list index out of range"), (PyObject*)NULL))
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_List_Fast(PyObject *o, Py_ssize_t i,
+                                                              int wraparound, int boundscheck);
+#define __Pyx_GetItemInt_Tuple(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
+    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
+    __Pyx_GetItemInt_Tuple_Fast(o, (Py_ssize_t)i, wraparound, boundscheck) :\
+    (PyErr_SetString(PyExc_IndexError, "tuple index out of range"), (PyObject*)NULL))
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Tuple_Fast(PyObject *o, Py_ssize_t i,
+                                                              int wraparound, int boundscheck);
+static PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j);
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i,
+                                                     int is_list, int wraparound, int boundscheck);
 
 /* KeywordStringCheck.proto */
 static int __Pyx_CheckKeywordStrings(PyObject *kw, const char* function_name, int kw_allowed);
@@ -2328,7 +2362,6 @@ static int __pyx_f_3src_18multi_dirs_chunker_should_ignore_file(char const *, st
 static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *, struct __pyx_t_3src_18multi_dirs_chunker_CConfig *); /*proto*/
 static int __pyx_f_3src_18multi_dirs_chunker_calculate_priority(char const *, struct __pyx_t_3src_18multi_dirs_chunker_CConfig *); /*proto*/
 static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *, size_t *); /*proto*/
-static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *); /*proto*/
 static struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_f_3src_18multi_dirs_chunker_create_file_queue(void); /*proto*/
 static void __pyx_f_3src_18multi_dirs_chunker_destroy_file_queue(struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *); /*proto*/
 static void __pyx_f_3src_18multi_dirs_chunker_add_to_queue(struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *, struct __pyx_t_3src_18multi_dirs_chunker_FileEntry *); /*proto*/
@@ -2340,6 +2373,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_thread_pool_wait_until_done(struct
 static int __pyx_f_3src_18multi_dirs_chunker_compare_file_entries(void const *, void const *); /*proto*/
 static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *, size_t, int, struct __pyx_t_3src_18multi_dirs_chunker_CConfig *); /*proto*/
 static void __pyx_f_3src_18multi_dirs_chunker_write_chunk_single_file(char const *, size_t, FILE *); /*proto*/
+static PyObject *__pyx_f_3src_18multi_dirs_chunker_python_split_tokens(char *); /*proto*/
 static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *); /*proto*/
 /* #### Code section: typeinfo ### */
 /* #### Code section: before_global_var ### */
@@ -2357,15 +2391,18 @@ static PyObject *__pyx_builtin_TypeError;
 /* #### Code section: string_decls ### */
 static const char __pyx_k_d[] = "d";
 static const char __pyx_k__2[] = "\n";
+static const char __pyx_k__3[] = "\n\n";
+static const char __pyx_k__4[] = " ";
 static const char __pyx_k_gc[] = "gc";
 static const char __pyx_k_so[] = "so";
-static const char __pyx_k__19[] = "?";
+static const char __pyx_k__21[] = "?";
 static const char __pyx_k_dll[] = "dll";
 static const char __pyx_k_exe[] = "exe";
 static const char __pyx_k_git[] = ".git";
 static const char __pyx_k_pyc[] = "*.pyc";
 static const char __pyx_k_pyo[] = "*.pyo";
 static const char __pyx_k_File[] = "File: ";
+static const char __pyx_k_None[] = "None";
 static const char __pyx_k_dirs[] = "dirs";
 static const char __pyx_k_idea[] = ".idea";
 static const char __pyx_k_main[] = "__main__";
@@ -2477,6 +2514,7 @@ typedef struct {
   PyObject *__pyx_kp_u_Failed_to_create_thread_pool;
   PyObject *__pyx_kp_u_File;
   PyObject *__pyx_n_s_MemoryError;
+  PyObject *__pyx_kp_u_None;
   PyObject *__pyx_n_s_ParallelChunker;
   PyObject *__pyx_n_s_ParallelChunker___reduce_cython;
   PyObject *__pyx_n_s_ParallelChunker___setstate_cytho;
@@ -2485,9 +2523,11 @@ typedef struct {
   PyObject *__pyx_kp_u_Pool_is_already_destroyed;
   PyObject *__pyx_n_s_RuntimeError;
   PyObject *__pyx_n_s_TypeError;
-  PyObject *__pyx_n_s__19;
   PyObject *__pyx_kp_b__2;
   PyObject *__pyx_kp_u__2;
+  PyObject *__pyx_n_s__21;
+  PyObject *__pyx_kp_u__3;
+  PyObject *__pyx_kp_u__4;
   PyObject *__pyx_n_s_asyncio_coroutines;
   PyObject *__pyx_n_s_b_dir;
   PyObject *__pyx_n_s_binary_extensions;
@@ -2539,23 +2579,23 @@ typedef struct {
   PyObject *__pyx_n_s_user_unignore;
   PyObject *__pyx_kp_u_utf_8;
   PyObject *__pyx_n_s_whole_chunk_mode;
-  PyObject *__pyx_k__3;
-  PyObject *__pyx_k__4;
   PyObject *__pyx_k__5;
   PyObject *__pyx_k__6;
+  PyObject *__pyx_k__7;
+  PyObject *__pyx_k__8;
   PyObject *__pyx_tuple_;
-  PyObject *__pyx_tuple__7;
-  PyObject *__pyx_tuple__8;
   PyObject *__pyx_tuple__9;
   PyObject *__pyx_tuple__10;
   PyObject *__pyx_tuple__11;
   PyObject *__pyx_tuple__12;
+  PyObject *__pyx_tuple__13;
   PyObject *__pyx_tuple__14;
-  PyObject *__pyx_tuple__17;
-  PyObject *__pyx_codeobj__13;
+  PyObject *__pyx_tuple__16;
+  PyObject *__pyx_tuple__19;
   PyObject *__pyx_codeobj__15;
-  PyObject *__pyx_codeobj__16;
+  PyObject *__pyx_codeobj__17;
   PyObject *__pyx_codeobj__18;
+  PyObject *__pyx_codeobj__20;
 } __pyx_mstate;
 
 #if CYTHON_USE_MODULE_STATE
@@ -2606,6 +2646,7 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_kp_u_Failed_to_create_thread_pool);
   Py_CLEAR(clear_module_state->__pyx_kp_u_File);
   Py_CLEAR(clear_module_state->__pyx_n_s_MemoryError);
+  Py_CLEAR(clear_module_state->__pyx_kp_u_None);
   Py_CLEAR(clear_module_state->__pyx_n_s_ParallelChunker);
   Py_CLEAR(clear_module_state->__pyx_n_s_ParallelChunker___reduce_cython);
   Py_CLEAR(clear_module_state->__pyx_n_s_ParallelChunker___setstate_cytho);
@@ -2614,9 +2655,11 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_kp_u_Pool_is_already_destroyed);
   Py_CLEAR(clear_module_state->__pyx_n_s_RuntimeError);
   Py_CLEAR(clear_module_state->__pyx_n_s_TypeError);
-  Py_CLEAR(clear_module_state->__pyx_n_s__19);
   Py_CLEAR(clear_module_state->__pyx_kp_b__2);
   Py_CLEAR(clear_module_state->__pyx_kp_u__2);
+  Py_CLEAR(clear_module_state->__pyx_n_s__21);
+  Py_CLEAR(clear_module_state->__pyx_kp_u__3);
+  Py_CLEAR(clear_module_state->__pyx_kp_u__4);
   Py_CLEAR(clear_module_state->__pyx_n_s_asyncio_coroutines);
   Py_CLEAR(clear_module_state->__pyx_n_s_b_dir);
   Py_CLEAR(clear_module_state->__pyx_n_s_binary_extensions);
@@ -2668,23 +2711,23 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_user_unignore);
   Py_CLEAR(clear_module_state->__pyx_kp_u_utf_8);
   Py_CLEAR(clear_module_state->__pyx_n_s_whole_chunk_mode);
-  Py_CLEAR(clear_module_state->__pyx_k__3);
-  Py_CLEAR(clear_module_state->__pyx_k__4);
   Py_CLEAR(clear_module_state->__pyx_k__5);
   Py_CLEAR(clear_module_state->__pyx_k__6);
+  Py_CLEAR(clear_module_state->__pyx_k__7);
+  Py_CLEAR(clear_module_state->__pyx_k__8);
   Py_CLEAR(clear_module_state->__pyx_tuple_);
-  Py_CLEAR(clear_module_state->__pyx_tuple__7);
-  Py_CLEAR(clear_module_state->__pyx_tuple__8);
   Py_CLEAR(clear_module_state->__pyx_tuple__9);
   Py_CLEAR(clear_module_state->__pyx_tuple__10);
   Py_CLEAR(clear_module_state->__pyx_tuple__11);
   Py_CLEAR(clear_module_state->__pyx_tuple__12);
+  Py_CLEAR(clear_module_state->__pyx_tuple__13);
   Py_CLEAR(clear_module_state->__pyx_tuple__14);
-  Py_CLEAR(clear_module_state->__pyx_tuple__17);
-  Py_CLEAR(clear_module_state->__pyx_codeobj__13);
+  Py_CLEAR(clear_module_state->__pyx_tuple__16);
+  Py_CLEAR(clear_module_state->__pyx_tuple__19);
   Py_CLEAR(clear_module_state->__pyx_codeobj__15);
-  Py_CLEAR(clear_module_state->__pyx_codeobj__16);
+  Py_CLEAR(clear_module_state->__pyx_codeobj__17);
   Py_CLEAR(clear_module_state->__pyx_codeobj__18);
+  Py_CLEAR(clear_module_state->__pyx_codeobj__20);
   return 0;
 }
 #endif
@@ -2713,6 +2756,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_kp_u_Failed_to_create_thread_pool);
   Py_VISIT(traverse_module_state->__pyx_kp_u_File);
   Py_VISIT(traverse_module_state->__pyx_n_s_MemoryError);
+  Py_VISIT(traverse_module_state->__pyx_kp_u_None);
   Py_VISIT(traverse_module_state->__pyx_n_s_ParallelChunker);
   Py_VISIT(traverse_module_state->__pyx_n_s_ParallelChunker___reduce_cython);
   Py_VISIT(traverse_module_state->__pyx_n_s_ParallelChunker___setstate_cytho);
@@ -2721,9 +2765,11 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_kp_u_Pool_is_already_destroyed);
   Py_VISIT(traverse_module_state->__pyx_n_s_RuntimeError);
   Py_VISIT(traverse_module_state->__pyx_n_s_TypeError);
-  Py_VISIT(traverse_module_state->__pyx_n_s__19);
   Py_VISIT(traverse_module_state->__pyx_kp_b__2);
   Py_VISIT(traverse_module_state->__pyx_kp_u__2);
+  Py_VISIT(traverse_module_state->__pyx_n_s__21);
+  Py_VISIT(traverse_module_state->__pyx_kp_u__3);
+  Py_VISIT(traverse_module_state->__pyx_kp_u__4);
   Py_VISIT(traverse_module_state->__pyx_n_s_asyncio_coroutines);
   Py_VISIT(traverse_module_state->__pyx_n_s_b_dir);
   Py_VISIT(traverse_module_state->__pyx_n_s_binary_extensions);
@@ -2775,23 +2821,23 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_user_unignore);
   Py_VISIT(traverse_module_state->__pyx_kp_u_utf_8);
   Py_VISIT(traverse_module_state->__pyx_n_s_whole_chunk_mode);
-  Py_VISIT(traverse_module_state->__pyx_k__3);
-  Py_VISIT(traverse_module_state->__pyx_k__4);
   Py_VISIT(traverse_module_state->__pyx_k__5);
   Py_VISIT(traverse_module_state->__pyx_k__6);
+  Py_VISIT(traverse_module_state->__pyx_k__7);
+  Py_VISIT(traverse_module_state->__pyx_k__8);
   Py_VISIT(traverse_module_state->__pyx_tuple_);
-  Py_VISIT(traverse_module_state->__pyx_tuple__7);
-  Py_VISIT(traverse_module_state->__pyx_tuple__8);
   Py_VISIT(traverse_module_state->__pyx_tuple__9);
   Py_VISIT(traverse_module_state->__pyx_tuple__10);
   Py_VISIT(traverse_module_state->__pyx_tuple__11);
   Py_VISIT(traverse_module_state->__pyx_tuple__12);
+  Py_VISIT(traverse_module_state->__pyx_tuple__13);
   Py_VISIT(traverse_module_state->__pyx_tuple__14);
-  Py_VISIT(traverse_module_state->__pyx_tuple__17);
-  Py_VISIT(traverse_module_state->__pyx_codeobj__13);
+  Py_VISIT(traverse_module_state->__pyx_tuple__16);
+  Py_VISIT(traverse_module_state->__pyx_tuple__19);
   Py_VISIT(traverse_module_state->__pyx_codeobj__15);
-  Py_VISIT(traverse_module_state->__pyx_codeobj__16);
+  Py_VISIT(traverse_module_state->__pyx_codeobj__17);
   Py_VISIT(traverse_module_state->__pyx_codeobj__18);
+  Py_VISIT(traverse_module_state->__pyx_codeobj__20);
   return 0;
 }
 #endif
@@ -2840,6 +2886,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_kp_u_Failed_to_create_thread_pool __pyx_mstate_global->__pyx_kp_u_Failed_to_create_thread_pool
 #define __pyx_kp_u_File __pyx_mstate_global->__pyx_kp_u_File
 #define __pyx_n_s_MemoryError __pyx_mstate_global->__pyx_n_s_MemoryError
+#define __pyx_kp_u_None __pyx_mstate_global->__pyx_kp_u_None
 #define __pyx_n_s_ParallelChunker __pyx_mstate_global->__pyx_n_s_ParallelChunker
 #define __pyx_n_s_ParallelChunker___reduce_cython __pyx_mstate_global->__pyx_n_s_ParallelChunker___reduce_cython
 #define __pyx_n_s_ParallelChunker___setstate_cytho __pyx_mstate_global->__pyx_n_s_ParallelChunker___setstate_cytho
@@ -2848,9 +2895,11 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_kp_u_Pool_is_already_destroyed __pyx_mstate_global->__pyx_kp_u_Pool_is_already_destroyed
 #define __pyx_n_s_RuntimeError __pyx_mstate_global->__pyx_n_s_RuntimeError
 #define __pyx_n_s_TypeError __pyx_mstate_global->__pyx_n_s_TypeError
-#define __pyx_n_s__19 __pyx_mstate_global->__pyx_n_s__19
 #define __pyx_kp_b__2 __pyx_mstate_global->__pyx_kp_b__2
 #define __pyx_kp_u__2 __pyx_mstate_global->__pyx_kp_u__2
+#define __pyx_n_s__21 __pyx_mstate_global->__pyx_n_s__21
+#define __pyx_kp_u__3 __pyx_mstate_global->__pyx_kp_u__3
+#define __pyx_kp_u__4 __pyx_mstate_global->__pyx_kp_u__4
 #define __pyx_n_s_asyncio_coroutines __pyx_mstate_global->__pyx_n_s_asyncio_coroutines
 #define __pyx_n_s_b_dir __pyx_mstate_global->__pyx_n_s_b_dir
 #define __pyx_n_s_binary_extensions __pyx_mstate_global->__pyx_n_s_binary_extensions
@@ -2902,31 +2951,31 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_user_unignore __pyx_mstate_global->__pyx_n_s_user_unignore
 #define __pyx_kp_u_utf_8 __pyx_mstate_global->__pyx_kp_u_utf_8
 #define __pyx_n_s_whole_chunk_mode __pyx_mstate_global->__pyx_n_s_whole_chunk_mode
-#define __pyx_k__3 __pyx_mstate_global->__pyx_k__3
-#define __pyx_k__4 __pyx_mstate_global->__pyx_k__4
 #define __pyx_k__5 __pyx_mstate_global->__pyx_k__5
 #define __pyx_k__6 __pyx_mstate_global->__pyx_k__6
+#define __pyx_k__7 __pyx_mstate_global->__pyx_k__7
+#define __pyx_k__8 __pyx_mstate_global->__pyx_k__8
 #define __pyx_tuple_ __pyx_mstate_global->__pyx_tuple_
-#define __pyx_tuple__7 __pyx_mstate_global->__pyx_tuple__7
-#define __pyx_tuple__8 __pyx_mstate_global->__pyx_tuple__8
 #define __pyx_tuple__9 __pyx_mstate_global->__pyx_tuple__9
 #define __pyx_tuple__10 __pyx_mstate_global->__pyx_tuple__10
 #define __pyx_tuple__11 __pyx_mstate_global->__pyx_tuple__11
 #define __pyx_tuple__12 __pyx_mstate_global->__pyx_tuple__12
+#define __pyx_tuple__13 __pyx_mstate_global->__pyx_tuple__13
 #define __pyx_tuple__14 __pyx_mstate_global->__pyx_tuple__14
-#define __pyx_tuple__17 __pyx_mstate_global->__pyx_tuple__17
-#define __pyx_codeobj__13 __pyx_mstate_global->__pyx_codeobj__13
+#define __pyx_tuple__16 __pyx_mstate_global->__pyx_tuple__16
+#define __pyx_tuple__19 __pyx_mstate_global->__pyx_tuple__19
 #define __pyx_codeobj__15 __pyx_mstate_global->__pyx_codeobj__15
-#define __pyx_codeobj__16 __pyx_mstate_global->__pyx_codeobj__16
+#define __pyx_codeobj__17 __pyx_mstate_global->__pyx_codeobj__17
 #define __pyx_codeobj__18 __pyx_mstate_global->__pyx_codeobj__18
+#define __pyx_codeobj__20 __pyx_mstate_global->__pyx_codeobj__20
 /* #### Code section: module_code ### */
 
-/* "src/multi_dirs_chunker.pyx":135
+/* "src/multi_dirs_chunker.pyx":132
  * ##################################################
  * 
  * cdef char* make_c_string(str s) except NULL:             # <<<<<<<<<<<<<<
- *     if s is None:
- *         return <char*>NULL
+ *     """
+ *     Allocate a C string from a Python string. Caller must free().
  */
 
 static char *__pyx_f_3src_18multi_dirs_chunker_make_c_string(PyObject *__pyx_v_s) {
@@ -2944,8 +2993,8 @@ static char *__pyx_f_3src_18multi_dirs_chunker_make_c_string(PyObject *__pyx_v_s
   __Pyx_RefNannySetupContext("make_c_string", 1);
 
   /* "src/multi_dirs_chunker.pyx":136
- * 
- * cdef char* make_c_string(str s) except NULL:
+ *     Allocate a C string from a Python string. Caller must free().
+ *     """
  *     if s is None:             # <<<<<<<<<<<<<<
  *         return <char*>NULL
  *     cdef bytes b = s.encode('utf-8')
@@ -2954,7 +3003,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_make_c_string(PyObject *__pyx_v_s
   if (__pyx_t_1) {
 
     /* "src/multi_dirs_chunker.pyx":137
- * cdef char* make_c_string(str s) except NULL:
+ *     """
  *     if s is None:
  *         return <char*>NULL             # <<<<<<<<<<<<<<
  *     cdef bytes b = s.encode('utf-8')
@@ -2964,8 +3013,8 @@ static char *__pyx_f_3src_18multi_dirs_chunker_make_c_string(PyObject *__pyx_v_s
     goto __pyx_L0;
 
     /* "src/multi_dirs_chunker.pyx":136
- * 
- * cdef char* make_c_string(str s) except NULL:
+ *     Allocate a C string from a Python string. Caller must free().
+ *     """
  *     if s is None:             # <<<<<<<<<<<<<<
  *         return <char*>NULL
  *     cdef bytes b = s.encode('utf-8')
@@ -3053,17 +3102,17 @@ static char *__pyx_f_3src_18multi_dirs_chunker_make_c_string(PyObject *__pyx_v_s
  *     strcpy(c_str, b)
  *     return c_str             # <<<<<<<<<<<<<<
  * 
- * 
+ * cdef void merge_ignore_patterns(CConfig* config,
  */
   __pyx_r = __pyx_v_c_str;
   goto __pyx_L0;
 
-  /* "src/multi_dirs_chunker.pyx":135
+  /* "src/multi_dirs_chunker.pyx":132
  * ##################################################
  * 
  * cdef char* make_c_string(str s) except NULL:             # <<<<<<<<<<<<<<
- *     if s is None:
- *         return <char*>NULL
+ *     """
+ *     Allocate a C string from a Python string. Caller must free().
  */
 
   /* function exit code */
@@ -3077,8 +3126,8 @@ static char *__pyx_f_3src_18multi_dirs_chunker_make_c_string(PyObject *__pyx_v_s
   return __pyx_r;
 }
 
-/* "src/multi_dirs_chunker.pyx":147
- * 
+/* "src/multi_dirs_chunker.pyx":145
+ *     return c_str
  * 
  * cdef void merge_ignore_patterns(CConfig* config,             # <<<<<<<<<<<<<<
  *                                 list user_ignore,
@@ -3102,8 +3151,8 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
   size_t __pyx_t_3;
   size_t __pyx_t_4;
   int __pyx_t_5;
-  PyObject *__pyx_t_6 = NULL;
-  char const *__pyx_t_7;
+  char const *__pyx_t_6;
+  PyObject *__pyx_t_7 = NULL;
   PyObject *__pyx_t_8 = NULL;
   PyObject *__pyx_t_9 = NULL;
   PyObject *__pyx_t_10 = NULL;
@@ -3113,32 +3162,32 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("merge_ignore_patterns", 1);
 
-  /* "src/multi_dirs_chunker.pyx":158
+  /* "src/multi_dirs_chunker.pyx":155
  *         char** new_ptr
  *         bytes pat_b, upat_b
  *         tuple builtin_ignores = BUILT_IN_IGNORES             # <<<<<<<<<<<<<<
  * 
- *     config.num_ignore = len(builtin_ignores)
+ *     # Copy built-in ignores
  */
   __Pyx_INCREF(__pyx_v_3src_18multi_dirs_chunker_BUILT_IN_IGNORES);
   __pyx_v_builtin_ignores = __pyx_v_3src_18multi_dirs_chunker_BUILT_IN_IGNORES;
 
-  /* "src/multi_dirs_chunker.pyx":160
- *         tuple builtin_ignores = BUILT_IN_IGNORES
+  /* "src/multi_dirs_chunker.pyx":158
  * 
+ *     # Copy built-in ignores
  *     config.num_ignore = len(builtin_ignores)             # <<<<<<<<<<<<<<
  *     config.ignore_patterns = <char**>malloc(config.num_ignore * sizeof(char*))
  *     if not config.ignore_patterns:
  */
   if (unlikely(__pyx_v_builtin_ignores == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 160, __pyx_L1_error)
+    __PYX_ERR(0, 158, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyTuple_GET_SIZE(__pyx_v_builtin_ignores); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 160, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyTuple_GET_SIZE(__pyx_v_builtin_ignores); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 158, __pyx_L1_error)
   __pyx_v_config->num_ignore = __pyx_t_1;
 
-  /* "src/multi_dirs_chunker.pyx":161
- * 
+  /* "src/multi_dirs_chunker.pyx":159
+ *     # Copy built-in ignores
  *     config.num_ignore = len(builtin_ignores)
  *     config.ignore_patterns = <char**>malloc(config.num_ignore * sizeof(char*))             # <<<<<<<<<<<<<<
  *     if not config.ignore_patterns:
@@ -3146,7 +3195,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
  */
   __pyx_v_config->ignore_patterns = ((char **)malloc((__pyx_v_config->num_ignore * (sizeof(char *)))));
 
-  /* "src/multi_dirs_chunker.pyx":162
+  /* "src/multi_dirs_chunker.pyx":160
  *     config.num_ignore = len(builtin_ignores)
  *     config.ignore_patterns = <char**>malloc(config.num_ignore * sizeof(char*))
  *     if not config.ignore_patterns:             # <<<<<<<<<<<<<<
@@ -3156,7 +3205,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
   __pyx_t_2 = (!(__pyx_v_config->ignore_patterns != 0));
   if (__pyx_t_2) {
 
-    /* "src/multi_dirs_chunker.pyx":163
+    /* "src/multi_dirs_chunker.pyx":161
  *     config.ignore_patterns = <char**>malloc(config.num_ignore * sizeof(char*))
  *     if not config.ignore_patterns:
  *         return             # <<<<<<<<<<<<<<
@@ -3165,7 +3214,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
  */
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":162
+    /* "src/multi_dirs_chunker.pyx":160
  *     config.num_ignore = len(builtin_ignores)
  *     config.ignore_patterns = <char**>malloc(config.num_ignore * sizeof(char*))
  *     if not config.ignore_patterns:             # <<<<<<<<<<<<<<
@@ -3174,7 +3223,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":165
+  /* "src/multi_dirs_chunker.pyx":163
  *         return
  * 
  *     for i in range(config.num_ignore):             # <<<<<<<<<<<<<<
@@ -3186,40 +3235,37 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
   for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
     __pyx_v_i = __pyx_t_5;
 
-    /* "src/multi_dirs_chunker.pyx":166
+    /* "src/multi_dirs_chunker.pyx":164
  * 
  *     for i in range(config.num_ignore):
  *         config.ignore_patterns[i] = strdup(builtin_ignores[i])             # <<<<<<<<<<<<<<
  * 
- *     total_ign = config.num_ignore + len(user_ignore)
+ *     # Add user ignores
  */
     if (unlikely(__pyx_v_builtin_ignores == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 166, __pyx_L1_error)
+      __PYX_ERR(0, 164, __pyx_L1_error)
     }
-    __pyx_t_6 = __Pyx_GetItemInt_Tuple(__pyx_v_builtin_ignores, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 166, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_7 = __Pyx_PyObject_AsString(__pyx_t_6); if (unlikely((!__pyx_t_7) && PyErr_Occurred())) __PYX_ERR(0, 166, __pyx_L1_error)
-    (__pyx_v_config->ignore_patterns[__pyx_v_i]) = strdup(__pyx_t_7);
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __pyx_t_6 = __Pyx_PyObject_AsString(PyTuple_GET_ITEM(__pyx_v_builtin_ignores, __pyx_v_i)); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 164, __pyx_L1_error)
+    (__pyx_v_config->ignore_patterns[__pyx_v_i]) = strdup(__pyx_t_6);
   }
 
-  /* "src/multi_dirs_chunker.pyx":168
- *         config.ignore_patterns[i] = strdup(builtin_ignores[i])
+  /* "src/multi_dirs_chunker.pyx":167
  * 
+ *     # Add user ignores
  *     total_ign = config.num_ignore + len(user_ignore)             # <<<<<<<<<<<<<<
  *     new_ptr = <char**>realloc(config.ignore_patterns, total_ign * sizeof(char*))
  *     if not new_ptr:
  */
   if (unlikely(__pyx_v_user_ignore == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 168, __pyx_L1_error)
+    __PYX_ERR(0, 167, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyList_GET_SIZE(__pyx_v_user_ignore); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 168, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyList_GET_SIZE(__pyx_v_user_ignore); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 167, __pyx_L1_error)
   __pyx_v_total_ign = (__pyx_v_config->num_ignore + __pyx_t_1);
 
-  /* "src/multi_dirs_chunker.pyx":169
- * 
+  /* "src/multi_dirs_chunker.pyx":168
+ *     # Add user ignores
  *     total_ign = config.num_ignore + len(user_ignore)
  *     new_ptr = <char**>realloc(config.ignore_patterns, total_ign * sizeof(char*))             # <<<<<<<<<<<<<<
  *     if not new_ptr:
@@ -3227,7 +3273,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
  */
   __pyx_v_new_ptr = ((char **)realloc(__pyx_v_config->ignore_patterns, (__pyx_v_total_ign * (sizeof(char *)))));
 
-  /* "src/multi_dirs_chunker.pyx":170
+  /* "src/multi_dirs_chunker.pyx":169
  *     total_ign = config.num_ignore + len(user_ignore)
  *     new_ptr = <char**>realloc(config.ignore_patterns, total_ign * sizeof(char*))
  *     if not new_ptr:             # <<<<<<<<<<<<<<
@@ -3237,7 +3283,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
   __pyx_t_2 = (!(__pyx_v_new_ptr != 0));
   if (__pyx_t_2) {
 
-    /* "src/multi_dirs_chunker.pyx":171
+    /* "src/multi_dirs_chunker.pyx":170
  *     new_ptr = <char**>realloc(config.ignore_patterns, total_ign * sizeof(char*))
  *     if not new_ptr:
  *         return             # <<<<<<<<<<<<<<
@@ -3246,7 +3292,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
  */
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":170
+    /* "src/multi_dirs_chunker.pyx":169
  *     total_ign = config.num_ignore + len(user_ignore)
  *     new_ptr = <char**>realloc(config.ignore_patterns, total_ign * sizeof(char*))
  *     if not new_ptr:             # <<<<<<<<<<<<<<
@@ -3255,7 +3301,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":172
+  /* "src/multi_dirs_chunker.pyx":171
  *     if not new_ptr:
  *         return
  *     config.ignore_patterns = new_ptr             # <<<<<<<<<<<<<<
@@ -3264,7 +3310,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
  */
   __pyx_v_config->ignore_patterns = __pyx_v_new_ptr;
 
-  /* "src/multi_dirs_chunker.pyx":174
+  /* "src/multi_dirs_chunker.pyx":173
  *     config.ignore_patterns = new_ptr
  * 
  *     idx = config.num_ignore             # <<<<<<<<<<<<<<
@@ -3274,7 +3320,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
   __pyx_t_3 = __pyx_v_config->num_ignore;
   __pyx_v_idx = __pyx_t_3;
 
-  /* "src/multi_dirs_chunker.pyx":175
+  /* "src/multi_dirs_chunker.pyx":174
  * 
  *     idx = config.num_ignore
  *     for pat in user_ignore:             # <<<<<<<<<<<<<<
@@ -3283,35 +3329,35 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
  */
   if (unlikely(__pyx_v_user_ignore == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 175, __pyx_L1_error)
+    __PYX_ERR(0, 174, __pyx_L1_error)
   }
-  __pyx_t_6 = __pyx_v_user_ignore; __Pyx_INCREF(__pyx_t_6);
+  __pyx_t_7 = __pyx_v_user_ignore; __Pyx_INCREF(__pyx_t_7);
   __pyx_t_1 = 0;
   for (;;) {
     {
-      Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_6);
+      Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_7);
       #if !CYTHON_ASSUME_SAFE_MACROS
-      if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 175, __pyx_L1_error)
+      if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 174, __pyx_L1_error)
       #endif
       if (__pyx_t_1 >= __pyx_temp) break;
     }
     #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-    __pyx_t_8 = PyList_GET_ITEM(__pyx_t_6, __pyx_t_1); __Pyx_INCREF(__pyx_t_8); __pyx_t_1++; if (unlikely((0 < 0))) __PYX_ERR(0, 175, __pyx_L1_error)
+    __pyx_t_8 = PyList_GET_ITEM(__pyx_t_7, __pyx_t_1); __Pyx_INCREF(__pyx_t_8); __pyx_t_1++; if (unlikely((0 < 0))) __PYX_ERR(0, 174, __pyx_L1_error)
     #else
-    __pyx_t_8 = __Pyx_PySequence_ITEM(__pyx_t_6, __pyx_t_1); __pyx_t_1++; if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 175, __pyx_L1_error)
+    __pyx_t_8 = __Pyx_PySequence_ITEM(__pyx_t_7, __pyx_t_1); __pyx_t_1++; if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 174, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     #endif
     __Pyx_XDECREF_SET(__pyx_v_pat, __pyx_t_8);
     __pyx_t_8 = 0;
 
-    /* "src/multi_dirs_chunker.pyx":176
+    /* "src/multi_dirs_chunker.pyx":175
  *     idx = config.num_ignore
  *     for pat in user_ignore:
  *         pat_b = pat.encode('utf-8')             # <<<<<<<<<<<<<<
  *         config.ignore_patterns[idx] = strdup(pat_b)
  *         idx += 1
  */
-    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_pat, __pyx_n_s_encode); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 176, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_pat, __pyx_n_s_encode); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 175, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __pyx_t_10 = NULL;
     __pyx_t_11 = 0;
@@ -3331,15 +3377,15 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
       PyObject *__pyx_callargs[2] = {__pyx_t_10, __pyx_kp_u_utf_8};
       __pyx_t_8 = __Pyx_PyObject_FastCall(__pyx_t_9, __pyx_callargs+1-__pyx_t_11, 1+__pyx_t_11);
       __Pyx_XDECREF(__pyx_t_10); __pyx_t_10 = 0;
-      if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 176, __pyx_L1_error)
+      if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 175, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
     }
-    if (!(likely(PyBytes_CheckExact(__pyx_t_8))||((__pyx_t_8) == Py_None) || __Pyx_RaiseUnexpectedTypeError("bytes", __pyx_t_8))) __PYX_ERR(0, 176, __pyx_L1_error)
+    if (!(likely(PyBytes_CheckExact(__pyx_t_8))||((__pyx_t_8) == Py_None) || __Pyx_RaiseUnexpectedTypeError("bytes", __pyx_t_8))) __PYX_ERR(0, 175, __pyx_L1_error)
     __Pyx_XDECREF_SET(__pyx_v_pat_b, ((PyObject*)__pyx_t_8));
     __pyx_t_8 = 0;
 
-    /* "src/multi_dirs_chunker.pyx":177
+    /* "src/multi_dirs_chunker.pyx":176
  *     for pat in user_ignore:
  *         pat_b = pat.encode('utf-8')
  *         config.ignore_patterns[idx] = strdup(pat_b)             # <<<<<<<<<<<<<<
@@ -3348,12 +3394,12 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
  */
     if (unlikely(__pyx_v_pat_b == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
-      __PYX_ERR(0, 177, __pyx_L1_error)
+      __PYX_ERR(0, 176, __pyx_L1_error)
     }
-    __pyx_t_7 = __Pyx_PyBytes_AsString(__pyx_v_pat_b); if (unlikely((!__pyx_t_7) && PyErr_Occurred())) __PYX_ERR(0, 177, __pyx_L1_error)
-    (__pyx_v_config->ignore_patterns[__pyx_v_idx]) = strdup(__pyx_t_7);
+    __pyx_t_6 = __Pyx_PyBytes_AsString(__pyx_v_pat_b); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 176, __pyx_L1_error)
+    (__pyx_v_config->ignore_patterns[__pyx_v_idx]) = strdup(__pyx_t_6);
 
-    /* "src/multi_dirs_chunker.pyx":178
+    /* "src/multi_dirs_chunker.pyx":177
  *         pat_b = pat.encode('utf-8')
  *         config.ignore_patterns[idx] = strdup(pat_b)
  *         idx += 1             # <<<<<<<<<<<<<<
@@ -3362,7 +3408,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
  */
     __pyx_v_idx = (__pyx_v_idx + 1);
 
-    /* "src/multi_dirs_chunker.pyx":175
+    /* "src/multi_dirs_chunker.pyx":174
  * 
  *     idx = config.num_ignore
  *     for pat in user_ignore:             # <<<<<<<<<<<<<<
@@ -3370,20 +3416,20 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
  *         config.ignore_patterns[idx] = strdup(pat_b)
  */
   }
-  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+  __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "src/multi_dirs_chunker.pyx":179
+  /* "src/multi_dirs_chunker.pyx":178
  *         config.ignore_patterns[idx] = strdup(pat_b)
  *         idx += 1
  *     config.num_ignore = total_ign             # <<<<<<<<<<<<<<
  * 
- *     total_un = len(user_unignore)
+ *     # Add unignore patterns
  */
   __pyx_v_config->num_ignore = __pyx_v_total_ign;
 
   /* "src/multi_dirs_chunker.pyx":181
- *     config.num_ignore = total_ign
  * 
+ *     # Add unignore patterns
  *     total_un = len(user_unignore)             # <<<<<<<<<<<<<<
  *     if total_un > 0:
  *         config.unignore_patterns = <char**>malloc(total_un * sizeof(char*))
@@ -3396,7 +3442,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
   __pyx_v_total_un = __pyx_t_1;
 
   /* "src/multi_dirs_chunker.pyx":182
- * 
+ *     # Add unignore patterns
  *     total_un = len(user_unignore)
  *     if total_un > 0:             # <<<<<<<<<<<<<<
  *         config.unignore_patterns = <char**>malloc(total_un * sizeof(char*))
@@ -3459,20 +3505,20 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
  *             config.unignore_patterns[i] = strdup(upat_b)
  */
     __pyx_t_5 = 0;
-    __pyx_t_6 = __pyx_v_user_unignore; __Pyx_INCREF(__pyx_t_6);
+    __pyx_t_7 = __pyx_v_user_unignore; __Pyx_INCREF(__pyx_t_7);
     __pyx_t_1 = 0;
     for (;;) {
       {
-        Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_6);
+        Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_7);
         #if !CYTHON_ASSUME_SAFE_MACROS
         if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 187, __pyx_L1_error)
         #endif
         if (__pyx_t_1 >= __pyx_temp) break;
       }
       #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-      __pyx_t_8 = PyList_GET_ITEM(__pyx_t_6, __pyx_t_1); __Pyx_INCREF(__pyx_t_8); __pyx_t_1++; if (unlikely((0 < 0))) __PYX_ERR(0, 187, __pyx_L1_error)
+      __pyx_t_8 = PyList_GET_ITEM(__pyx_t_7, __pyx_t_1); __Pyx_INCREF(__pyx_t_8); __pyx_t_1++; if (unlikely((0 < 0))) __PYX_ERR(0, 187, __pyx_L1_error)
       #else
-      __pyx_t_8 = __Pyx_PySequence_ITEM(__pyx_t_6, __pyx_t_1); __pyx_t_1++; if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 187, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_PySequence_ITEM(__pyx_t_7, __pyx_t_1); __pyx_t_1++; if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 187, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       #endif
       __Pyx_XDECREF_SET(__pyx_v_upat, __pyx_t_8);
@@ -3526,8 +3572,8 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
         PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
         __PYX_ERR(0, 189, __pyx_L1_error)
       }
-      __pyx_t_7 = __Pyx_PyBytes_AsString(__pyx_v_upat_b); if (unlikely((!__pyx_t_7) && PyErr_Occurred())) __PYX_ERR(0, 189, __pyx_L1_error)
-      (__pyx_v_config->unignore_patterns[__pyx_v_i]) = strdup(__pyx_t_7);
+      __pyx_t_6 = __Pyx_PyBytes_AsString(__pyx_v_upat_b); if (unlikely((!__pyx_t_6) && PyErr_Occurred())) __PYX_ERR(0, 189, __pyx_L1_error)
+      (__pyx_v_config->unignore_patterns[__pyx_v_i]) = strdup(__pyx_t_6);
 
       /* "src/multi_dirs_chunker.pyx":187
  *             return
@@ -3537,10 +3583,10 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
  *             config.unignore_patterns[i] = strdup(upat_b)
  */
     }
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
     /* "src/multi_dirs_chunker.pyx":182
- * 
+ *     # Add unignore patterns
  *     total_un = len(user_unignore)
  *     if total_un > 0:             # <<<<<<<<<<<<<<
  *         config.unignore_patterns = <char**>malloc(total_un * sizeof(char*))
@@ -3564,14 +3610,14 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
  *         config.unignore_patterns = NULL
  *         config.num_unignore = 0             # <<<<<<<<<<<<<<
  * 
- * 
+ * cdef bint pattern_matches(const char* path, const char* pat):
  */
     __pyx_v_config->num_unignore = 0;
   }
   __pyx_L10:;
 
-  /* "src/multi_dirs_chunker.pyx":147
- * 
+  /* "src/multi_dirs_chunker.pyx":145
+ *     return c_str
  * 
  * cdef void merge_ignore_patterns(CConfig* config,             # <<<<<<<<<<<<<<
  *                                 list user_ignore,
@@ -3581,7 +3627,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
   /* function exit code */
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_6);
+  __Pyx_XDECREF(__pyx_t_7);
   __Pyx_XDECREF(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_9);
   __Pyx_XDECREF(__pyx_t_10);
@@ -3595,61 +3641,89 @@ static void __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns(struct __pyx
   __Pyx_RefNannyFinishContext();
 }
 
-/* "src/multi_dirs_chunker.pyx":195
- * 
+/* "src/multi_dirs_chunker.pyx":194
+ *         config.num_unignore = 0
  * 
  * cdef bint pattern_matches(const char* path, const char* pat):             # <<<<<<<<<<<<<<
- *     cdef int FNM_NOESCAPE = 0
- *     cdef int FNM_PATHNAME = 1
+ *     """
+ *     Check fnmatch on (path, pattern).
  */
 
 static int __pyx_f_3src_18multi_dirs_chunker_pattern_matches(char const *__pyx_v_path, char const *__pyx_v_pat) {
   int __pyx_v_FNM_NOESCAPE;
   int __pyx_v_FNM_PATHNAME;
-  int __pyx_v_FNM_CASEFOLD;
   int __pyx_r;
   int __pyx_t_1;
+  int __pyx_t_2;
 
-  /* "src/multi_dirs_chunker.pyx":196
- * 
- * cdef bint pattern_matches(const char* path, const char* pat):
+  /* "src/multi_dirs_chunker.pyx":198
+ *     Check fnmatch on (path, pattern).
+ *     """
  *     cdef int FNM_NOESCAPE = 0             # <<<<<<<<<<<<<<
  *     cdef int FNM_PATHNAME = 1
- *     cdef int FNM_CASEFOLD = 16
+ *     if not path or not pat:
  */
   __pyx_v_FNM_NOESCAPE = 0;
 
-  /* "src/multi_dirs_chunker.pyx":197
- * cdef bint pattern_matches(const char* path, const char* pat):
+  /* "src/multi_dirs_chunker.pyx":199
+ *     """
  *     cdef int FNM_NOESCAPE = 0
  *     cdef int FNM_PATHNAME = 1             # <<<<<<<<<<<<<<
- *     cdef int FNM_CASEFOLD = 16
- * 
+ *     if not path or not pat:
+ *         return False
  */
   __pyx_v_FNM_PATHNAME = 1;
 
-  /* "src/multi_dirs_chunker.pyx":198
+  /* "src/multi_dirs_chunker.pyx":200
  *     cdef int FNM_NOESCAPE = 0
  *     cdef int FNM_PATHNAME = 1
- *     cdef int FNM_CASEFOLD = 16             # <<<<<<<<<<<<<<
- * 
- *     if fnmatch(pat, path, FNM_NOESCAPE | FNM_PATHNAME | FNM_CASEFOLD) == 0:
+ *     if not path or not pat:             # <<<<<<<<<<<<<<
+ *         return False
+ *     if fnmatch(pat, path, FNM_NOESCAPE | FNM_PATHNAME ) == 0:
  */
-  __pyx_v_FNM_CASEFOLD = 16;
-
-  /* "src/multi_dirs_chunker.pyx":200
- *     cdef int FNM_CASEFOLD = 16
- * 
- *     if fnmatch(pat, path, FNM_NOESCAPE | FNM_PATHNAME | FNM_CASEFOLD) == 0:             # <<<<<<<<<<<<<<
- *         return True
- *     return False
- */
-  __pyx_t_1 = (fnmatch(__pyx_v_pat, __pyx_v_path, ((__pyx_v_FNM_NOESCAPE | __pyx_v_FNM_PATHNAME) | __pyx_v_FNM_CASEFOLD)) == 0);
+  __pyx_t_2 = (!(__pyx_v_path != 0));
+  if (!__pyx_t_2) {
+  } else {
+    __pyx_t_1 = __pyx_t_2;
+    goto __pyx_L4_bool_binop_done;
+  }
+  __pyx_t_2 = (!(__pyx_v_pat != 0));
+  __pyx_t_1 = __pyx_t_2;
+  __pyx_L4_bool_binop_done:;
   if (__pyx_t_1) {
 
     /* "src/multi_dirs_chunker.pyx":201
- * 
- *     if fnmatch(pat, path, FNM_NOESCAPE | FNM_PATHNAME | FNM_CASEFOLD) == 0:
+ *     cdef int FNM_PATHNAME = 1
+ *     if not path or not pat:
+ *         return False             # <<<<<<<<<<<<<<
+ *     if fnmatch(pat, path, FNM_NOESCAPE | FNM_PATHNAME ) == 0:
+ *         return True
+ */
+    __pyx_r = 0;
+    goto __pyx_L0;
+
+    /* "src/multi_dirs_chunker.pyx":200
+ *     cdef int FNM_NOESCAPE = 0
+ *     cdef int FNM_PATHNAME = 1
+ *     if not path or not pat:             # <<<<<<<<<<<<<<
+ *         return False
+ *     if fnmatch(pat, path, FNM_NOESCAPE | FNM_PATHNAME ) == 0:
+ */
+  }
+
+  /* "src/multi_dirs_chunker.pyx":202
+ *     if not path or not pat:
+ *         return False
+ *     if fnmatch(pat, path, FNM_NOESCAPE | FNM_PATHNAME ) == 0:             # <<<<<<<<<<<<<<
+ *         return True
+ *     return False
+ */
+  __pyx_t_1 = (fnmatch(__pyx_v_pat, __pyx_v_path, (__pyx_v_FNM_NOESCAPE | __pyx_v_FNM_PATHNAME)) == 0);
+  if (__pyx_t_1) {
+
+    /* "src/multi_dirs_chunker.pyx":203
+ *         return False
+ *     if fnmatch(pat, path, FNM_NOESCAPE | FNM_PATHNAME ) == 0:
  *         return True             # <<<<<<<<<<<<<<
  *     return False
  * 
@@ -3657,31 +3731,31 @@ static int __pyx_f_3src_18multi_dirs_chunker_pattern_matches(char const *__pyx_v
     __pyx_r = 1;
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":200
- *     cdef int FNM_CASEFOLD = 16
- * 
- *     if fnmatch(pat, path, FNM_NOESCAPE | FNM_PATHNAME | FNM_CASEFOLD) == 0:             # <<<<<<<<<<<<<<
+    /* "src/multi_dirs_chunker.pyx":202
+ *     if not path or not pat:
+ *         return False
+ *     if fnmatch(pat, path, FNM_NOESCAPE | FNM_PATHNAME ) == 0:             # <<<<<<<<<<<<<<
  *         return True
  *     return False
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":202
- *     if fnmatch(pat, path, FNM_NOESCAPE | FNM_PATHNAME | FNM_CASEFOLD) == 0:
+  /* "src/multi_dirs_chunker.pyx":204
+ *     if fnmatch(pat, path, FNM_NOESCAPE | FNM_PATHNAME ) == 0:
  *         return True
  *     return False             # <<<<<<<<<<<<<<
  * 
- * 
+ * cdef bint should_ignore_file(const char* path, CConfig* config):
  */
   __pyx_r = 0;
   goto __pyx_L0;
 
-  /* "src/multi_dirs_chunker.pyx":195
- * 
+  /* "src/multi_dirs_chunker.pyx":194
+ *         config.num_unignore = 0
  * 
  * cdef bint pattern_matches(const char* path, const char* pat):             # <<<<<<<<<<<<<<
- *     cdef int FNM_NOESCAPE = 0
- *     cdef int FNM_PATHNAME = 1
+ *     """
+ *     Check fnmatch on (path, pattern).
  */
 
   /* function exit code */
@@ -3689,50 +3763,101 @@ static int __pyx_f_3src_18multi_dirs_chunker_pattern_matches(char const *__pyx_v
   return __pyx_r;
 }
 
-/* "src/multi_dirs_chunker.pyx":205
- * 
+/* "src/multi_dirs_chunker.pyx":206
+ *     return False
  * 
  * cdef bint should_ignore_file(const char* path, CConfig* config):             # <<<<<<<<<<<<<<
  *     """
- *     Return True if path is matched by any ignore pattern,
+ *     Return True if 'path' is matched by an ignore pattern,
  */
 
 static int __pyx_f_3src_18multi_dirs_chunker_should_ignore_file(char const *__pyx_v_path, struct __pyx_t_3src_18multi_dirs_chunker_CConfig *__pyx_v_config) {
   size_t __pyx_v_i;
+  char const *__pyx_v_base_name;
   int __pyx_r;
-  size_t __pyx_t_1;
+  int __pyx_t_1;
   size_t __pyx_t_2;
   size_t __pyx_t_3;
-  int __pyx_t_4;
+  size_t __pyx_t_4;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
   /* "src/multi_dirs_chunker.pyx":212
+ *     """
  *     cdef size_t i
- * 
- *     for i in range(config.num_unignore):             # <<<<<<<<<<<<<<
- *         if pattern_matches(path, config.unignore_patterns[i]):
- *             return False
+ *     cdef const char* base_name = strrchr(path, b'/')             # <<<<<<<<<<<<<<
+ *     if base_name:
+ *         base_name += 1  # skip past '/'
  */
-  __pyx_t_1 = __pyx_v_config->num_unignore;
-  __pyx_t_2 = __pyx_t_1;
-  for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
-    __pyx_v_i = __pyx_t_3;
+  __pyx_v_base_name = strrchr(__pyx_v_path, '/');
+
+  /* "src/multi_dirs_chunker.pyx":213
+ *     cdef size_t i
+ *     cdef const char* base_name = strrchr(path, b'/')
+ *     if base_name:             # <<<<<<<<<<<<<<
+ *         base_name += 1  # skip past '/'
+ *     else:
+ */
+  __pyx_t_1 = (__pyx_v_base_name != 0);
+  if (__pyx_t_1) {
+
+    /* "src/multi_dirs_chunker.pyx":214
+ *     cdef const char* base_name = strrchr(path, b'/')
+ *     if base_name:
+ *         base_name += 1  # skip past '/'             # <<<<<<<<<<<<<<
+ *     else:
+ *         base_name = path
+ */
+    __pyx_v_base_name = (__pyx_v_base_name + 1);
 
     /* "src/multi_dirs_chunker.pyx":213
+ *     cdef size_t i
+ *     cdef const char* base_name = strrchr(path, b'/')
+ *     if base_name:             # <<<<<<<<<<<<<<
+ *         base_name += 1  # skip past '/'
+ *     else:
+ */
+    goto __pyx_L3;
+  }
+
+  /* "src/multi_dirs_chunker.pyx":216
+ *         base_name += 1  # skip past '/'
+ *     else:
+ *         base_name = path             # <<<<<<<<<<<<<<
  * 
+ *     # Check unignore patterns first
+ */
+  /*else*/ {
+    __pyx_v_base_name = __pyx_v_path;
+  }
+  __pyx_L3:;
+
+  /* "src/multi_dirs_chunker.pyx":219
+ * 
+ *     # Check unignore patterns first
+ *     for i in range(config.num_unignore):             # <<<<<<<<<<<<<<
+ *         if pattern_matches(base_name, config.unignore_patterns[i]):
+ *             return False
+ */
+  __pyx_t_2 = __pyx_v_config->num_unignore;
+  __pyx_t_3 = __pyx_t_2;
+  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
+    __pyx_v_i = __pyx_t_4;
+
+    /* "src/multi_dirs_chunker.pyx":220
+ *     # Check unignore patterns first
  *     for i in range(config.num_unignore):
- *         if pattern_matches(path, config.unignore_patterns[i]):             # <<<<<<<<<<<<<<
+ *         if pattern_matches(base_name, config.unignore_patterns[i]):             # <<<<<<<<<<<<<<
  *             return False
  * 
  */
-    __pyx_t_4 = __pyx_f_3src_18multi_dirs_chunker_pattern_matches(__pyx_v_path, (__pyx_v_config->unignore_patterns[__pyx_v_i])); if (unlikely(__pyx_t_4 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 213, __pyx_L1_error)
-    if (__pyx_t_4) {
+    __pyx_t_1 = __pyx_f_3src_18multi_dirs_chunker_pattern_matches(__pyx_v_base_name, (__pyx_v_config->unignore_patterns[__pyx_v_i])); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 220, __pyx_L1_error)
+    if (__pyx_t_1) {
 
-      /* "src/multi_dirs_chunker.pyx":214
+      /* "src/multi_dirs_chunker.pyx":221
  *     for i in range(config.num_unignore):
- *         if pattern_matches(path, config.unignore_patterns[i]):
+ *         if pattern_matches(base_name, config.unignore_patterns[i]):
  *             return False             # <<<<<<<<<<<<<<
  * 
  *     for i in range(config.num_ignore):
@@ -3740,41 +3865,41 @@ static int __pyx_f_3src_18multi_dirs_chunker_should_ignore_file(char const *__py
       __pyx_r = 0;
       goto __pyx_L0;
 
-      /* "src/multi_dirs_chunker.pyx":213
- * 
+      /* "src/multi_dirs_chunker.pyx":220
+ *     # Check unignore patterns first
  *     for i in range(config.num_unignore):
- *         if pattern_matches(path, config.unignore_patterns[i]):             # <<<<<<<<<<<<<<
+ *         if pattern_matches(base_name, config.unignore_patterns[i]):             # <<<<<<<<<<<<<<
  *             return False
  * 
  */
     }
   }
 
-  /* "src/multi_dirs_chunker.pyx":216
+  /* "src/multi_dirs_chunker.pyx":223
  *             return False
  * 
  *     for i in range(config.num_ignore):             # <<<<<<<<<<<<<<
- *         if pattern_matches(path, config.ignore_patterns[i]):
+ *         if pattern_matches(base_name, config.ignore_patterns[i]):
  *             return True
  */
-  __pyx_t_1 = __pyx_v_config->num_ignore;
-  __pyx_t_2 = __pyx_t_1;
-  for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
-    __pyx_v_i = __pyx_t_3;
+  __pyx_t_2 = __pyx_v_config->num_ignore;
+  __pyx_t_3 = __pyx_t_2;
+  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
+    __pyx_v_i = __pyx_t_4;
 
-    /* "src/multi_dirs_chunker.pyx":217
+    /* "src/multi_dirs_chunker.pyx":224
  * 
  *     for i in range(config.num_ignore):
- *         if pattern_matches(path, config.ignore_patterns[i]):             # <<<<<<<<<<<<<<
+ *         if pattern_matches(base_name, config.ignore_patterns[i]):             # <<<<<<<<<<<<<<
  *             return True
  * 
  */
-    __pyx_t_4 = __pyx_f_3src_18multi_dirs_chunker_pattern_matches(__pyx_v_path, (__pyx_v_config->ignore_patterns[__pyx_v_i])); if (unlikely(__pyx_t_4 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 217, __pyx_L1_error)
-    if (__pyx_t_4) {
+    __pyx_t_1 = __pyx_f_3src_18multi_dirs_chunker_pattern_matches(__pyx_v_base_name, (__pyx_v_config->ignore_patterns[__pyx_v_i])); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 224, __pyx_L1_error)
+    if (__pyx_t_1) {
 
-      /* "src/multi_dirs_chunker.pyx":218
+      /* "src/multi_dirs_chunker.pyx":225
  *     for i in range(config.num_ignore):
- *         if pattern_matches(path, config.ignore_patterns[i]):
+ *         if pattern_matches(base_name, config.ignore_patterns[i]):
  *             return True             # <<<<<<<<<<<<<<
  * 
  *     return False
@@ -3782,17 +3907,17 @@ static int __pyx_f_3src_18multi_dirs_chunker_should_ignore_file(char const *__py
       __pyx_r = 1;
       goto __pyx_L0;
 
-      /* "src/multi_dirs_chunker.pyx":217
+      /* "src/multi_dirs_chunker.pyx":224
  * 
  *     for i in range(config.num_ignore):
- *         if pattern_matches(path, config.ignore_patterns[i]):             # <<<<<<<<<<<<<<
+ *         if pattern_matches(base_name, config.ignore_patterns[i]):             # <<<<<<<<<<<<<<
  *             return True
  * 
  */
     }
   }
 
-  /* "src/multi_dirs_chunker.pyx":220
+  /* "src/multi_dirs_chunker.pyx":227
  *             return True
  * 
  *     return False             # <<<<<<<<<<<<<<
@@ -3802,12 +3927,12 @@ static int __pyx_f_3src_18multi_dirs_chunker_should_ignore_file(char const *__py
   __pyx_r = 0;
   goto __pyx_L0;
 
-  /* "src/multi_dirs_chunker.pyx":205
- * 
+  /* "src/multi_dirs_chunker.pyx":206
+ *     return False
  * 
  * cdef bint should_ignore_file(const char* path, CConfig* config):             # <<<<<<<<<<<<<<
  *     """
- *     Return True if path is matched by any ignore pattern,
+ *     Return True if 'path' is matched by an ignore pattern,
  */
 
   /* function exit code */
@@ -3818,12 +3943,12 @@ static int __pyx_f_3src_18multi_dirs_chunker_should_ignore_file(char const *__py
   return __pyx_r;
 }
 
-/* "src/multi_dirs_chunker.pyx":222
+/* "src/multi_dirs_chunker.pyx":229
  *     return False
  * 
  * cdef bint is_binary_file(const char* path, CConfig* config):             # <<<<<<<<<<<<<<
  *     """
- *     Check extension or read for null bytes in first 8192 bytes.
+ *     Check file extension or scan for null bytes in the first 8192 bytes.
  */
 
 static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_path, struct __pyx_t_3src_18multi_dirs_chunker_CConfig *__pyx_v_config) {
@@ -3839,37 +3964,37 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
   size_t __pyx_t_3;
   int __pyx_t_4;
 
-  /* "src/multi_dirs_chunker.pyx":233
- *         char buf[8192]
+  /* "src/multi_dirs_chunker.pyx":241
  * 
+ *     # Check extension first
  *     ext = strrchr(path, b'.')             # <<<<<<<<<<<<<<
  *     if ext:
- *         ext += 1
+ *         ext += 1  # skip past '.'
  */
   __pyx_v_ext = strrchr(__pyx_v_path, '.');
 
-  /* "src/multi_dirs_chunker.pyx":234
- * 
+  /* "src/multi_dirs_chunker.pyx":242
+ *     # Check extension first
  *     ext = strrchr(path, b'.')
  *     if ext:             # <<<<<<<<<<<<<<
- *         ext += 1
+ *         ext += 1  # skip past '.'
  *         for i in range(config.num_binary_exts):
  */
   __pyx_t_1 = (__pyx_v_ext != 0);
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":235
+    /* "src/multi_dirs_chunker.pyx":243
  *     ext = strrchr(path, b'.')
  *     if ext:
- *         ext += 1             # <<<<<<<<<<<<<<
+ *         ext += 1  # skip past '.'             # <<<<<<<<<<<<<<
  *         for i in range(config.num_binary_exts):
  *             if strcasecmp(ext, config.binary_exts[i]) == 0:
  */
     __pyx_v_ext = (__pyx_v_ext + 1);
 
-    /* "src/multi_dirs_chunker.pyx":236
+    /* "src/multi_dirs_chunker.pyx":244
  *     if ext:
- *         ext += 1
+ *         ext += 1  # skip past '.'
  *         for i in range(config.num_binary_exts):             # <<<<<<<<<<<<<<
  *             if strcasecmp(ext, config.binary_exts[i]) == 0:
  *                 return True
@@ -3879,8 +4004,8 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
     for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
       __pyx_v_i = __pyx_t_4;
 
-      /* "src/multi_dirs_chunker.pyx":237
- *         ext += 1
+      /* "src/multi_dirs_chunker.pyx":245
+ *         ext += 1  # skip past '.'
  *         for i in range(config.num_binary_exts):
  *             if strcasecmp(ext, config.binary_exts[i]) == 0:             # <<<<<<<<<<<<<<
  *                 return True
@@ -3889,7 +4014,7 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
       __pyx_t_1 = (strcasecmp(__pyx_v_ext, (__pyx_v_config->binary_exts[__pyx_v_i])) == 0);
       if (__pyx_t_1) {
 
-        /* "src/multi_dirs_chunker.pyx":238
+        /* "src/multi_dirs_chunker.pyx":246
  *         for i in range(config.num_binary_exts):
  *             if strcasecmp(ext, config.binary_exts[i]) == 0:
  *                 return True             # <<<<<<<<<<<<<<
@@ -3899,8 +4024,8 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
         __pyx_r = 1;
         goto __pyx_L0;
 
-        /* "src/multi_dirs_chunker.pyx":237
- *         ext += 1
+        /* "src/multi_dirs_chunker.pyx":245
+ *         ext += 1  # skip past '.'
  *         for i in range(config.num_binary_exts):
  *             if strcasecmp(ext, config.binary_exts[i]) == 0:             # <<<<<<<<<<<<<<
  *                 return True
@@ -3909,16 +4034,16 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
       }
     }
 
-    /* "src/multi_dirs_chunker.pyx":234
- * 
+    /* "src/multi_dirs_chunker.pyx":242
+ *     # Check extension first
  *     ext = strrchr(path, b'.')
  *     if ext:             # <<<<<<<<<<<<<<
- *         ext += 1
+ *         ext += 1  # skip past '.'
  *         for i in range(config.num_binary_exts):
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":240
+  /* "src/multi_dirs_chunker.pyx":248
  *                 return True
  * 
  *     fp = fopen(path, "rb")             # <<<<<<<<<<<<<<
@@ -3927,7 +4052,7 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
  */
   __pyx_v_fp = fopen(__pyx_v_path, ((char const *)"rb"));
 
-  /* "src/multi_dirs_chunker.pyx":241
+  /* "src/multi_dirs_chunker.pyx":249
  * 
  *     fp = fopen(path, "rb")
  *     if not fp:             # <<<<<<<<<<<<<<
@@ -3937,7 +4062,7 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
   __pyx_t_1 = (!(__pyx_v_fp != 0));
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":242
+    /* "src/multi_dirs_chunker.pyx":250
  *     fp = fopen(path, "rb")
  *     if not fp:
  *         return True             # <<<<<<<<<<<<<<
@@ -3947,7 +4072,7 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
     __pyx_r = 1;
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":241
+    /* "src/multi_dirs_chunker.pyx":249
  * 
  *     fp = fopen(path, "rb")
  *     if not fp:             # <<<<<<<<<<<<<<
@@ -3956,7 +4081,7 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":244
+  /* "src/multi_dirs_chunker.pyx":252
  *         return True
  * 
  *     size_read = fread(buf, 1, 8192, fp)             # <<<<<<<<<<<<<<
@@ -3965,7 +4090,7 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
  */
   __pyx_v_size_read = fread(__pyx_v_buf, 1, 0x2000, __pyx_v_fp);
 
-  /* "src/multi_dirs_chunker.pyx":245
+  /* "src/multi_dirs_chunker.pyx":253
  * 
  *     size_read = fread(buf, 1, 8192, fp)
  *     fclose(fp)             # <<<<<<<<<<<<<<
@@ -3974,7 +4099,7 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
  */
   (void)(fclose(__pyx_v_fp));
 
-  /* "src/multi_dirs_chunker.pyx":247
+  /* "src/multi_dirs_chunker.pyx":255
  *     fclose(fp)
  * 
  *     for j in range(size_read):             # <<<<<<<<<<<<<<
@@ -3986,7 +4111,7 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
     __pyx_v_j = __pyx_t_4;
 
-    /* "src/multi_dirs_chunker.pyx":248
+    /* "src/multi_dirs_chunker.pyx":256
  * 
  *     for j in range(size_read):
  *         if buf[j] == b'\0':             # <<<<<<<<<<<<<<
@@ -3996,7 +4121,7 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
     __pyx_t_1 = ((__pyx_v_buf[__pyx_v_j]) == '\x00');
     if (__pyx_t_1) {
 
-      /* "src/multi_dirs_chunker.pyx":249
+      /* "src/multi_dirs_chunker.pyx":257
  *     for j in range(size_read):
  *         if buf[j] == b'\0':
  *             return True             # <<<<<<<<<<<<<<
@@ -4006,7 +4131,7 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
       __pyx_r = 1;
       goto __pyx_L0;
 
-      /* "src/multi_dirs_chunker.pyx":248
+      /* "src/multi_dirs_chunker.pyx":256
  * 
  *     for j in range(size_read):
  *         if buf[j] == b'\0':             # <<<<<<<<<<<<<<
@@ -4016,7 +4141,7 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
     }
   }
 
-  /* "src/multi_dirs_chunker.pyx":250
+  /* "src/multi_dirs_chunker.pyx":258
  *         if buf[j] == b'\0':
  *             return True
  *     return False             # <<<<<<<<<<<<<<
@@ -4026,12 +4151,12 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
   __pyx_r = 0;
   goto __pyx_L0;
 
-  /* "src/multi_dirs_chunker.pyx":222
+  /* "src/multi_dirs_chunker.pyx":229
  *     return False
  * 
  * cdef bint is_binary_file(const char* path, CConfig* config):             # <<<<<<<<<<<<<<
  *     """
- *     Check extension or read for null bytes in first 8192 bytes.
+ *     Check file extension or scan for null bytes in the first 8192 bytes.
  */
 
   /* function exit code */
@@ -4039,12 +4164,12 @@ static int __pyx_f_3src_18multi_dirs_chunker_is_binary_file(char const *__pyx_v_
   return __pyx_r;
 }
 
-/* "src/multi_dirs_chunker.pyx":252
+/* "src/multi_dirs_chunker.pyx":260
  *     return False
  * 
  * cdef int calculate_priority(const char* path, CConfig* config):             # <<<<<<<<<<<<<<
- * 
- *     cdef int highest = 0
+ *     """
+ *     Check each priority rule; return highest score that matches 'path'.
  */
 
 static int __pyx_f_3src_18multi_dirs_chunker_calculate_priority(char const *__pyx_v_path, struct __pyx_t_3src_18multi_dirs_chunker_CConfig *__pyx_v_config) {
@@ -4060,16 +4185,16 @@ static int __pyx_f_3src_18multi_dirs_chunker_calculate_priority(char const *__py
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "src/multi_dirs_chunker.pyx":254
- * cdef int calculate_priority(const char* path, CConfig* config):
- * 
+  /* "src/multi_dirs_chunker.pyx":264
+ *     Check each priority rule; return highest score that matches 'path'.
+ *     """
  *     cdef int highest = 0             # <<<<<<<<<<<<<<
  *     cdef int i
  *     for i in range(config.num_priority_rules):
  */
   __pyx_v_highest = 0;
 
-  /* "src/multi_dirs_chunker.pyx":256
+  /* "src/multi_dirs_chunker.pyx":266
  *     cdef int highest = 0
  *     cdef int i
  *     for i in range(config.num_priority_rules):             # <<<<<<<<<<<<<<
@@ -4081,17 +4206,17 @@ static int __pyx_f_3src_18multi_dirs_chunker_calculate_priority(char const *__py
   for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
     __pyx_v_i = __pyx_t_3;
 
-    /* "src/multi_dirs_chunker.pyx":257
+    /* "src/multi_dirs_chunker.pyx":267
  *     cdef int i
  *     for i in range(config.num_priority_rules):
  *         if pattern_matches(path, config.priority_rules[i].pattern):             # <<<<<<<<<<<<<<
  *             if config.priority_rules[i].score > highest:
  *                 highest = config.priority_rules[i].score
  */
-    __pyx_t_4 = __pyx_f_3src_18multi_dirs_chunker_pattern_matches(__pyx_v_path, (__pyx_v_config->priority_rules[__pyx_v_i]).pattern); if (unlikely(__pyx_t_4 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 257, __pyx_L1_error)
+    __pyx_t_4 = __pyx_f_3src_18multi_dirs_chunker_pattern_matches(__pyx_v_path, (__pyx_v_config->priority_rules[__pyx_v_i]).pattern); if (unlikely(__pyx_t_4 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 267, __pyx_L1_error)
     if (__pyx_t_4) {
 
-      /* "src/multi_dirs_chunker.pyx":258
+      /* "src/multi_dirs_chunker.pyx":268
  *     for i in range(config.num_priority_rules):
  *         if pattern_matches(path, config.priority_rules[i].pattern):
  *             if config.priority_rules[i].score > highest:             # <<<<<<<<<<<<<<
@@ -4101,7 +4226,7 @@ static int __pyx_f_3src_18multi_dirs_chunker_calculate_priority(char const *__py
       __pyx_t_4 = ((__pyx_v_config->priority_rules[__pyx_v_i]).score > __pyx_v_highest);
       if (__pyx_t_4) {
 
-        /* "src/multi_dirs_chunker.pyx":259
+        /* "src/multi_dirs_chunker.pyx":269
  *         if pattern_matches(path, config.priority_rules[i].pattern):
  *             if config.priority_rules[i].score > highest:
  *                 highest = config.priority_rules[i].score             # <<<<<<<<<<<<<<
@@ -4111,7 +4236,7 @@ static int __pyx_f_3src_18multi_dirs_chunker_calculate_priority(char const *__py
         __pyx_t_5 = (__pyx_v_config->priority_rules[__pyx_v_i]).score;
         __pyx_v_highest = __pyx_t_5;
 
-        /* "src/multi_dirs_chunker.pyx":258
+        /* "src/multi_dirs_chunker.pyx":268
  *     for i in range(config.num_priority_rules):
  *         if pattern_matches(path, config.priority_rules[i].pattern):
  *             if config.priority_rules[i].score > highest:             # <<<<<<<<<<<<<<
@@ -4120,7 +4245,7 @@ static int __pyx_f_3src_18multi_dirs_chunker_calculate_priority(char const *__py
  */
       }
 
-      /* "src/multi_dirs_chunker.pyx":257
+      /* "src/multi_dirs_chunker.pyx":267
  *     cdef int i
  *     for i in range(config.num_priority_rules):
  *         if pattern_matches(path, config.priority_rules[i].pattern):             # <<<<<<<<<<<<<<
@@ -4130,22 +4255,22 @@ static int __pyx_f_3src_18multi_dirs_chunker_calculate_priority(char const *__py
     }
   }
 
-  /* "src/multi_dirs_chunker.pyx":260
+  /* "src/multi_dirs_chunker.pyx":270
  *             if config.priority_rules[i].score > highest:
  *                 highest = config.priority_rules[i].score
  *     return highest             # <<<<<<<<<<<<<<
  * 
- * 
+ * cdef char* read_file_contents(const char* path, size_t* size_out) except NULL:
  */
   __pyx_r = __pyx_v_highest;
   goto __pyx_L0;
 
-  /* "src/multi_dirs_chunker.pyx":252
+  /* "src/multi_dirs_chunker.pyx":260
  *     return False
  * 
  * cdef int calculate_priority(const char* path, CConfig* config):             # <<<<<<<<<<<<<<
- * 
- *     cdef int highest = 0
+ *     """
+ *     Check each priority rule; return highest score that matches 'path'.
  */
 
   /* function exit code */
@@ -4156,12 +4281,12 @@ static int __pyx_f_3src_18multi_dirs_chunker_calculate_priority(char const *__py
   return __pyx_r;
 }
 
-/* "src/multi_dirs_chunker.pyx":263
- * 
+/* "src/multi_dirs_chunker.pyx":272
+ *     return highest
  * 
  * cdef char* read_file_contents(const char* path, size_t* size_out) except NULL:             # <<<<<<<<<<<<<<
- * 
- *     cdef FILE* fp = fopen(path, "rb")
+ *     """
+ *     Read the entire file into a malloc'd buffer (caller frees).
  */
 
 static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__pyx_v_path, size_t *__pyx_v_size_out) {
@@ -4175,17 +4300,17 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
   char *__pyx_r;
   int __pyx_t_1;
 
-  /* "src/multi_dirs_chunker.pyx":265
- * cdef char* read_file_contents(const char* path, size_t* size_out) except NULL:
- * 
+  /* "src/multi_dirs_chunker.pyx":276
+ *     Read the entire file into a malloc'd buffer (caller frees).
+ *     """
  *     cdef FILE* fp = fopen(path, "rb")             # <<<<<<<<<<<<<<
  *     if not fp:
  *         return NULL
  */
   __pyx_v_fp = fopen(__pyx_v_path, ((char const *)"rb"));
 
-  /* "src/multi_dirs_chunker.pyx":266
- * 
+  /* "src/multi_dirs_chunker.pyx":277
+ *     """
  *     cdef FILE* fp = fopen(path, "rb")
  *     if not fp:             # <<<<<<<<<<<<<<
  *         return NULL
@@ -4194,7 +4319,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
   __pyx_t_1 = (!(__pyx_v_fp != 0));
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":267
+    /* "src/multi_dirs_chunker.pyx":278
  *     cdef FILE* fp = fopen(path, "rb")
  *     if not fp:
  *         return NULL             # <<<<<<<<<<<<<<
@@ -4204,8 +4329,8 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
     __pyx_r = NULL;
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":266
- * 
+    /* "src/multi_dirs_chunker.pyx":277
+ *     """
  *     cdef FILE* fp = fopen(path, "rb")
  *     if not fp:             # <<<<<<<<<<<<<<
  *         return NULL
@@ -4213,7 +4338,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":269
+  /* "src/multi_dirs_chunker.pyx":280
  *         return NULL
  * 
  *     cdef size_t used = 0             # <<<<<<<<<<<<<<
@@ -4222,7 +4347,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
   __pyx_v_used = 0;
 
-  /* "src/multi_dirs_chunker.pyx":270
+  /* "src/multi_dirs_chunker.pyx":281
  * 
  *     cdef size_t used = 0
  *     cdef size_t capacity = 8192             # <<<<<<<<<<<<<<
@@ -4231,7 +4356,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
   __pyx_v_capacity = 0x2000;
 
-  /* "src/multi_dirs_chunker.pyx":271
+  /* "src/multi_dirs_chunker.pyx":282
  *     cdef size_t used = 0
  *     cdef size_t capacity = 8192
  *     cdef char* buffer = <char*>malloc(capacity)             # <<<<<<<<<<<<<<
@@ -4240,7 +4365,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
   __pyx_v_buffer = ((char *)malloc(__pyx_v_capacity));
 
-  /* "src/multi_dirs_chunker.pyx":273
+  /* "src/multi_dirs_chunker.pyx":284
  *     cdef char* buffer = <char*>malloc(capacity)
  *     cdef size_t nread
  *     cdef size_t chunk = 4096             # <<<<<<<<<<<<<<
@@ -4249,7 +4374,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
   __pyx_v_chunk = 0x1000;
 
-  /* "src/multi_dirs_chunker.pyx":276
+  /* "src/multi_dirs_chunker.pyx":287
  *     cdef char* new_buf
  * 
  *     if not buffer:             # <<<<<<<<<<<<<<
@@ -4259,7 +4384,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
   __pyx_t_1 = (!(__pyx_v_buffer != 0));
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":277
+    /* "src/multi_dirs_chunker.pyx":288
  * 
  *     if not buffer:
  *         fclose(fp)             # <<<<<<<<<<<<<<
@@ -4268,7 +4393,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
     (void)(fclose(__pyx_v_fp));
 
-    /* "src/multi_dirs_chunker.pyx":278
+    /* "src/multi_dirs_chunker.pyx":289
  *     if not buffer:
  *         fclose(fp)
  *         return NULL             # <<<<<<<<<<<<<<
@@ -4278,7 +4403,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
     __pyx_r = NULL;
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":276
+    /* "src/multi_dirs_chunker.pyx":287
  *     cdef char* new_buf
  * 
  *     if not buffer:             # <<<<<<<<<<<<<<
@@ -4287,7 +4412,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":280
+  /* "src/multi_dirs_chunker.pyx":291
  *         return NULL
  * 
  *     while True:             # <<<<<<<<<<<<<<
@@ -4296,7 +4421,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
   while (1) {
 
-    /* "src/multi_dirs_chunker.pyx":281
+    /* "src/multi_dirs_chunker.pyx":292
  * 
  *     while True:
  *         nread = fread(buffer + used, 1, chunk, fp)             # <<<<<<<<<<<<<<
@@ -4305,7 +4430,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
     __pyx_v_nread = fread((__pyx_v_buffer + __pyx_v_used), 1, __pyx_v_chunk, __pyx_v_fp);
 
-    /* "src/multi_dirs_chunker.pyx":282
+    /* "src/multi_dirs_chunker.pyx":293
  *     while True:
  *         nread = fread(buffer + used, 1, chunk, fp)
  *         if nread == 0:             # <<<<<<<<<<<<<<
@@ -4315,7 +4440,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
     __pyx_t_1 = (__pyx_v_nread == 0);
     if (__pyx_t_1) {
 
-      /* "src/multi_dirs_chunker.pyx":283
+      /* "src/multi_dirs_chunker.pyx":294
  *         nread = fread(buffer + used, 1, chunk, fp)
  *         if nread == 0:
  *             break             # <<<<<<<<<<<<<<
@@ -4324,7 +4449,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
       goto __pyx_L6_break;
 
-      /* "src/multi_dirs_chunker.pyx":282
+      /* "src/multi_dirs_chunker.pyx":293
  *     while True:
  *         nread = fread(buffer + used, 1, chunk, fp)
  *         if nread == 0:             # <<<<<<<<<<<<<<
@@ -4333,7 +4458,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
     }
 
-    /* "src/multi_dirs_chunker.pyx":284
+    /* "src/multi_dirs_chunker.pyx":295
  *         if nread == 0:
  *             break
  *         used += nread             # <<<<<<<<<<<<<<
@@ -4342,7 +4467,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
     __pyx_v_used = (__pyx_v_used + __pyx_v_nread);
 
-    /* "src/multi_dirs_chunker.pyx":285
+    /* "src/multi_dirs_chunker.pyx":296
  *             break
  *         used += nread
  *         if used + chunk > capacity:             # <<<<<<<<<<<<<<
@@ -4352,7 +4477,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
     __pyx_t_1 = ((__pyx_v_used + __pyx_v_chunk) > __pyx_v_capacity);
     if (__pyx_t_1) {
 
-      /* "src/multi_dirs_chunker.pyx":286
+      /* "src/multi_dirs_chunker.pyx":297
  *         used += nread
  *         if used + chunk > capacity:
  *             capacity *= 2             # <<<<<<<<<<<<<<
@@ -4361,7 +4486,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
       __pyx_v_capacity = (__pyx_v_capacity * 2);
 
-      /* "src/multi_dirs_chunker.pyx":287
+      /* "src/multi_dirs_chunker.pyx":298
  *         if used + chunk > capacity:
  *             capacity *= 2
  *             new_buf = <char*>realloc(buffer, capacity)             # <<<<<<<<<<<<<<
@@ -4370,7 +4495,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
       __pyx_v_new_buf = ((char *)realloc(__pyx_v_buffer, __pyx_v_capacity));
 
-      /* "src/multi_dirs_chunker.pyx":288
+      /* "src/multi_dirs_chunker.pyx":299
  *             capacity *= 2
  *             new_buf = <char*>realloc(buffer, capacity)
  *             if not new_buf:             # <<<<<<<<<<<<<<
@@ -4380,7 +4505,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
       __pyx_t_1 = (!(__pyx_v_new_buf != 0));
       if (__pyx_t_1) {
 
-        /* "src/multi_dirs_chunker.pyx":289
+        /* "src/multi_dirs_chunker.pyx":300
  *             new_buf = <char*>realloc(buffer, capacity)
  *             if not new_buf:
  *                 free(buffer)             # <<<<<<<<<<<<<<
@@ -4389,7 +4514,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
         free(__pyx_v_buffer);
 
-        /* "src/multi_dirs_chunker.pyx":290
+        /* "src/multi_dirs_chunker.pyx":301
  *             if not new_buf:
  *                 free(buffer)
  *                 fclose(fp)             # <<<<<<<<<<<<<<
@@ -4398,7 +4523,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
         (void)(fclose(__pyx_v_fp));
 
-        /* "src/multi_dirs_chunker.pyx":291
+        /* "src/multi_dirs_chunker.pyx":302
  *                 free(buffer)
  *                 fclose(fp)
  *                 return NULL             # <<<<<<<<<<<<<<
@@ -4408,7 +4533,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
         __pyx_r = NULL;
         goto __pyx_L0;
 
-        /* "src/multi_dirs_chunker.pyx":288
+        /* "src/multi_dirs_chunker.pyx":299
  *             capacity *= 2
  *             new_buf = <char*>realloc(buffer, capacity)
  *             if not new_buf:             # <<<<<<<<<<<<<<
@@ -4417,7 +4542,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
       }
 
-      /* "src/multi_dirs_chunker.pyx":292
+      /* "src/multi_dirs_chunker.pyx":303
  *                 fclose(fp)
  *                 return NULL
  *             buffer = new_buf             # <<<<<<<<<<<<<<
@@ -4426,7 +4551,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
       __pyx_v_buffer = __pyx_v_new_buf;
 
-      /* "src/multi_dirs_chunker.pyx":285
+      /* "src/multi_dirs_chunker.pyx":296
  *             break
  *         used += nread
  *         if used + chunk > capacity:             # <<<<<<<<<<<<<<
@@ -4437,7 +4562,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
   }
   __pyx_L6_break:;
 
-  /* "src/multi_dirs_chunker.pyx":294
+  /* "src/multi_dirs_chunker.pyx":305
  *             buffer = new_buf
  * 
  *     fclose(fp)             # <<<<<<<<<<<<<<
@@ -4446,7 +4571,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
   (void)(fclose(__pyx_v_fp));
 
-  /* "src/multi_dirs_chunker.pyx":295
+  /* "src/multi_dirs_chunker.pyx":306
  * 
  *     fclose(fp)
  *     buffer[used] = b'\0'             # <<<<<<<<<<<<<<
@@ -4455,7 +4580,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
   (__pyx_v_buffer[__pyx_v_used]) = '\x00';
 
-  /* "src/multi_dirs_chunker.pyx":296
+  /* "src/multi_dirs_chunker.pyx":307
  *     fclose(fp)
  *     buffer[used] = b'\0'
  *     if size_out != NULL:             # <<<<<<<<<<<<<<
@@ -4465,7 +4590,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
   __pyx_t_1 = (__pyx_v_size_out != NULL);
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":297
+    /* "src/multi_dirs_chunker.pyx":308
  *     buffer[used] = b'\0'
  *     if size_out != NULL:
  *         size_out[0] = used             # <<<<<<<<<<<<<<
@@ -4474,7 +4599,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
     (__pyx_v_size_out[0]) = __pyx_v_used;
 
-    /* "src/multi_dirs_chunker.pyx":296
+    /* "src/multi_dirs_chunker.pyx":307
  *     fclose(fp)
  *     buffer[used] = b'\0'
  *     if size_out != NULL:             # <<<<<<<<<<<<<<
@@ -4483,7 +4608,7 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":298
+  /* "src/multi_dirs_chunker.pyx":309
  *     if size_out != NULL:
  *         size_out[0] = used
  *     return buffer             # <<<<<<<<<<<<<<
@@ -4493,12 +4618,12 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
   __pyx_r = __pyx_v_buffer;
   goto __pyx_L0;
 
-  /* "src/multi_dirs_chunker.pyx":263
- * 
+  /* "src/multi_dirs_chunker.pyx":272
+ *     return highest
  * 
  * cdef char* read_file_contents(const char* path, size_t* size_out) except NULL:             # <<<<<<<<<<<<<<
- * 
- *     cdef FILE* fp = fopen(path, "rb")
+ *     """
+ *     Read the entire file into a malloc'd buffer (caller frees).
  */
 
   /* function exit code */
@@ -4506,12 +4631,12 @@ static char *__pyx_f_3src_18multi_dirs_chunker_read_file_contents(char const *__
   return __pyx_r;
 }
 
-/* "src/multi_dirs_chunker.pyx":300
+/* "src/multi_dirs_chunker.pyx":311
  *     return buffer
  * 
  * cdef size_t count_tokens(const char* text):             # <<<<<<<<<<<<<<
- * 
- *     if not text:
+ *     """
+ *     Count "whitespace-separated tokens" if token_mode is active.
  */
 
 static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v_text) {
@@ -4526,9 +4651,9 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
   size_t __pyx_t_3;
   size_t __pyx_t_4;
 
-  /* "src/multi_dirs_chunker.pyx":302
- * cdef size_t count_tokens(const char* text):
- * 
+  /* "src/multi_dirs_chunker.pyx":315
+ *     Count "whitespace-separated tokens" if token_mode is active.
+ *     """
  *     if not text:             # <<<<<<<<<<<<<<
  *         return 0
  * 
@@ -4536,8 +4661,8 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
   __pyx_t_1 = (!(__pyx_v_text != 0));
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":303
- * 
+    /* "src/multi_dirs_chunker.pyx":316
+ *     """
  *     if not text:
  *         return 0             # <<<<<<<<<<<<<<
  * 
@@ -4546,16 +4671,16 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
     __pyx_r = 0;
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":302
- * cdef size_t count_tokens(const char* text):
- * 
+    /* "src/multi_dirs_chunker.pyx":315
+ *     Count "whitespace-separated tokens" if token_mode is active.
+ *     """
  *     if not text:             # <<<<<<<<<<<<<<
  *         return 0
  * 
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":305
+  /* "src/multi_dirs_chunker.pyx":318
  *         return 0
  * 
  *     cdef size_t count = 0             # <<<<<<<<<<<<<<
@@ -4564,7 +4689,7 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
  */
   __pyx_v_count = 0;
 
-  /* "src/multi_dirs_chunker.pyx":306
+  /* "src/multi_dirs_chunker.pyx":319
  * 
  *     cdef size_t count = 0
  *     cdef bint in_space = True             # <<<<<<<<<<<<<<
@@ -4573,7 +4698,7 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
  */
   __pyx_v_in_space = 1;
 
-  /* "src/multi_dirs_chunker.pyx":308
+  /* "src/multi_dirs_chunker.pyx":321
  *     cdef bint in_space = True
  *     cdef char c
  *     cdef size_t i = 0             # <<<<<<<<<<<<<<
@@ -4582,7 +4707,7 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
  */
   __pyx_v_i = 0;
 
-  /* "src/multi_dirs_chunker.pyx":309
+  /* "src/multi_dirs_chunker.pyx":322
  *     cdef char c
  *     cdef size_t i = 0
  *     cdef size_t length = strlen(text)             # <<<<<<<<<<<<<<
@@ -4591,7 +4716,7 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
  */
   __pyx_v_length = strlen(__pyx_v_text);
 
-  /* "src/multi_dirs_chunker.pyx":311
+  /* "src/multi_dirs_chunker.pyx":324
  *     cdef size_t length = strlen(text)
  * 
  *     for i in range(length):             # <<<<<<<<<<<<<<
@@ -4603,7 +4728,7 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "src/multi_dirs_chunker.pyx":312
+    /* "src/multi_dirs_chunker.pyx":325
  * 
  *     for i in range(length):
  *         c = text[i]             # <<<<<<<<<<<<<<
@@ -4612,7 +4737,7 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
  */
     __pyx_v_c = (__pyx_v_text[__pyx_v_i]);
 
-    /* "src/multi_dirs_chunker.pyx":313
+    /* "src/multi_dirs_chunker.pyx":326
  *     for i in range(length):
  *         c = text[i]
  *         if c in [b' ', b'\t', b'\n', b'\r', b'\f', b'\v']:             # <<<<<<<<<<<<<<
@@ -4627,7 +4752,7 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
       case '\x0C':
       case '\x0B':
 
-      /* "src/multi_dirs_chunker.pyx":314
+      /* "src/multi_dirs_chunker.pyx":327
  *         c = text[i]
  *         if c in [b' ', b'\t', b'\n', b'\r', b'\f', b'\v']:
  *             in_space = True             # <<<<<<<<<<<<<<
@@ -4636,7 +4761,7 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
  */
       __pyx_v_in_space = 1;
 
-      /* "src/multi_dirs_chunker.pyx":313
+      /* "src/multi_dirs_chunker.pyx":326
  *     for i in range(length):
  *         c = text[i]
  *         if c in [b' ', b'\t', b'\n', b'\r', b'\f', b'\v']:             # <<<<<<<<<<<<<<
@@ -4646,7 +4771,7 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
       break;
       default:
 
-      /* "src/multi_dirs_chunker.pyx":316
+      /* "src/multi_dirs_chunker.pyx":329
  *             in_space = True
  *         else:
  *             if in_space:             # <<<<<<<<<<<<<<
@@ -4655,7 +4780,7 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
  */
       if (__pyx_v_in_space) {
 
-        /* "src/multi_dirs_chunker.pyx":317
+        /* "src/multi_dirs_chunker.pyx":330
  *         else:
  *             if in_space:
  *                 count += 1             # <<<<<<<<<<<<<<
@@ -4664,7 +4789,7 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
  */
         __pyx_v_count = (__pyx_v_count + 1);
 
-        /* "src/multi_dirs_chunker.pyx":316
+        /* "src/multi_dirs_chunker.pyx":329
  *             in_space = True
  *         else:
  *             if in_space:             # <<<<<<<<<<<<<<
@@ -4673,7 +4798,7 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
  */
       }
 
-      /* "src/multi_dirs_chunker.pyx":318
+      /* "src/multi_dirs_chunker.pyx":331
  *             if in_space:
  *                 count += 1
  *             in_space = False             # <<<<<<<<<<<<<<
@@ -4685,7 +4810,7 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
     }
   }
 
-  /* "src/multi_dirs_chunker.pyx":319
+  /* "src/multi_dirs_chunker.pyx":332
  *                 count += 1
  *             in_space = False
  *     return count             # <<<<<<<<<<<<<<
@@ -4695,12 +4820,12 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
   __pyx_r = __pyx_v_count;
   goto __pyx_L0;
 
-  /* "src/multi_dirs_chunker.pyx":300
+  /* "src/multi_dirs_chunker.pyx":311
  *     return buffer
  * 
  * cdef size_t count_tokens(const char* text):             # <<<<<<<<<<<<<<
- * 
- *     if not text:
+ *     """
+ *     Count "whitespace-separated tokens" if token_mode is active.
  */
 
   /* function exit code */
@@ -4708,12 +4833,12 @@ static size_t __pyx_f_3src_18multi_dirs_chunker_count_tokens(char const *__pyx_v
   return __pyx_r;
 }
 
-/* "src/multi_dirs_chunker.pyx":325
+/* "src/multi_dirs_chunker.pyx":338
  * ##################################################
  * 
  * cdef FileQueue* create_file_queue():             # <<<<<<<<<<<<<<
- *     cdef FileQueue* queue = <FileQueue*>malloc(sizeof(FileQueue))
- *     if not queue:
+ *     """
+ *     Simple dynamic array (FileEntry**) with a mutex.
  */
 
 static struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_f_3src_18multi_dirs_chunker_create_file_queue(void) {
@@ -4721,17 +4846,17 @@ static struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_f_3src_18multi_
   struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_r;
   int __pyx_t_1;
 
-  /* "src/multi_dirs_chunker.pyx":326
- * 
- * cdef FileQueue* create_file_queue():
+  /* "src/multi_dirs_chunker.pyx":342
+ *     Simple dynamic array (FileEntry**) with a mutex.
+ *     """
  *     cdef FileQueue* queue = <FileQueue*>malloc(sizeof(FileQueue))             # <<<<<<<<<<<<<<
  *     if not queue:
  *         return NULL
  */
   __pyx_v_queue = ((struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *)malloc((sizeof(struct __pyx_t_3src_18multi_dirs_chunker_FileQueue))));
 
-  /* "src/multi_dirs_chunker.pyx":327
- * cdef FileQueue* create_file_queue():
+  /* "src/multi_dirs_chunker.pyx":343
+ *     """
  *     cdef FileQueue* queue = <FileQueue*>malloc(sizeof(FileQueue))
  *     if not queue:             # <<<<<<<<<<<<<<
  *         return NULL
@@ -4740,7 +4865,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_f_3src_18multi_
   __pyx_t_1 = (!(__pyx_v_queue != 0));
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":328
+    /* "src/multi_dirs_chunker.pyx":344
  *     cdef FileQueue* queue = <FileQueue*>malloc(sizeof(FileQueue))
  *     if not queue:
  *         return NULL             # <<<<<<<<<<<<<<
@@ -4750,8 +4875,8 @@ static struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_f_3src_18multi_
     __pyx_r = NULL;
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":327
- * cdef FileQueue* create_file_queue():
+    /* "src/multi_dirs_chunker.pyx":343
+ *     """
  *     cdef FileQueue* queue = <FileQueue*>malloc(sizeof(FileQueue))
  *     if not queue:             # <<<<<<<<<<<<<<
  *         return NULL
@@ -4759,7 +4884,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_f_3src_18multi_
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":329
+  /* "src/multi_dirs_chunker.pyx":345
  *     if not queue:
  *         return NULL
  *     queue.entries = <FileEntry**>malloc(INITIAL_QUEUE_SIZE * sizeof(FileEntry*))             # <<<<<<<<<<<<<<
@@ -4768,7 +4893,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_f_3src_18multi_
  */
   __pyx_v_queue->entries = ((struct __pyx_t_3src_18multi_dirs_chunker_FileEntry **)malloc((__pyx_v_3src_18multi_dirs_chunker_INITIAL_QUEUE_SIZE * (sizeof(struct __pyx_t_3src_18multi_dirs_chunker_FileEntry *)))));
 
-  /* "src/multi_dirs_chunker.pyx":330
+  /* "src/multi_dirs_chunker.pyx":346
  *         return NULL
  *     queue.entries = <FileEntry**>malloc(INITIAL_QUEUE_SIZE * sizeof(FileEntry*))
  *     if not queue.entries:             # <<<<<<<<<<<<<<
@@ -4778,7 +4903,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_f_3src_18multi_
   __pyx_t_1 = (!(__pyx_v_queue->entries != 0));
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":331
+    /* "src/multi_dirs_chunker.pyx":347
  *     queue.entries = <FileEntry**>malloc(INITIAL_QUEUE_SIZE * sizeof(FileEntry*))
  *     if not queue.entries:
  *         free(queue)             # <<<<<<<<<<<<<<
@@ -4787,7 +4912,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_f_3src_18multi_
  */
     free(__pyx_v_queue);
 
-    /* "src/multi_dirs_chunker.pyx":332
+    /* "src/multi_dirs_chunker.pyx":348
  *     if not queue.entries:
  *         free(queue)
  *         return NULL             # <<<<<<<<<<<<<<
@@ -4797,7 +4922,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_f_3src_18multi_
     __pyx_r = NULL;
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":330
+    /* "src/multi_dirs_chunker.pyx":346
  *         return NULL
  *     queue.entries = <FileEntry**>malloc(INITIAL_QUEUE_SIZE * sizeof(FileEntry*))
  *     if not queue.entries:             # <<<<<<<<<<<<<<
@@ -4806,7 +4931,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_f_3src_18multi_
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":333
+  /* "src/multi_dirs_chunker.pyx":349
  *         free(queue)
  *         return NULL
  *     queue.count = 0             # <<<<<<<<<<<<<<
@@ -4815,7 +4940,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_f_3src_18multi_
  */
   __pyx_v_queue->count = 0;
 
-  /* "src/multi_dirs_chunker.pyx":334
+  /* "src/multi_dirs_chunker.pyx":350
  *         return NULL
  *     queue.count = 0
  *     queue.capacity = INITIAL_QUEUE_SIZE             # <<<<<<<<<<<<<<
@@ -4824,7 +4949,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_f_3src_18multi_
  */
   __pyx_v_queue->capacity = __pyx_v_3src_18multi_dirs_chunker_INITIAL_QUEUE_SIZE;
 
-  /* "src/multi_dirs_chunker.pyx":335
+  /* "src/multi_dirs_chunker.pyx":351
  *     queue.count = 0
  *     queue.capacity = INITIAL_QUEUE_SIZE
  *     pthread_mutex_init(&queue.mutex, NULL)             # <<<<<<<<<<<<<<
@@ -4833,22 +4958,22 @@ static struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_f_3src_18multi_
  */
   (void)(pthread_mutex_init((&__pyx_v_queue->mutex), NULL));
 
-  /* "src/multi_dirs_chunker.pyx":336
+  /* "src/multi_dirs_chunker.pyx":352
  *     queue.capacity = INITIAL_QUEUE_SIZE
  *     pthread_mutex_init(&queue.mutex, NULL)
  *     return queue             # <<<<<<<<<<<<<<
  * 
- * 
+ * cdef void destroy_file_queue(FileQueue* queue):
  */
   __pyx_r = __pyx_v_queue;
   goto __pyx_L0;
 
-  /* "src/multi_dirs_chunker.pyx":325
+  /* "src/multi_dirs_chunker.pyx":338
  * ##################################################
  * 
  * cdef FileQueue* create_file_queue():             # <<<<<<<<<<<<<<
- *     cdef FileQueue* queue = <FileQueue*>malloc(sizeof(FileQueue))
- *     if not queue:
+ *     """
+ *     Simple dynamic array (FileEntry**) with a mutex.
  */
 
   /* function exit code */
@@ -4856,8 +4981,8 @@ static struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_f_3src_18multi_
   return __pyx_r;
 }
 
-/* "src/multi_dirs_chunker.pyx":339
- * 
+/* "src/multi_dirs_chunker.pyx":354
+ *     return queue
  * 
  * cdef void destroy_file_queue(FileQueue* queue):             # <<<<<<<<<<<<<<
  *     if not queue:
@@ -4867,7 +4992,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_f_3src_18multi_
 static void __pyx_f_3src_18multi_dirs_chunker_destroy_file_queue(struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_v_queue) {
   int __pyx_t_1;
 
-  /* "src/multi_dirs_chunker.pyx":340
+  /* "src/multi_dirs_chunker.pyx":355
  * 
  * cdef void destroy_file_queue(FileQueue* queue):
  *     if not queue:             # <<<<<<<<<<<<<<
@@ -4877,7 +5002,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_file_queue(struct __pyx_t_
   __pyx_t_1 = (!(__pyx_v_queue != 0));
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":341
+    /* "src/multi_dirs_chunker.pyx":356
  * cdef void destroy_file_queue(FileQueue* queue):
  *     if not queue:
  *         return             # <<<<<<<<<<<<<<
@@ -4886,7 +5011,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_file_queue(struct __pyx_t_
  */
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":340
+    /* "src/multi_dirs_chunker.pyx":355
  * 
  * cdef void destroy_file_queue(FileQueue* queue):
  *     if not queue:             # <<<<<<<<<<<<<<
@@ -4895,7 +5020,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_file_queue(struct __pyx_t_
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":342
+  /* "src/multi_dirs_chunker.pyx":357
  *     if not queue:
  *         return
  *     if queue.entries:             # <<<<<<<<<<<<<<
@@ -4905,7 +5030,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_file_queue(struct __pyx_t_
   __pyx_t_1 = (__pyx_v_queue->entries != 0);
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":343
+    /* "src/multi_dirs_chunker.pyx":358
  *         return
  *     if queue.entries:
  *         free(queue.entries)             # <<<<<<<<<<<<<<
@@ -4914,7 +5039,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_file_queue(struct __pyx_t_
  */
     free(__pyx_v_queue->entries);
 
-    /* "src/multi_dirs_chunker.pyx":342
+    /* "src/multi_dirs_chunker.pyx":357
  *     if not queue:
  *         return
  *     if queue.entries:             # <<<<<<<<<<<<<<
@@ -4923,7 +5048,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_file_queue(struct __pyx_t_
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":344
+  /* "src/multi_dirs_chunker.pyx":359
  *     if queue.entries:
  *         free(queue.entries)
  *     pthread_mutex_destroy(&queue.mutex)             # <<<<<<<<<<<<<<
@@ -4932,17 +5057,17 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_file_queue(struct __pyx_t_
  */
   (void)(pthread_mutex_destroy((&__pyx_v_queue->mutex)));
 
-  /* "src/multi_dirs_chunker.pyx":345
+  /* "src/multi_dirs_chunker.pyx":360
  *         free(queue.entries)
  *     pthread_mutex_destroy(&queue.mutex)
  *     free(queue)             # <<<<<<<<<<<<<<
  * 
- * 
+ * cdef void add_to_queue(FileQueue* queue, FileEntry* entry):
  */
   free(__pyx_v_queue);
 
-  /* "src/multi_dirs_chunker.pyx":339
- * 
+  /* "src/multi_dirs_chunker.pyx":354
+ *     return queue
  * 
  * cdef void destroy_file_queue(FileQueue* queue):             # <<<<<<<<<<<<<<
  *     if not queue:
@@ -4953,170 +5078,260 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_file_queue(struct __pyx_t_
   __pyx_L0:;
 }
 
-/* "src/multi_dirs_chunker.pyx":348
- * 
+/* "src/multi_dirs_chunker.pyx":362
+ *     free(queue)
  * 
  * cdef void add_to_queue(FileQueue* queue, FileEntry* entry):             # <<<<<<<<<<<<<<
- *     cdef FileEntry** new_entries
- *     pthread_mutex_lock(&queue.mutex)
+ *     """
+ *     Push a FileEntry onto the queue, resizing if necessary.
  */
 
 static void __pyx_f_3src_18multi_dirs_chunker_add_to_queue(struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *__pyx_v_queue, struct __pyx_t_3src_18multi_dirs_chunker_FileEntry *__pyx_v_entry) {
+  size_t __pyx_v_new_capacity;
   struct __pyx_t_3src_18multi_dirs_chunker_FileEntry **__pyx_v_new_entries;
   int __pyx_t_1;
+  int __pyx_t_2;
 
-  /* "src/multi_dirs_chunker.pyx":350
- * cdef void add_to_queue(FileQueue* queue, FileEntry* entry):
+  /* "src/multi_dirs_chunker.pyx":369
  *     cdef FileEntry** new_entries
+ * 
+ *     if not entry or not entry.path:             # <<<<<<<<<<<<<<
+ *         if entry:
+ *             free(entry)
+ */
+  __pyx_t_2 = (!(__pyx_v_entry != 0));
+  if (!__pyx_t_2) {
+  } else {
+    __pyx_t_1 = __pyx_t_2;
+    goto __pyx_L4_bool_binop_done;
+  }
+  __pyx_t_2 = (!(__pyx_v_entry->path != 0));
+  __pyx_t_1 = __pyx_t_2;
+  __pyx_L4_bool_binop_done:;
+  if (__pyx_t_1) {
+
+    /* "src/multi_dirs_chunker.pyx":370
+ * 
+ *     if not entry or not entry.path:
+ *         if entry:             # <<<<<<<<<<<<<<
+ *             free(entry)
+ *         return
+ */
+    __pyx_t_1 = (__pyx_v_entry != 0);
+    if (__pyx_t_1) {
+
+      /* "src/multi_dirs_chunker.pyx":371
+ *     if not entry or not entry.path:
+ *         if entry:
+ *             free(entry)             # <<<<<<<<<<<<<<
+ *         return
+ * 
+ */
+      free(__pyx_v_entry);
+
+      /* "src/multi_dirs_chunker.pyx":370
+ * 
+ *     if not entry or not entry.path:
+ *         if entry:             # <<<<<<<<<<<<<<
+ *             free(entry)
+ *         return
+ */
+    }
+
+    /* "src/multi_dirs_chunker.pyx":372
+ *         if entry:
+ *             free(entry)
+ *         return             # <<<<<<<<<<<<<<
+ * 
+ *     pthread_mutex_lock(&queue.mutex)
+ */
+    goto __pyx_L0;
+
+    /* "src/multi_dirs_chunker.pyx":369
+ *     cdef FileEntry** new_entries
+ * 
+ *     if not entry or not entry.path:             # <<<<<<<<<<<<<<
+ *         if entry:
+ *             free(entry)
+ */
+  }
+
+  /* "src/multi_dirs_chunker.pyx":374
+ *         return
+ * 
  *     pthread_mutex_lock(&queue.mutex)             # <<<<<<<<<<<<<<
+ * 
  *     if queue.count == queue.capacity:
- *         queue.capacity *= 2
  */
   (void)(pthread_mutex_lock((&__pyx_v_queue->mutex)));
 
-  /* "src/multi_dirs_chunker.pyx":351
- *     cdef FileEntry** new_entries
+  /* "src/multi_dirs_chunker.pyx":376
  *     pthread_mutex_lock(&queue.mutex)
+ * 
  *     if queue.count == queue.capacity:             # <<<<<<<<<<<<<<
- *         queue.capacity *= 2
- *         new_entries = <FileEntry**>realloc(queue.entries, queue.capacity * sizeof(FileEntry*))
+ *         new_capacity = queue.capacity * 2
+ *         new_entries = <FileEntry**>realloc(queue.entries, new_capacity * sizeof(FileEntry*))
  */
   __pyx_t_1 = (__pyx_v_queue->count == __pyx_v_queue->capacity);
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":352
- *     pthread_mutex_lock(&queue.mutex)
+    /* "src/multi_dirs_chunker.pyx":377
+ * 
  *     if queue.count == queue.capacity:
- *         queue.capacity *= 2             # <<<<<<<<<<<<<<
- *         new_entries = <FileEntry**>realloc(queue.entries, queue.capacity * sizeof(FileEntry*))
- *         if new_entries:
+ *         new_capacity = queue.capacity * 2             # <<<<<<<<<<<<<<
+ *         new_entries = <FileEntry**>realloc(queue.entries, new_capacity * sizeof(FileEntry*))
+ * 
  */
-    __pyx_v_queue->capacity = (__pyx_v_queue->capacity * 2);
+    __pyx_v_new_capacity = (__pyx_v_queue->capacity * 2);
 
-    /* "src/multi_dirs_chunker.pyx":353
+    /* "src/multi_dirs_chunker.pyx":378
  *     if queue.count == queue.capacity:
- *         queue.capacity *= 2
- *         new_entries = <FileEntry**>realloc(queue.entries, queue.capacity * sizeof(FileEntry*))             # <<<<<<<<<<<<<<
- *         if new_entries:
- *             queue.entries = new_entries
+ *         new_capacity = queue.capacity * 2
+ *         new_entries = <FileEntry**>realloc(queue.entries, new_capacity * sizeof(FileEntry*))             # <<<<<<<<<<<<<<
+ * 
+ *         if not new_entries:
  */
-    __pyx_v_new_entries = ((struct __pyx_t_3src_18multi_dirs_chunker_FileEntry **)realloc(__pyx_v_queue->entries, (__pyx_v_queue->capacity * (sizeof(struct __pyx_t_3src_18multi_dirs_chunker_FileEntry *)))));
+    __pyx_v_new_entries = ((struct __pyx_t_3src_18multi_dirs_chunker_FileEntry **)realloc(__pyx_v_queue->entries, (__pyx_v_new_capacity * (sizeof(struct __pyx_t_3src_18multi_dirs_chunker_FileEntry *)))));
 
-    /* "src/multi_dirs_chunker.pyx":354
- *         queue.capacity *= 2
- *         new_entries = <FileEntry**>realloc(queue.entries, queue.capacity * sizeof(FileEntry*))
- *         if new_entries:             # <<<<<<<<<<<<<<
- *             queue.entries = new_entries
- *         else:
+    /* "src/multi_dirs_chunker.pyx":380
+ *         new_entries = <FileEntry**>realloc(queue.entries, new_capacity * sizeof(FileEntry*))
+ * 
+ *         if not new_entries:             # <<<<<<<<<<<<<<
+ *             # If we cannot realloc, we have to free the entry
+ *             free(entry.path)
  */
-    __pyx_t_1 = (__pyx_v_new_entries != 0);
+    __pyx_t_1 = (!(__pyx_v_new_entries != 0));
     if (__pyx_t_1) {
 
-      /* "src/multi_dirs_chunker.pyx":355
- *         new_entries = <FileEntry**>realloc(queue.entries, queue.capacity * sizeof(FileEntry*))
- *         if new_entries:
- *             queue.entries = new_entries             # <<<<<<<<<<<<<<
- *         else:
+      /* "src/multi_dirs_chunker.pyx":382
+ *         if not new_entries:
+ *             # If we cannot realloc, we have to free the entry
+ *             free(entry.path)             # <<<<<<<<<<<<<<
+ *             free(entry)
  *             pthread_mutex_unlock(&queue.mutex)
  */
-      __pyx_v_queue->entries = __pyx_v_new_entries;
+      free(__pyx_v_entry->path);
 
-      /* "src/multi_dirs_chunker.pyx":354
- *         queue.capacity *= 2
- *         new_entries = <FileEntry**>realloc(queue.entries, queue.capacity * sizeof(FileEntry*))
- *         if new_entries:             # <<<<<<<<<<<<<<
- *             queue.entries = new_entries
- *         else:
+      /* "src/multi_dirs_chunker.pyx":383
+ *             # If we cannot realloc, we have to free the entry
+ *             free(entry.path)
+ *             free(entry)             # <<<<<<<<<<<<<<
+ *             pthread_mutex_unlock(&queue.mutex)
+ *             return
  */
-      goto __pyx_L4;
-    }
+      free(__pyx_v_entry);
 
-    /* "src/multi_dirs_chunker.pyx":357
- *             queue.entries = new_entries
- *         else:
+      /* "src/multi_dirs_chunker.pyx":384
+ *             free(entry.path)
+ *             free(entry)
  *             pthread_mutex_unlock(&queue.mutex)             # <<<<<<<<<<<<<<
  *             return
- *     queue.entries[queue.count] = entry
+ * 
  */
-    /*else*/ {
       (void)(pthread_mutex_unlock((&__pyx_v_queue->mutex)));
 
-      /* "src/multi_dirs_chunker.pyx":358
- *         else:
+      /* "src/multi_dirs_chunker.pyx":385
+ *             free(entry)
  *             pthread_mutex_unlock(&queue.mutex)
  *             return             # <<<<<<<<<<<<<<
- *     queue.entries[queue.count] = entry
- *     queue.count += 1
+ * 
+ *         queue.entries = new_entries
  */
       goto __pyx_L0;
-    }
-    __pyx_L4:;
 
-    /* "src/multi_dirs_chunker.pyx":351
- *     cdef FileEntry** new_entries
+      /* "src/multi_dirs_chunker.pyx":380
+ *         new_entries = <FileEntry**>realloc(queue.entries, new_capacity * sizeof(FileEntry*))
+ * 
+ *         if not new_entries:             # <<<<<<<<<<<<<<
+ *             # If we cannot realloc, we have to free the entry
+ *             free(entry.path)
+ */
+    }
+
+    /* "src/multi_dirs_chunker.pyx":387
+ *             return
+ * 
+ *         queue.entries = new_entries             # <<<<<<<<<<<<<<
+ *         queue.capacity = new_capacity
+ * 
+ */
+    __pyx_v_queue->entries = __pyx_v_new_entries;
+
+    /* "src/multi_dirs_chunker.pyx":388
+ * 
+ *         queue.entries = new_entries
+ *         queue.capacity = new_capacity             # <<<<<<<<<<<<<<
+ * 
+ *     queue.entries[queue.count] = entry
+ */
+    __pyx_v_queue->capacity = __pyx_v_new_capacity;
+
+    /* "src/multi_dirs_chunker.pyx":376
  *     pthread_mutex_lock(&queue.mutex)
+ * 
  *     if queue.count == queue.capacity:             # <<<<<<<<<<<<<<
- *         queue.capacity *= 2
- *         new_entries = <FileEntry**>realloc(queue.entries, queue.capacity * sizeof(FileEntry*))
+ *         new_capacity = queue.capacity * 2
+ *         new_entries = <FileEntry**>realloc(queue.entries, new_capacity * sizeof(FileEntry*))
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":359
- *             pthread_mutex_unlock(&queue.mutex)
- *             return
+  /* "src/multi_dirs_chunker.pyx":390
+ *         queue.capacity = new_capacity
+ * 
  *     queue.entries[queue.count] = entry             # <<<<<<<<<<<<<<
  *     queue.count += 1
- *     pthread_mutex_unlock(&queue.mutex)
+ * 
  */
   (__pyx_v_queue->entries[__pyx_v_queue->count]) = __pyx_v_entry;
 
-  /* "src/multi_dirs_chunker.pyx":360
- *             return
+  /* "src/multi_dirs_chunker.pyx":391
+ * 
  *     queue.entries[queue.count] = entry
  *     queue.count += 1             # <<<<<<<<<<<<<<
- *     pthread_mutex_unlock(&queue.mutex)
  * 
+ *     pthread_mutex_unlock(&queue.mutex)
  */
   __pyx_v_queue->count = (__pyx_v_queue->count + 1);
 
-  /* "src/multi_dirs_chunker.pyx":361
- *     queue.entries[queue.count] = entry
+  /* "src/multi_dirs_chunker.pyx":393
  *     queue.count += 1
+ * 
  *     pthread_mutex_unlock(&queue.mutex)             # <<<<<<<<<<<<<<
  * 
  * ##################################################
  */
   (void)(pthread_mutex_unlock((&__pyx_v_queue->mutex)));
 
-  /* "src/multi_dirs_chunker.pyx":348
- * 
+  /* "src/multi_dirs_chunker.pyx":362
+ *     free(queue)
  * 
  * cdef void add_to_queue(FileQueue* queue, FileEntry* entry):             # <<<<<<<<<<<<<<
- *     cdef FileEntry** new_entries
- *     pthread_mutex_lock(&queue.mutex)
+ *     """
+ *     Push a FileEntry onto the queue, resizing if necessary.
  */
 
   /* function exit code */
   __pyx_L0:;
 }
 
-/* "src/multi_dirs_chunker.pyx":367
+/* "src/multi_dirs_chunker.pyx":399
  * ##################################################
  * 
  * cdef void process_directory(ThreadPool* pool, const char* dir_path):             # <<<<<<<<<<<<<<
- *     cdef DIR* dir
- *     cdef char* full_path
+ *     cdef DIRHandle d
+ *     cdef DirEntHandle e
  */
 
 static void __pyx_f_3src_18multi_dirs_chunker_process_directory(struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_v_pool, char const *__pyx_v_dir_path) {
-  struct DIR *__pyx_v_dir;
+  DIRHandle __pyx_v_d;
+  DirEntHandle __pyx_v_e;
   char *__pyx_v_full_path;
-  struct dirent *__pyx_v_ent;
+  char const *__pyx_v_nameptr;
   int __pyx_v_needed;
+  struct __pyx_t_3src_18multi_dirs_chunker_FileEntry *__pyx_v_fe;
   struct stat __pyx_v_st_buf;
   struct stat __pyx_v_st_info;
   CYTHON_UNUSED mode_t __pyx_v_file_mode;
-  struct __pyx_t_3src_18multi_dirs_chunker_FileEntry *__pyx_v_fe;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
@@ -5136,193 +5351,202 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_directory(struct __pyx_t_3
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("process_directory", 1);
 
-  /* "src/multi_dirs_chunker.pyx":375
- *     cdef stat_t st_info
- *     cdef mode_t file_mode
- *     cdef FileEntry* fe = NULL             # <<<<<<<<<<<<<<
- * 
- *     dir = opendir(dir_path)
- */
-  __pyx_v_fe = NULL;
-
-  /* "src/multi_dirs_chunker.pyx":377
- *     cdef FileEntry* fe = NULL
- * 
- *     dir = opendir(dir_path)             # <<<<<<<<<<<<<<
- *     if not dir:
- *         return
- */
-  __pyx_v_dir = opendir(__pyx_v_dir_path);
-
-  /* "src/multi_dirs_chunker.pyx":378
- * 
- *     dir = opendir(dir_path)
- *     if not dir:             # <<<<<<<<<<<<<<
- *         return
- * 
- */
-  __pyx_t_1 = (!(__pyx_v_dir != 0));
-  if (__pyx_t_1) {
-
-    /* "src/multi_dirs_chunker.pyx":379
- *     dir = opendir(dir_path)
- *     if not dir:
- *         return             # <<<<<<<<<<<<<<
- * 
- *     full_path = <char*>malloc(MAX_PATH_LEN)
- */
-    goto __pyx_L0;
-
-    /* "src/multi_dirs_chunker.pyx":378
- * 
- *     dir = opendir(dir_path)
- *     if not dir:             # <<<<<<<<<<<<<<
- *         return
- * 
- */
-  }
-
-  /* "src/multi_dirs_chunker.pyx":381
- *         return
- * 
- *     full_path = <char*>malloc(MAX_PATH_LEN)             # <<<<<<<<<<<<<<
+  /* "src/multi_dirs_chunker.pyx":402
+ *     cdef DIRHandle d
+ *     cdef DirEntHandle e
+ *     cdef char* full_path = <char*>malloc(MAX_PATH_LEN)             # <<<<<<<<<<<<<<
  *     if not full_path:
- *         closedir(dir)
+ *         return
  */
   __pyx_v_full_path = ((char *)malloc(__pyx_e_3src_18multi_dirs_chunker_MAX_PATH_LEN));
 
-  /* "src/multi_dirs_chunker.pyx":382
- * 
- *     full_path = <char*>malloc(MAX_PATH_LEN)
+  /* "src/multi_dirs_chunker.pyx":403
+ *     cdef DirEntHandle e
+ *     cdef char* full_path = <char*>malloc(MAX_PATH_LEN)
  *     if not full_path:             # <<<<<<<<<<<<<<
- *         closedir(dir)
  *         return
+ * 
  */
   __pyx_t_1 = (!(__pyx_v_full_path != 0));
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":383
- *     full_path = <char*>malloc(MAX_PATH_LEN)
+    /* "src/multi_dirs_chunker.pyx":404
+ *     cdef char* full_path = <char*>malloc(MAX_PATH_LEN)
  *     if not full_path:
- *         closedir(dir)             # <<<<<<<<<<<<<<
+ *         return             # <<<<<<<<<<<<<<
+ * 
+ *     cdef const char* nameptr
+ */
+    goto __pyx_L0;
+
+    /* "src/multi_dirs_chunker.pyx":403
+ *     cdef DirEntHandle e
+ *     cdef char* full_path = <char*>malloc(MAX_PATH_LEN)
+ *     if not full_path:             # <<<<<<<<<<<<<<
  *         return
  * 
  */
-    (void)(closedir(__pyx_v_dir));
+  }
 
-    /* "src/multi_dirs_chunker.pyx":384
- *     if not full_path:
- *         closedir(dir)
+  /* "src/multi_dirs_chunker.pyx":408
+ *     cdef const char* nameptr
+ *     cdef int needed
+ *     cdef FileEntry* fe = NULL             # <<<<<<<<<<<<<<
+ *     cdef stat_t st_buf, st_info
+ *     cdef mode_t file_mode
+ */
+  __pyx_v_fe = NULL;
+
+  /* "src/multi_dirs_chunker.pyx":412
+ *     cdef mode_t file_mode
+ * 
+ *     d = my_opendir(dir_path)             # <<<<<<<<<<<<<<
+ *     if not d:
+ *         free(full_path)
+ */
+  __pyx_v_d = my_opendir(__pyx_v_dir_path);
+
+  /* "src/multi_dirs_chunker.pyx":413
+ * 
+ *     d = my_opendir(dir_path)
+ *     if not d:             # <<<<<<<<<<<<<<
+ *         free(full_path)
+ *         return
+ */
+  __pyx_t_1 = (!(__pyx_v_d != 0));
+  if (__pyx_t_1) {
+
+    /* "src/multi_dirs_chunker.pyx":414
+ *     d = my_opendir(dir_path)
+ *     if not d:
+ *         free(full_path)             # <<<<<<<<<<<<<<
+ *         return
+ * 
+ */
+    free(__pyx_v_full_path);
+
+    /* "src/multi_dirs_chunker.pyx":415
+ *     if not d:
+ *         free(full_path)
  *         return             # <<<<<<<<<<<<<<
  * 
  *     try:
  */
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":382
+    /* "src/multi_dirs_chunker.pyx":413
  * 
- *     full_path = <char*>malloc(MAX_PATH_LEN)
- *     if not full_path:             # <<<<<<<<<<<<<<
- *         closedir(dir)
+ *     d = my_opendir(dir_path)
+ *     if not d:             # <<<<<<<<<<<<<<
+ *         free(full_path)
  *         return
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":386
+  /* "src/multi_dirs_chunker.pyx":417
  *         return
  * 
  *     try:             # <<<<<<<<<<<<<<
  *         while True:
- *             ent = readdir(dir)
+ *             e = my_readdir(d)
  */
   /*try:*/ {
 
-    /* "src/multi_dirs_chunker.pyx":387
+    /* "src/multi_dirs_chunker.pyx":418
  * 
  *     try:
  *         while True:             # <<<<<<<<<<<<<<
- *             ent = readdir(dir)
- *             if not ent:
+ *             e = my_readdir(d)
+ *             if not e:
  */
     while (1) {
 
-      /* "src/multi_dirs_chunker.pyx":388
+      /* "src/multi_dirs_chunker.pyx":419
  *     try:
  *         while True:
- *             ent = readdir(dir)             # <<<<<<<<<<<<<<
- *             if not ent:
+ *             e = my_readdir(d)             # <<<<<<<<<<<<<<
+ *             if not e:
  *                 break
  */
-      __pyx_v_ent = readdir(__pyx_v_dir);
+      __pyx_v_e = my_readdir(__pyx_v_d);
 
-      /* "src/multi_dirs_chunker.pyx":389
+      /* "src/multi_dirs_chunker.pyx":420
  *         while True:
- *             ent = readdir(dir)
- *             if not ent:             # <<<<<<<<<<<<<<
+ *             e = my_readdir(d)
+ *             if not e:             # <<<<<<<<<<<<<<
  *                 break
- *             if ent.d_name[0] == b'.':
+ * 
  */
-      __pyx_t_1 = (!(__pyx_v_ent != 0));
+      __pyx_t_1 = (!(__pyx_v_e != 0));
       if (__pyx_t_1) {
 
-        /* "src/multi_dirs_chunker.pyx":390
- *             ent = readdir(dir)
- *             if not ent:
+        /* "src/multi_dirs_chunker.pyx":421
+ *             e = my_readdir(d)
+ *             if not e:
  *                 break             # <<<<<<<<<<<<<<
- *             if ent.d_name[0] == b'.':
- *                 continue
+ * 
+ *             nameptr = my_dirent_name(e)
  */
         goto __pyx_L9_break;
 
-        /* "src/multi_dirs_chunker.pyx":389
+        /* "src/multi_dirs_chunker.pyx":420
  *         while True:
- *             ent = readdir(dir)
- *             if not ent:             # <<<<<<<<<<<<<<
+ *             e = my_readdir(d)
+ *             if not e:             # <<<<<<<<<<<<<<
  *                 break
- *             if ent.d_name[0] == b'.':
+ * 
  */
       }
 
-      /* "src/multi_dirs_chunker.pyx":391
- *             if not ent:
+      /* "src/multi_dirs_chunker.pyx":423
  *                 break
- *             if ent.d_name[0] == b'.':             # <<<<<<<<<<<<<<
+ * 
+ *             nameptr = my_dirent_name(e)             # <<<<<<<<<<<<<<
+ *             if nameptr[0] == b'.':
+ *                 continue
+ */
+      __pyx_v_nameptr = my_dirent_name(__pyx_v_e);
+
+      /* "src/multi_dirs_chunker.pyx":424
+ * 
+ *             nameptr = my_dirent_name(e)
+ *             if nameptr[0] == b'.':             # <<<<<<<<<<<<<<
  *                 continue
  * 
  */
-      __pyx_t_1 = ((__pyx_v_ent->d_name[0]) == '.');
+      __pyx_t_1 = ((__pyx_v_nameptr[0]) == '.');
       if (__pyx_t_1) {
 
-        /* "src/multi_dirs_chunker.pyx":392
- *                 break
- *             if ent.d_name[0] == b'.':
+        /* "src/multi_dirs_chunker.pyx":425
+ *             nameptr = my_dirent_name(e)
+ *             if nameptr[0] == b'.':
  *                 continue             # <<<<<<<<<<<<<<
  * 
- *             needed = snprintf(full_path, MAX_PATH_LEN, "%s/%s", dir_path, ent.d_name)
+ *             needed = snprintf(full_path, MAX_PATH_LEN, b"%s/%s", dir_path, nameptr)
  */
         goto __pyx_L8_continue;
 
-        /* "src/multi_dirs_chunker.pyx":391
- *             if not ent:
- *                 break
- *             if ent.d_name[0] == b'.':             # <<<<<<<<<<<<<<
+        /* "src/multi_dirs_chunker.pyx":424
+ * 
+ *             nameptr = my_dirent_name(e)
+ *             if nameptr[0] == b'.':             # <<<<<<<<<<<<<<
  *                 continue
  * 
  */
       }
 
-      /* "src/multi_dirs_chunker.pyx":394
+      /* "src/multi_dirs_chunker.pyx":427
  *                 continue
  * 
- *             needed = snprintf(full_path, MAX_PATH_LEN, "%s/%s", dir_path, ent.d_name)             # <<<<<<<<<<<<<<
+ *             needed = snprintf(full_path, MAX_PATH_LEN, b"%s/%s", dir_path, nameptr)             # <<<<<<<<<<<<<<
  *             if needed < 0 or needed >= MAX_PATH_LEN:
  *                 continue
  */
-      __pyx_v_needed = snprintf(__pyx_v_full_path, __pyx_e_3src_18multi_dirs_chunker_MAX_PATH_LEN, ((char const *)"%s/%s"), __pyx_v_dir_path, __pyx_v_ent->d_name);
+      __pyx_v_needed = snprintf(__pyx_v_full_path, __pyx_e_3src_18multi_dirs_chunker_MAX_PATH_LEN, ((char const *)"%s/%s"), __pyx_v_dir_path, __pyx_v_nameptr);
 
-      /* "src/multi_dirs_chunker.pyx":395
+      /* "src/multi_dirs_chunker.pyx":428
  * 
- *             needed = snprintf(full_path, MAX_PATH_LEN, "%s/%s", dir_path, ent.d_name)
+ *             needed = snprintf(full_path, MAX_PATH_LEN, b"%s/%s", dir_path, nameptr)
  *             if needed < 0 or needed >= MAX_PATH_LEN:             # <<<<<<<<<<<<<<
  *                 continue
  * 
@@ -5338,8 +5562,8 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_directory(struct __pyx_t_3
       __pyx_L13_bool_binop_done:;
       if (__pyx_t_1) {
 
-        /* "src/multi_dirs_chunker.pyx":396
- *             needed = snprintf(full_path, MAX_PATH_LEN, "%s/%s", dir_path, ent.d_name)
+        /* "src/multi_dirs_chunker.pyx":429
+ *             needed = snprintf(full_path, MAX_PATH_LEN, b"%s/%s", dir_path, nameptr)
  *             if needed < 0 or needed >= MAX_PATH_LEN:
  *                 continue             # <<<<<<<<<<<<<<
  * 
@@ -5347,16 +5571,16 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_directory(struct __pyx_t_3
  */
         goto __pyx_L8_continue;
 
-        /* "src/multi_dirs_chunker.pyx":395
+        /* "src/multi_dirs_chunker.pyx":428
  * 
- *             needed = snprintf(full_path, MAX_PATH_LEN, "%s/%s", dir_path, ent.d_name)
+ *             needed = snprintf(full_path, MAX_PATH_LEN, b"%s/%s", dir_path, nameptr)
  *             if needed < 0 or needed >= MAX_PATH_LEN:             # <<<<<<<<<<<<<<
  *                 continue
  * 
  */
       }
 
-      /* "src/multi_dirs_chunker.pyx":398
+      /* "src/multi_dirs_chunker.pyx":431
  *                 continue
  * 
  *             if lstat(full_path, &st_buf) == 0:             # <<<<<<<<<<<<<<
@@ -5366,29 +5590,29 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_directory(struct __pyx_t_3
       __pyx_t_1 = (lstat(__pyx_v_full_path, (&__pyx_v_st_buf)) == 0);
       if (__pyx_t_1) {
 
-        /* "src/multi_dirs_chunker.pyx":399
+        /* "src/multi_dirs_chunker.pyx":432
  * 
  *             if lstat(full_path, &st_buf) == 0:
  *                 file_mode = st_buf.st_mode             # <<<<<<<<<<<<<<
  *                 if stat(full_path, &st_info) == 0:
- * 
+ *                     if S_ISDIR(st_info.st_mode):
  */
         __pyx_t_3 = __pyx_v_st_buf.st_mode;
         __pyx_v_file_mode = __pyx_t_3;
 
-        /* "src/multi_dirs_chunker.pyx":400
+        /* "src/multi_dirs_chunker.pyx":433
  *             if lstat(full_path, &st_buf) == 0:
  *                 file_mode = st_buf.st_mode
  *                 if stat(full_path, &st_info) == 0:             # <<<<<<<<<<<<<<
- * 
  *                     if S_ISDIR(st_info.st_mode):
+ *                         process_directory(pool, full_path)
  */
         __pyx_t_1 = (stat(__pyx_v_full_path, (&__pyx_v_st_info)) == 0);
         if (__pyx_t_1) {
 
-          /* "src/multi_dirs_chunker.pyx":402
+          /* "src/multi_dirs_chunker.pyx":434
+ *                 file_mode = st_buf.st_mode
  *                 if stat(full_path, &st_info) == 0:
- * 
  *                     if S_ISDIR(st_info.st_mode):             # <<<<<<<<<<<<<<
  *                         process_directory(pool, full_path)
  *                     elif S_ISREG(st_info.st_mode):
@@ -5396,18 +5620,18 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_directory(struct __pyx_t_3
           __pyx_t_1 = (S_ISDIR(__pyx_v_st_info.st_mode) != 0);
           if (__pyx_t_1) {
 
-            /* "src/multi_dirs_chunker.pyx":403
- * 
+            /* "src/multi_dirs_chunker.pyx":435
+ *                 if stat(full_path, &st_info) == 0:
  *                     if S_ISDIR(st_info.st_mode):
  *                         process_directory(pool, full_path)             # <<<<<<<<<<<<<<
  *                     elif S_ISREG(st_info.st_mode):
- *                         if should_ignore_file(full_path, pool.config):
- */
-            __pyx_f_3src_18multi_dirs_chunker_process_directory(__pyx_v_pool, __pyx_v_full_path); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 403, __pyx_L6_error)
-
-            /* "src/multi_dirs_chunker.pyx":402
- *                 if stat(full_path, &st_info) == 0:
  * 
+ */
+            __pyx_f_3src_18multi_dirs_chunker_process_directory(__pyx_v_pool, __pyx_v_full_path); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 435, __pyx_L6_error)
+
+            /* "src/multi_dirs_chunker.pyx":434
+ *                 file_mode = st_buf.st_mode
+ *                 if stat(full_path, &st_info) == 0:
  *                     if S_ISDIR(st_info.st_mode):             # <<<<<<<<<<<<<<
  *                         process_directory(pool, full_path)
  *                     elif S_ISREG(st_info.st_mode):
@@ -5415,156 +5639,194 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_directory(struct __pyx_t_3
             goto __pyx_L17;
           }
 
-          /* "src/multi_dirs_chunker.pyx":404
+          /* "src/multi_dirs_chunker.pyx":436
  *                     if S_ISDIR(st_info.st_mode):
  *                         process_directory(pool, full_path)
  *                     elif S_ISREG(st_info.st_mode):             # <<<<<<<<<<<<<<
- *                         if should_ignore_file(full_path, pool.config):
- *                             continue
+ * 
+ *                         # Check ignore
  */
           __pyx_t_1 = (S_ISREG(__pyx_v_st_info.st_mode) != 0);
           if (__pyx_t_1) {
 
-            /* "src/multi_dirs_chunker.pyx":405
- *                         process_directory(pool, full_path)
- *                     elif S_ISREG(st_info.st_mode):
+            /* "src/multi_dirs_chunker.pyx":439
+ * 
+ *                         # Check ignore
  *                         if should_ignore_file(full_path, pool.config):             # <<<<<<<<<<<<<<
- *                             continue
- *                         if is_binary_file(full_path, pool.config):
- */
-            __pyx_t_1 = __pyx_f_3src_18multi_dirs_chunker_should_ignore_file(__pyx_v_full_path, __pyx_v_pool->config); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 405, __pyx_L6_error)
-            if (__pyx_t_1) {
-
-              /* "src/multi_dirs_chunker.pyx":406
- *                     elif S_ISREG(st_info.st_mode):
- *                         if should_ignore_file(full_path, pool.config):
- *                             continue             # <<<<<<<<<<<<<<
- *                         if is_binary_file(full_path, pool.config):
- *                             continue
- */
-              goto __pyx_L8_continue;
-
-              /* "src/multi_dirs_chunker.pyx":405
- *                         process_directory(pool, full_path)
- *                     elif S_ISREG(st_info.st_mode):
- *                         if should_ignore_file(full_path, pool.config):             # <<<<<<<<<<<<<<
- *                             continue
- *                         if is_binary_file(full_path, pool.config):
- */
-            }
-
-            /* "src/multi_dirs_chunker.pyx":407
- *                         if should_ignore_file(full_path, pool.config):
- *                             continue
- *                         if is_binary_file(full_path, pool.config):             # <<<<<<<<<<<<<<
  *                             continue
  * 
  */
-            __pyx_t_1 = __pyx_f_3src_18multi_dirs_chunker_is_binary_file(__pyx_v_full_path, __pyx_v_pool->config); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 407, __pyx_L6_error)
+            __pyx_t_1 = __pyx_f_3src_18multi_dirs_chunker_should_ignore_file(__pyx_v_full_path, __pyx_v_pool->config); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 439, __pyx_L6_error)
             if (__pyx_t_1) {
 
-              /* "src/multi_dirs_chunker.pyx":408
- *                             continue
- *                         if is_binary_file(full_path, pool.config):
+              /* "src/multi_dirs_chunker.pyx":440
+ *                         # Check ignore
+ *                         if should_ignore_file(full_path, pool.config):
  *                             continue             # <<<<<<<<<<<<<<
  * 
- *                         fe = <FileEntry*>malloc(sizeof(FileEntry))
+ *                         # Check if binary
  */
               goto __pyx_L8_continue;
 
-              /* "src/multi_dirs_chunker.pyx":407
- *                         if should_ignore_file(full_path, pool.config):
- *                             continue
- *                         if is_binary_file(full_path, pool.config):             # <<<<<<<<<<<<<<
+              /* "src/multi_dirs_chunker.pyx":439
+ * 
+ *                         # Check ignore
+ *                         if should_ignore_file(full_path, pool.config):             # <<<<<<<<<<<<<<
  *                             continue
  * 
  */
             }
 
-            /* "src/multi_dirs_chunker.pyx":410
+            /* "src/multi_dirs_chunker.pyx":443
+ * 
+ *                         # Check if binary
+ *                         if is_binary_file(full_path, pool.config):             # <<<<<<<<<<<<<<
  *                             continue
  * 
+ */
+            __pyx_t_1 = __pyx_f_3src_18multi_dirs_chunker_is_binary_file(__pyx_v_full_path, __pyx_v_pool->config); if (unlikely(__pyx_t_1 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 443, __pyx_L6_error)
+            if (__pyx_t_1) {
+
+              /* "src/multi_dirs_chunker.pyx":444
+ *                         # Check if binary
+ *                         if is_binary_file(full_path, pool.config):
+ *                             continue             # <<<<<<<<<<<<<<
+ * 
+ *                         # Prepare a FileEntry to queue
+ */
+              goto __pyx_L8_continue;
+
+              /* "src/multi_dirs_chunker.pyx":443
+ * 
+ *                         # Check if binary
+ *                         if is_binary_file(full_path, pool.config):             # <<<<<<<<<<<<<<
+ *                             continue
+ * 
+ */
+            }
+
+            /* "src/multi_dirs_chunker.pyx":447
+ * 
+ *                         # Prepare a FileEntry to queue
  *                         fe = <FileEntry*>malloc(sizeof(FileEntry))             # <<<<<<<<<<<<<<
  *                         if not fe:
  *                             continue
  */
             __pyx_v_fe = ((struct __pyx_t_3src_18multi_dirs_chunker_FileEntry *)malloc((sizeof(struct __pyx_t_3src_18multi_dirs_chunker_FileEntry))));
 
-            /* "src/multi_dirs_chunker.pyx":411
- * 
+            /* "src/multi_dirs_chunker.pyx":448
+ *                         # Prepare a FileEntry to queue
  *                         fe = <FileEntry*>malloc(sizeof(FileEntry))
  *                         if not fe:             # <<<<<<<<<<<<<<
  *                             continue
- *                         fe.path = strdup(full_path)
+ * 
  */
             __pyx_t_1 = (!(__pyx_v_fe != 0));
             if (__pyx_t_1) {
 
-              /* "src/multi_dirs_chunker.pyx":412
+              /* "src/multi_dirs_chunker.pyx":449
  *                         fe = <FileEntry*>malloc(sizeof(FileEntry))
  *                         if not fe:
  *                             continue             # <<<<<<<<<<<<<<
+ * 
  *                         fe.path = strdup(full_path)
+ */
+              goto __pyx_L8_continue;
+
+              /* "src/multi_dirs_chunker.pyx":448
+ *                         # Prepare a FileEntry to queue
+ *                         fe = <FileEntry*>malloc(sizeof(FileEntry))
+ *                         if not fe:             # <<<<<<<<<<<<<<
+ *                             continue
+ * 
+ */
+            }
+
+            /* "src/multi_dirs_chunker.pyx":451
+ *                             continue
+ * 
+ *                         fe.path = strdup(full_path)             # <<<<<<<<<<<<<<
+ *                         if not fe.path:
+ *                             free(fe)
+ */
+            __pyx_v_fe->path = strdup(__pyx_v_full_path);
+
+            /* "src/multi_dirs_chunker.pyx":452
+ * 
+ *                         fe.path = strdup(full_path)
+ *                         if not fe.path:             # <<<<<<<<<<<<<<
+ *                             free(fe)
+ *                             continue
+ */
+            __pyx_t_1 = (!(__pyx_v_fe->path != 0));
+            if (__pyx_t_1) {
+
+              /* "src/multi_dirs_chunker.pyx":453
+ *                         fe.path = strdup(full_path)
+ *                         if not fe.path:
+ *                             free(fe)             # <<<<<<<<<<<<<<
+ *                             continue
+ * 
+ */
+              free(__pyx_v_fe);
+
+              /* "src/multi_dirs_chunker.pyx":454
+ *                         if not fe.path:
+ *                             free(fe)
+ *                             continue             # <<<<<<<<<<<<<<
+ * 
  *                         fe.content = NULL
  */
               goto __pyx_L8_continue;
 
-              /* "src/multi_dirs_chunker.pyx":411
+              /* "src/multi_dirs_chunker.pyx":452
  * 
- *                         fe = <FileEntry*>malloc(sizeof(FileEntry))
- *                         if not fe:             # <<<<<<<<<<<<<<
- *                             continue
  *                         fe.path = strdup(full_path)
+ *                         if not fe.path:             # <<<<<<<<<<<<<<
+ *                             free(fe)
+ *                             continue
  */
             }
 
-            /* "src/multi_dirs_chunker.pyx":413
- *                         if not fe:
+            /* "src/multi_dirs_chunker.pyx":456
  *                             continue
- *                         fe.path = strdup(full_path)             # <<<<<<<<<<<<<<
- *                         fe.content = NULL
- *                         fe.size = st_info.st_size
- */
-            __pyx_v_fe->path = strdup(__pyx_v_full_path);
-
-            /* "src/multi_dirs_chunker.pyx":414
- *                             continue
- *                         fe.path = strdup(full_path)
+ * 
  *                         fe.content = NULL             # <<<<<<<<<<<<<<
  *                         fe.size = st_info.st_size
- *                         fe.priority = 0
+ *                         fe.priority = calculate_priority(full_path, pool.config)
  */
             __pyx_v_fe->content = NULL;
 
-            /* "src/multi_dirs_chunker.pyx":415
- *                         fe.path = strdup(full_path)
+            /* "src/multi_dirs_chunker.pyx":457
+ * 
  *                         fe.content = NULL
  *                         fe.size = st_info.st_size             # <<<<<<<<<<<<<<
- *                         fe.priority = 0
+ *                         fe.priority = calculate_priority(full_path, pool.config)
  * 
  */
             __pyx_t_4 = __pyx_v_st_info.st_size;
             __pyx_v_fe->size = __pyx_t_4;
 
-            /* "src/multi_dirs_chunker.pyx":416
+            /* "src/multi_dirs_chunker.pyx":458
  *                         fe.content = NULL
  *                         fe.size = st_info.st_size
- *                         fe.priority = 0             # <<<<<<<<<<<<<<
+ *                         fe.priority = calculate_priority(full_path, pool.config)             # <<<<<<<<<<<<<<
  * 
  *                         add_to_queue(pool.queue, fe)
  */
-            __pyx_v_fe->priority = 0;
+            __pyx_t_5 = __pyx_f_3src_18multi_dirs_chunker_calculate_priority(__pyx_v_full_path, __pyx_v_pool->config); if (unlikely(__pyx_t_5 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 458, __pyx_L6_error)
+            __pyx_v_fe->priority = __pyx_t_5;
 
-            /* "src/multi_dirs_chunker.pyx":418
- *                         fe.priority = 0
+            /* "src/multi_dirs_chunker.pyx":460
+ *                         fe.priority = calculate_priority(full_path, pool.config)
  * 
  *                         add_to_queue(pool.queue, fe)             # <<<<<<<<<<<<<<
  * 
  *                         pthread_mutex_lock(&pool.mutex)
  */
-            __pyx_f_3src_18multi_dirs_chunker_add_to_queue(__pyx_v_pool->queue, __pyx_v_fe); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 418, __pyx_L6_error)
+            __pyx_f_3src_18multi_dirs_chunker_add_to_queue(__pyx_v_pool->queue, __pyx_v_fe); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 460, __pyx_L6_error)
 
-            /* "src/multi_dirs_chunker.pyx":420
+            /* "src/multi_dirs_chunker.pyx":462
  *                         add_to_queue(pool.queue, fe)
  * 
  *                         pthread_mutex_lock(&pool.mutex)             # <<<<<<<<<<<<<<
@@ -5573,7 +5835,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_directory(struct __pyx_t_3
  */
             (void)(pthread_mutex_lock((&__pyx_v_pool->mutex)));
 
-            /* "src/multi_dirs_chunker.pyx":421
+            /* "src/multi_dirs_chunker.pyx":463
  * 
  *                         pthread_mutex_lock(&pool.mutex)
  *                         pthread_cond_signal(&pool.condition)             # <<<<<<<<<<<<<<
@@ -5582,7 +5844,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_directory(struct __pyx_t_3
  */
             (void)(pthread_cond_signal((&__pyx_v_pool->condition)));
 
-            /* "src/multi_dirs_chunker.pyx":422
+            /* "src/multi_dirs_chunker.pyx":464
  *                         pthread_mutex_lock(&pool.mutex)
  *                         pthread_cond_signal(&pool.condition)
  *                         pthread_mutex_unlock(&pool.mutex)             # <<<<<<<<<<<<<<
@@ -5591,26 +5853,26 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_directory(struct __pyx_t_3
  */
             (void)(pthread_mutex_unlock((&__pyx_v_pool->mutex)));
 
-            /* "src/multi_dirs_chunker.pyx":404
+            /* "src/multi_dirs_chunker.pyx":436
  *                     if S_ISDIR(st_info.st_mode):
  *                         process_directory(pool, full_path)
  *                     elif S_ISREG(st_info.st_mode):             # <<<<<<<<<<<<<<
- *                         if should_ignore_file(full_path, pool.config):
- *                             continue
+ * 
+ *                         # Check ignore
  */
           }
           __pyx_L17:;
 
-          /* "src/multi_dirs_chunker.pyx":400
+          /* "src/multi_dirs_chunker.pyx":433
  *             if lstat(full_path, &st_buf) == 0:
  *                 file_mode = st_buf.st_mode
  *                 if stat(full_path, &st_info) == 0:             # <<<<<<<<<<<<<<
- * 
  *                     if S_ISDIR(st_info.st_mode):
+ *                         process_directory(pool, full_path)
  */
         }
 
-        /* "src/multi_dirs_chunker.pyx":398
+        /* "src/multi_dirs_chunker.pyx":431
  *                 continue
  * 
  *             if lstat(full_path, &st_buf) == 0:             # <<<<<<<<<<<<<<
@@ -5623,23 +5885,23 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_directory(struct __pyx_t_3
     __pyx_L9_break:;
   }
 
-  /* "src/multi_dirs_chunker.pyx":425
+  /* "src/multi_dirs_chunker.pyx":467
  * 
  *     finally:
- *         closedir(dir)             # <<<<<<<<<<<<<<
+ *         my_closedir(d)             # <<<<<<<<<<<<<<
  *         free(full_path)
  * 
  */
   /*finally:*/ {
     /*normal exit:*/{
-      (void)(closedir(__pyx_v_dir));
+      (void)(my_closedir(__pyx_v_d));
 
-      /* "src/multi_dirs_chunker.pyx":426
+      /* "src/multi_dirs_chunker.pyx":468
  *     finally:
- *         closedir(dir)
+ *         my_closedir(d)
  *         free(full_path)             # <<<<<<<<<<<<<<
  * 
- * ##################################################
+ * 
  */
       free(__pyx_v_full_path);
       goto __pyx_L7;
@@ -5660,21 +5922,21 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_directory(struct __pyx_t_3
       __pyx_t_5 = __pyx_lineno; __pyx_t_6 = __pyx_clineno; __pyx_t_7 = __pyx_filename;
       {
 
-        /* "src/multi_dirs_chunker.pyx":425
+        /* "src/multi_dirs_chunker.pyx":467
  * 
  *     finally:
- *         closedir(dir)             # <<<<<<<<<<<<<<
+ *         my_closedir(d)             # <<<<<<<<<<<<<<
  *         free(full_path)
  * 
  */
-        (void)(closedir(__pyx_v_dir));
+        (void)(my_closedir(__pyx_v_d));
 
-        /* "src/multi_dirs_chunker.pyx":426
+        /* "src/multi_dirs_chunker.pyx":468
  *     finally:
- *         closedir(dir)
+ *         my_closedir(d)
  *         free(full_path)             # <<<<<<<<<<<<<<
  * 
- * ##################################################
+ * 
  */
         free(__pyx_v_full_path);
       }
@@ -5695,12 +5957,12 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_directory(struct __pyx_t_3
     __pyx_L7:;
   }
 
-  /* "src/multi_dirs_chunker.pyx":367
+  /* "src/multi_dirs_chunker.pyx":399
  * ##################################################
  * 
  * cdef void process_directory(ThreadPool* pool, const char* dir_path):             # <<<<<<<<<<<<<<
- *     cdef DIR* dir
- *     cdef char* full_path
+ *     cdef DIRHandle d
+ *     cdef DirEntHandle e
  */
 
   /* function exit code */
@@ -5711,12 +5973,12 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_directory(struct __pyx_t_3
   __Pyx_RefNannyFinishContext();
 }
 
-/* "src/multi_dirs_chunker.pyx":432
+/* "src/multi_dirs_chunker.pyx":475
  * ##################################################
  * 
  * cdef void* worker_thread(void* arg) noexcept:             # <<<<<<<<<<<<<<
- *     cdef ThreadPool* pool = <ThreadPool*>arg
- *     cdef FileEntry* entry = NULL
+ *     """
+ *     Each worker: waits for a file in the queue, reads content,
  */
 
 static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) {
@@ -5725,6 +5987,7 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
   size_t __pyx_v_file_size;
   char *__pyx_v_contents;
   struct __pyx_t_3src_18multi_dirs_chunker_FileEntry **__pyx_v_new_pf;
+  size_t __pyx_v_new_capacity;
   void *__pyx_r;
   int __pyx_t_1;
   int __pyx_t_2;
@@ -5734,17 +5997,17 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "src/multi_dirs_chunker.pyx":433
- * 
- * cdef void* worker_thread(void* arg) noexcept:
+  /* "src/multi_dirs_chunker.pyx":480
+ *     updates 'processed_files', etc.
+ *     """
  *     cdef ThreadPool* pool = <ThreadPool*>arg             # <<<<<<<<<<<<<<
  *     cdef FileEntry* entry = NULL
  *     cdef size_t file_size = 0
  */
   __pyx_v_pool = ((struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *)__pyx_v_arg);
 
-  /* "src/multi_dirs_chunker.pyx":434
- * cdef void* worker_thread(void* arg) noexcept:
+  /* "src/multi_dirs_chunker.pyx":481
+ *     """
  *     cdef ThreadPool* pool = <ThreadPool*>arg
  *     cdef FileEntry* entry = NULL             # <<<<<<<<<<<<<<
  *     cdef size_t file_size = 0
@@ -5752,7 +6015,7 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
  */
   __pyx_v_entry = NULL;
 
-  /* "src/multi_dirs_chunker.pyx":435
+  /* "src/multi_dirs_chunker.pyx":482
  *     cdef ThreadPool* pool = <ThreadPool*>arg
  *     cdef FileEntry* entry = NULL
  *     cdef size_t file_size = 0             # <<<<<<<<<<<<<<
@@ -5761,48 +6024,48 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
  */
   __pyx_v_file_size = 0;
 
-  /* "src/multi_dirs_chunker.pyx":436
+  /* "src/multi_dirs_chunker.pyx":483
  *     cdef FileEntry* entry = NULL
  *     cdef size_t file_size = 0
  *     cdef char* contents = NULL             # <<<<<<<<<<<<<<
  *     cdef FileEntry** new_pf = NULL
- * 
+ *     cdef size_t new_capacity
  */
   __pyx_v_contents = NULL;
 
-  /* "src/multi_dirs_chunker.pyx":437
+  /* "src/multi_dirs_chunker.pyx":484
  *     cdef size_t file_size = 0
  *     cdef char* contents = NULL
  *     cdef FileEntry** new_pf = NULL             # <<<<<<<<<<<<<<
+ *     cdef size_t new_capacity
  * 
- *     while True:
  */
   __pyx_v_new_pf = NULL;
 
-  /* "src/multi_dirs_chunker.pyx":439
- *     cdef FileEntry** new_pf = NULL
+  /* "src/multi_dirs_chunker.pyx":487
+ *     cdef size_t new_capacity
  * 
  *     while True:             # <<<<<<<<<<<<<<
+ *         # Acquire the main lock
  *         pthread_mutex_lock(&pool.mutex)
- *         while pool.queue.count == 0 and not pool.should_stop:
  */
   while (1) {
 
-    /* "src/multi_dirs_chunker.pyx":440
- * 
+    /* "src/multi_dirs_chunker.pyx":489
  *     while True:
+ *         # Acquire the main lock
  *         pthread_mutex_lock(&pool.mutex)             # <<<<<<<<<<<<<<
+ *         # Wait for new files or for 'should_stop'
  *         while pool.queue.count == 0 and not pool.should_stop:
- *             pthread_cond_wait(&pool.condition, &pool.mutex)
  */
     (void)(pthread_mutex_lock((&__pyx_v_pool->mutex)));
 
-    /* "src/multi_dirs_chunker.pyx":441
- *     while True:
+    /* "src/multi_dirs_chunker.pyx":491
  *         pthread_mutex_lock(&pool.mutex)
+ *         # Wait for new files or for 'should_stop'
  *         while pool.queue.count == 0 and not pool.should_stop:             # <<<<<<<<<<<<<<
  *             pthread_cond_wait(&pool.condition, &pool.mutex)
- *         if pool.should_stop and pool.queue.count == 0:
+ *         # If we are stopping and no more files left, break out
  */
     while (1) {
       __pyx_t_2 = (__pyx_v_pool->queue->count == 0);
@@ -5816,19 +6079,19 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
       __pyx_L7_bool_binop_done:;
       if (!__pyx_t_1) break;
 
-      /* "src/multi_dirs_chunker.pyx":442
- *         pthread_mutex_lock(&pool.mutex)
+      /* "src/multi_dirs_chunker.pyx":492
+ *         # Wait for new files or for 'should_stop'
  *         while pool.queue.count == 0 and not pool.should_stop:
  *             pthread_cond_wait(&pool.condition, &pool.mutex)             # <<<<<<<<<<<<<<
+ *         # If we are stopping and no more files left, break out
  *         if pool.should_stop and pool.queue.count == 0:
- *             pthread_mutex_unlock(&pool.mutex)
  */
       (void)(pthread_cond_wait((&__pyx_v_pool->condition), (&__pyx_v_pool->mutex)));
     }
 
-    /* "src/multi_dirs_chunker.pyx":443
- *         while pool.queue.count == 0 and not pool.should_stop:
+    /* "src/multi_dirs_chunker.pyx":494
  *             pthread_cond_wait(&pool.condition, &pool.mutex)
+ *         # If we are stopping and no more files left, break out
  *         if pool.should_stop and pool.queue.count == 0:             # <<<<<<<<<<<<<<
  *             pthread_mutex_unlock(&pool.mutex)
  *             break
@@ -5844,8 +6107,8 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
     __pyx_L10_bool_binop_done:;
     if (__pyx_t_1) {
 
-      /* "src/multi_dirs_chunker.pyx":444
- *             pthread_cond_wait(&pool.condition, &pool.mutex)
+      /* "src/multi_dirs_chunker.pyx":495
+ *         # If we are stopping and no more files left, break out
  *         if pool.should_stop and pool.queue.count == 0:
  *             pthread_mutex_unlock(&pool.mutex)             # <<<<<<<<<<<<<<
  *             break
@@ -5853,35 +6116,35 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
  */
       (void)(pthread_mutex_unlock((&__pyx_v_pool->mutex)));
 
-      /* "src/multi_dirs_chunker.pyx":445
+      /* "src/multi_dirs_chunker.pyx":496
  *         if pool.should_stop and pool.queue.count == 0:
  *             pthread_mutex_unlock(&pool.mutex)
  *             break             # <<<<<<<<<<<<<<
  * 
- *         entry = NULL
+ *         # Pop from the queue
  */
       goto __pyx_L4_break;
 
-      /* "src/multi_dirs_chunker.pyx":443
- *         while pool.queue.count == 0 and not pool.should_stop:
+      /* "src/multi_dirs_chunker.pyx":494
  *             pthread_cond_wait(&pool.condition, &pool.mutex)
+ *         # If we are stopping and no more files left, break out
  *         if pool.should_stop and pool.queue.count == 0:             # <<<<<<<<<<<<<<
  *             pthread_mutex_unlock(&pool.mutex)
  *             break
  */
     }
 
-    /* "src/multi_dirs_chunker.pyx":447
- *             break
+    /* "src/multi_dirs_chunker.pyx":499
  * 
+ *         # Pop from the queue
  *         entry = NULL             # <<<<<<<<<<<<<<
  *         if pool.queue.count > 0:
  *             pool.queue.count -= 1
  */
     __pyx_v_entry = NULL;
 
-    /* "src/multi_dirs_chunker.pyx":448
- * 
+    /* "src/multi_dirs_chunker.pyx":500
+ *         # Pop from the queue
  *         entry = NULL
  *         if pool.queue.count > 0:             # <<<<<<<<<<<<<<
  *             pool.queue.count -= 1
@@ -5890,7 +6153,7 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
     __pyx_t_1 = (__pyx_v_pool->queue->count > 0);
     if (__pyx_t_1) {
 
-      /* "src/multi_dirs_chunker.pyx":449
+      /* "src/multi_dirs_chunker.pyx":501
  *         entry = NULL
  *         if pool.queue.count > 0:
  *             pool.queue.count -= 1             # <<<<<<<<<<<<<<
@@ -5899,7 +6162,7 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
  */
       __pyx_v_pool->queue->count = (__pyx_v_pool->queue->count - 1);
 
-      /* "src/multi_dirs_chunker.pyx":450
+      /* "src/multi_dirs_chunker.pyx":502
  *         if pool.queue.count > 0:
  *             pool.queue.count -= 1
  *             entry = pool.queue.entries[pool.queue.count]             # <<<<<<<<<<<<<<
@@ -5908,7 +6171,7 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
  */
       __pyx_v_entry = (__pyx_v_pool->queue->entries[__pyx_v_pool->queue->count]);
 
-      /* "src/multi_dirs_chunker.pyx":451
+      /* "src/multi_dirs_chunker.pyx":503
  *             pool.queue.count -= 1
  *             entry = pool.queue.entries[pool.queue.count]
  *             pool.active_count += 1             # <<<<<<<<<<<<<<
@@ -5917,8 +6180,8 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
  */
       __pyx_v_pool->active_count = (__pyx_v_pool->active_count + 1);
 
-      /* "src/multi_dirs_chunker.pyx":448
- * 
+      /* "src/multi_dirs_chunker.pyx":500
+ *         # Pop from the queue
  *         entry = NULL
  *         if pool.queue.count > 0:             # <<<<<<<<<<<<<<
  *             pool.queue.count -= 1
@@ -5926,7 +6189,7 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
  */
     }
 
-    /* "src/multi_dirs_chunker.pyx":452
+    /* "src/multi_dirs_chunker.pyx":504
  *             entry = pool.queue.entries[pool.queue.count]
  *             pool.active_count += 1
  *         pthread_mutex_unlock(&pool.mutex)             # <<<<<<<<<<<<<<
@@ -5935,7 +6198,7 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
  */
     (void)(pthread_mutex_unlock((&__pyx_v_pool->mutex)));
 
-    /* "src/multi_dirs_chunker.pyx":454
+    /* "src/multi_dirs_chunker.pyx":506
  *         pthread_mutex_unlock(&pool.mutex)
  * 
  *         if entry:             # <<<<<<<<<<<<<<
@@ -5945,7 +6208,7 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
     __pyx_t_1 = (__pyx_v_entry != 0);
     if (__pyx_t_1) {
 
-      /* "src/multi_dirs_chunker.pyx":455
+      /* "src/multi_dirs_chunker.pyx":507
  * 
  *         if entry:
  *             file_size = 0             # <<<<<<<<<<<<<<
@@ -5954,17 +6217,17 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
  */
       __pyx_v_file_size = 0;
 
-      /* "src/multi_dirs_chunker.pyx":456
+      /* "src/multi_dirs_chunker.pyx":508
  *         if entry:
  *             file_size = 0
  *             contents = read_file_contents(entry.path, &file_size)             # <<<<<<<<<<<<<<
  *             if contents:
  *                 entry.content = contents
  */
-      __pyx_t_3 = __pyx_f_3src_18multi_dirs_chunker_read_file_contents(__pyx_v_entry->path, (&__pyx_v_file_size)); if (unlikely(__pyx_t_3 == ((char *)NULL))) __PYX_ERR(0, 456, __pyx_L1_error)
+      __pyx_t_3 = __pyx_f_3src_18multi_dirs_chunker_read_file_contents(__pyx_v_entry->path, (&__pyx_v_file_size)); if (unlikely(__pyx_t_3 == ((char *)NULL))) __PYX_ERR(0, 508, __pyx_L1_error)
       __pyx_v_contents = __pyx_t_3;
 
-      /* "src/multi_dirs_chunker.pyx":457
+      /* "src/multi_dirs_chunker.pyx":509
  *             file_size = 0
  *             contents = read_file_contents(entry.path, &file_size)
  *             if contents:             # <<<<<<<<<<<<<<
@@ -5974,35 +6237,35 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
       __pyx_t_1 = (__pyx_v_contents != 0);
       if (__pyx_t_1) {
 
-        /* "src/multi_dirs_chunker.pyx":458
+        /* "src/multi_dirs_chunker.pyx":510
  *             contents = read_file_contents(entry.path, &file_size)
  *             if contents:
  *                 entry.content = contents             # <<<<<<<<<<<<<<
  *                 entry.size = file_size
- *                 entry.priority = calculate_priority(entry.path, pool.config)
+ *                 # Recompute priority after reading? (We do so again, optional.)
  */
         __pyx_v_entry->content = __pyx_v_contents;
 
-        /* "src/multi_dirs_chunker.pyx":459
+        /* "src/multi_dirs_chunker.pyx":511
  *             if contents:
  *                 entry.content = contents
  *                 entry.size = file_size             # <<<<<<<<<<<<<<
+ *                 # Recompute priority after reading? (We do so again, optional.)
  *                 entry.priority = calculate_priority(entry.path, pool.config)
- * 
  */
         __pyx_v_entry->size = __pyx_v_file_size;
 
-        /* "src/multi_dirs_chunker.pyx":460
- *                 entry.content = contents
+        /* "src/multi_dirs_chunker.pyx":513
  *                 entry.size = file_size
+ *                 # Recompute priority after reading? (We do so again, optional.)
  *                 entry.priority = calculate_priority(entry.path, pool.config)             # <<<<<<<<<<<<<<
  * 
- *             pthread_mutex_lock(&pool.processed_mutex)
+ *             # Insert into processed_files
  */
-        __pyx_t_4 = __pyx_f_3src_18multi_dirs_chunker_calculate_priority(__pyx_v_entry->path, __pyx_v_pool->config); if (unlikely(__pyx_t_4 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 460, __pyx_L1_error)
+        __pyx_t_4 = __pyx_f_3src_18multi_dirs_chunker_calculate_priority(__pyx_v_entry->path, __pyx_v_pool->config); if (unlikely(__pyx_t_4 == ((int)-1) && PyErr_Occurred())) __PYX_ERR(0, 513, __pyx_L1_error)
         __pyx_v_entry->priority = __pyx_t_4;
 
-        /* "src/multi_dirs_chunker.pyx":457
+        /* "src/multi_dirs_chunker.pyx":509
  *             file_size = 0
  *             contents = read_file_contents(entry.path, &file_size)
  *             if contents:             # <<<<<<<<<<<<<<
@@ -6011,91 +6274,220 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
  */
       }
 
-      /* "src/multi_dirs_chunker.pyx":462
- *                 entry.priority = calculate_priority(entry.path, pool.config)
+      /* "src/multi_dirs_chunker.pyx":516
  * 
+ *             # Insert into processed_files
  *             pthread_mutex_lock(&pool.processed_mutex)             # <<<<<<<<<<<<<<
  *             if pool.processed_count == pool.processed_capacity:
- *                 pool.processed_capacity *= 2
+ *                 new_capacity = pool.processed_capacity * 2
  */
       (void)(pthread_mutex_lock((&__pyx_v_pool->processed_mutex)));
 
-      /* "src/multi_dirs_chunker.pyx":463
- * 
+      /* "src/multi_dirs_chunker.pyx":517
+ *             # Insert into processed_files
  *             pthread_mutex_lock(&pool.processed_mutex)
  *             if pool.processed_count == pool.processed_capacity:             # <<<<<<<<<<<<<<
- *                 pool.processed_capacity *= 2
- *                 new_pf = <FileEntry**>realloc(pool.processed_files,
+ *                 new_capacity = pool.processed_capacity * 2
+ *                 new_pf = <FileEntry**>realloc(pool.processed_files, new_capacity * sizeof(FileEntry*))
  */
       __pyx_t_1 = (__pyx_v_pool->processed_count == __pyx_v_pool->processed_capacity);
       if (__pyx_t_1) {
 
-        /* "src/multi_dirs_chunker.pyx":464
+        /* "src/multi_dirs_chunker.pyx":518
  *             pthread_mutex_lock(&pool.processed_mutex)
  *             if pool.processed_count == pool.processed_capacity:
- *                 pool.processed_capacity *= 2             # <<<<<<<<<<<<<<
- *                 new_pf = <FileEntry**>realloc(pool.processed_files,
- *                     pool.processed_capacity * sizeof(FileEntry*))
+ *                 new_capacity = pool.processed_capacity * 2             # <<<<<<<<<<<<<<
+ *                 new_pf = <FileEntry**>realloc(pool.processed_files, new_capacity * sizeof(FileEntry*))
+ * 
  */
-        __pyx_v_pool->processed_capacity = (__pyx_v_pool->processed_capacity * 2);
+        __pyx_v_new_capacity = (__pyx_v_pool->processed_capacity * 2);
 
-        /* "src/multi_dirs_chunker.pyx":465
+        /* "src/multi_dirs_chunker.pyx":519
  *             if pool.processed_count == pool.processed_capacity:
- *                 pool.processed_capacity *= 2
- *                 new_pf = <FileEntry**>realloc(pool.processed_files,             # <<<<<<<<<<<<<<
- *                     pool.processed_capacity * sizeof(FileEntry*))
- *                 if new_pf:
+ *                 new_capacity = pool.processed_capacity * 2
+ *                 new_pf = <FileEntry**>realloc(pool.processed_files, new_capacity * sizeof(FileEntry*))             # <<<<<<<<<<<<<<
+ * 
+ *                 if not new_pf:
  */
-        __pyx_v_new_pf = ((struct __pyx_t_3src_18multi_dirs_chunker_FileEntry **)realloc(__pyx_v_pool->processed_files, (__pyx_v_pool->processed_capacity * (sizeof(struct __pyx_t_3src_18multi_dirs_chunker_FileEntry *)))));
+        __pyx_v_new_pf = ((struct __pyx_t_3src_18multi_dirs_chunker_FileEntry **)realloc(__pyx_v_pool->processed_files, (__pyx_v_new_capacity * (sizeof(struct __pyx_t_3src_18multi_dirs_chunker_FileEntry *)))));
 
-        /* "src/multi_dirs_chunker.pyx":467
- *                 new_pf = <FileEntry**>realloc(pool.processed_files,
- *                     pool.processed_capacity * sizeof(FileEntry*))
- *                 if new_pf:             # <<<<<<<<<<<<<<
- *                     pool.processed_files = new_pf
- *             pool.processed_files[pool.processed_count] = entry
+        /* "src/multi_dirs_chunker.pyx":521
+ *                 new_pf = <FileEntry**>realloc(pool.processed_files, new_capacity * sizeof(FileEntry*))
+ * 
+ *                 if not new_pf:             # <<<<<<<<<<<<<<
+ *                     # If we can't expand, we have to clean up and bail
+ *                     pthread_mutex_unlock(&pool.processed_mutex)
  */
-        __pyx_t_1 = (__pyx_v_new_pf != 0);
+        __pyx_t_1 = (!(__pyx_v_new_pf != 0));
         if (__pyx_t_1) {
 
-          /* "src/multi_dirs_chunker.pyx":468
- *                     pool.processed_capacity * sizeof(FileEntry*))
- *                 if new_pf:
- *                     pool.processed_files = new_pf             # <<<<<<<<<<<<<<
- *             pool.processed_files[pool.processed_count] = entry
- *             pool.processed_count += 1
+          /* "src/multi_dirs_chunker.pyx":523
+ *                 if not new_pf:
+ *                     # If we can't expand, we have to clean up and bail
+ *                     pthread_mutex_unlock(&pool.processed_mutex)             # <<<<<<<<<<<<<<
+ *                     if entry.path:
+ *                         free(entry.path)
  */
-          __pyx_v_pool->processed_files = __pyx_v_new_pf;
+          (void)(pthread_mutex_unlock((&__pyx_v_pool->processed_mutex)));
 
-          /* "src/multi_dirs_chunker.pyx":467
- *                 new_pf = <FileEntry**>realloc(pool.processed_files,
- *                     pool.processed_capacity * sizeof(FileEntry*))
- *                 if new_pf:             # <<<<<<<<<<<<<<
- *                     pool.processed_files = new_pf
- *             pool.processed_files[pool.processed_count] = entry
+          /* "src/multi_dirs_chunker.pyx":524
+ *                     # If we can't expand, we have to clean up and bail
+ *                     pthread_mutex_unlock(&pool.processed_mutex)
+ *                     if entry.path:             # <<<<<<<<<<<<<<
+ *                         free(entry.path)
+ *                     if entry.content:
+ */
+          __pyx_t_1 = (__pyx_v_entry->path != 0);
+          if (__pyx_t_1) {
+
+            /* "src/multi_dirs_chunker.pyx":525
+ *                     pthread_mutex_unlock(&pool.processed_mutex)
+ *                     if entry.path:
+ *                         free(entry.path)             # <<<<<<<<<<<<<<
+ *                     if entry.content:
+ *                         free(entry.content)
+ */
+            free(__pyx_v_entry->path);
+
+            /* "src/multi_dirs_chunker.pyx":524
+ *                     # If we can't expand, we have to clean up and bail
+ *                     pthread_mutex_unlock(&pool.processed_mutex)
+ *                     if entry.path:             # <<<<<<<<<<<<<<
+ *                         free(entry.path)
+ *                     if entry.content:
+ */
+          }
+
+          /* "src/multi_dirs_chunker.pyx":526
+ *                     if entry.path:
+ *                         free(entry.path)
+ *                     if entry.content:             # <<<<<<<<<<<<<<
+ *                         free(entry.content)
+ *                     free(entry)
+ */
+          __pyx_t_1 = (__pyx_v_entry->content != 0);
+          if (__pyx_t_1) {
+
+            /* "src/multi_dirs_chunker.pyx":527
+ *                         free(entry.path)
+ *                     if entry.content:
+ *                         free(entry.content)             # <<<<<<<<<<<<<<
+ *                     free(entry)
+ *                     pthread_mutex_lock(&pool.mutex)
+ */
+            free(__pyx_v_entry->content);
+
+            /* "src/multi_dirs_chunker.pyx":526
+ *                     if entry.path:
+ *                         free(entry.path)
+ *                     if entry.content:             # <<<<<<<<<<<<<<
+ *                         free(entry.content)
+ *                     free(entry)
+ */
+          }
+
+          /* "src/multi_dirs_chunker.pyx":528
+ *                     if entry.content:
+ *                         free(entry.content)
+ *                     free(entry)             # <<<<<<<<<<<<<<
+ *                     pthread_mutex_lock(&pool.mutex)
+ *                     pool.active_count -= 1
+ */
+          free(__pyx_v_entry);
+
+          /* "src/multi_dirs_chunker.pyx":529
+ *                         free(entry.content)
+ *                     free(entry)
+ *                     pthread_mutex_lock(&pool.mutex)             # <<<<<<<<<<<<<<
+ *                     pool.active_count -= 1
+ *                     pthread_cond_broadcast(&pool.condition)
+ */
+          (void)(pthread_mutex_lock((&__pyx_v_pool->mutex)));
+
+          /* "src/multi_dirs_chunker.pyx":530
+ *                     free(entry)
+ *                     pthread_mutex_lock(&pool.mutex)
+ *                     pool.active_count -= 1             # <<<<<<<<<<<<<<
+ *                     pthread_cond_broadcast(&pool.condition)
+ *                     pthread_mutex_unlock(&pool.mutex)
+ */
+          __pyx_v_pool->active_count = (__pyx_v_pool->active_count - 1);
+
+          /* "src/multi_dirs_chunker.pyx":531
+ *                     pthread_mutex_lock(&pool.mutex)
+ *                     pool.active_count -= 1
+ *                     pthread_cond_broadcast(&pool.condition)             # <<<<<<<<<<<<<<
+ *                     pthread_mutex_unlock(&pool.mutex)
+ *                     return NULL
+ */
+          (void)(pthread_cond_broadcast((&__pyx_v_pool->condition)));
+
+          /* "src/multi_dirs_chunker.pyx":532
+ *                     pool.active_count -= 1
+ *                     pthread_cond_broadcast(&pool.condition)
+ *                     pthread_mutex_unlock(&pool.mutex)             # <<<<<<<<<<<<<<
+ *                     return NULL
+ * 
+ */
+          (void)(pthread_mutex_unlock((&__pyx_v_pool->mutex)));
+
+          /* "src/multi_dirs_chunker.pyx":533
+ *                     pthread_cond_broadcast(&pool.condition)
+ *                     pthread_mutex_unlock(&pool.mutex)
+ *                     return NULL             # <<<<<<<<<<<<<<
+ * 
+ *                 pool.processed_files = new_pf
+ */
+          __pyx_r = NULL;
+          goto __pyx_L0;
+
+          /* "src/multi_dirs_chunker.pyx":521
+ *                 new_pf = <FileEntry**>realloc(pool.processed_files, new_capacity * sizeof(FileEntry*))
+ * 
+ *                 if not new_pf:             # <<<<<<<<<<<<<<
+ *                     # If we can't expand, we have to clean up and bail
+ *                     pthread_mutex_unlock(&pool.processed_mutex)
  */
         }
 
-        /* "src/multi_dirs_chunker.pyx":463
+        /* "src/multi_dirs_chunker.pyx":535
+ *                     return NULL
  * 
+ *                 pool.processed_files = new_pf             # <<<<<<<<<<<<<<
+ *                 pool.processed_capacity = new_capacity
+ * 
+ */
+        __pyx_v_pool->processed_files = __pyx_v_new_pf;
+
+        /* "src/multi_dirs_chunker.pyx":536
+ * 
+ *                 pool.processed_files = new_pf
+ *                 pool.processed_capacity = new_capacity             # <<<<<<<<<<<<<<
+ * 
+ *             pool.processed_files[pool.processed_count] = entry
+ */
+        __pyx_v_pool->processed_capacity = __pyx_v_new_capacity;
+
+        /* "src/multi_dirs_chunker.pyx":517
+ *             # Insert into processed_files
  *             pthread_mutex_lock(&pool.processed_mutex)
  *             if pool.processed_count == pool.processed_capacity:             # <<<<<<<<<<<<<<
- *                 pool.processed_capacity *= 2
- *                 new_pf = <FileEntry**>realloc(pool.processed_files,
+ *                 new_capacity = pool.processed_capacity * 2
+ *                 new_pf = <FileEntry**>realloc(pool.processed_files, new_capacity * sizeof(FileEntry*))
  */
       }
 
-      /* "src/multi_dirs_chunker.pyx":469
- *                 if new_pf:
- *                     pool.processed_files = new_pf
+      /* "src/multi_dirs_chunker.pyx":538
+ *                 pool.processed_capacity = new_capacity
+ * 
  *             pool.processed_files[pool.processed_count] = entry             # <<<<<<<<<<<<<<
  *             pool.processed_count += 1
  *             pthread_mutex_unlock(&pool.processed_mutex)
  */
       (__pyx_v_pool->processed_files[__pyx_v_pool->processed_count]) = __pyx_v_entry;
 
-      /* "src/multi_dirs_chunker.pyx":470
- *                     pool.processed_files = new_pf
+      /* "src/multi_dirs_chunker.pyx":539
+ * 
  *             pool.processed_files[pool.processed_count] = entry
  *             pool.processed_count += 1             # <<<<<<<<<<<<<<
  *             pthread_mutex_unlock(&pool.processed_mutex)
@@ -6103,7 +6495,7 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
  */
       __pyx_v_pool->processed_count = (__pyx_v_pool->processed_count + 1);
 
-      /* "src/multi_dirs_chunker.pyx":471
+      /* "src/multi_dirs_chunker.pyx":540
  *             pool.processed_files[pool.processed_count] = entry
  *             pool.processed_count += 1
  *             pthread_mutex_unlock(&pool.processed_mutex)             # <<<<<<<<<<<<<<
@@ -6112,7 +6504,7 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
  */
       (void)(pthread_mutex_unlock((&__pyx_v_pool->processed_mutex)));
 
-      /* "src/multi_dirs_chunker.pyx":473
+      /* "src/multi_dirs_chunker.pyx":542
  *             pthread_mutex_unlock(&pool.processed_mutex)
  * 
  *             pthread_mutex_lock(&pool.mutex)             # <<<<<<<<<<<<<<
@@ -6121,7 +6513,7 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
  */
       (void)(pthread_mutex_lock((&__pyx_v_pool->mutex)));
 
-      /* "src/multi_dirs_chunker.pyx":474
+      /* "src/multi_dirs_chunker.pyx":543
  * 
  *             pthread_mutex_lock(&pool.mutex)
  *             pool.active_count -= 1             # <<<<<<<<<<<<<<
@@ -6130,7 +6522,7 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
  */
       __pyx_v_pool->active_count = (__pyx_v_pool->active_count - 1);
 
-      /* "src/multi_dirs_chunker.pyx":475
+      /* "src/multi_dirs_chunker.pyx":544
  *             pthread_mutex_lock(&pool.mutex)
  *             pool.active_count -= 1
  *             pthread_cond_broadcast(&pool.condition)             # <<<<<<<<<<<<<<
@@ -6139,7 +6531,7 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
  */
       (void)(pthread_cond_broadcast((&__pyx_v_pool->condition)));
 
-      /* "src/multi_dirs_chunker.pyx":476
+      /* "src/multi_dirs_chunker.pyx":545
  *             pool.active_count -= 1
  *             pthread_cond_broadcast(&pool.condition)
  *             pthread_mutex_unlock(&pool.mutex)             # <<<<<<<<<<<<<<
@@ -6148,7 +6540,7 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
  */
       (void)(pthread_mutex_unlock((&__pyx_v_pool->mutex)));
 
-      /* "src/multi_dirs_chunker.pyx":454
+      /* "src/multi_dirs_chunker.pyx":506
  *         pthread_mutex_unlock(&pool.mutex)
  * 
  *         if entry:             # <<<<<<<<<<<<<<
@@ -6159,7 +6551,7 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
   }
   __pyx_L4_break:;
 
-  /* "src/multi_dirs_chunker.pyx":478
+  /* "src/multi_dirs_chunker.pyx":547
  *             pthread_mutex_unlock(&pool.mutex)
  * 
  *     return NULL             # <<<<<<<<<<<<<<
@@ -6169,12 +6561,12 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
   __pyx_r = NULL;
   goto __pyx_L0;
 
-  /* "src/multi_dirs_chunker.pyx":432
+  /* "src/multi_dirs_chunker.pyx":475
  * ##################################################
  * 
  * cdef void* worker_thread(void* arg) noexcept:             # <<<<<<<<<<<<<<
- *     cdef ThreadPool* pool = <ThreadPool*>arg
- *     cdef FileEntry* entry = NULL
+ *     """
+ *     Each worker: waits for a file in the queue, reads content,
  */
 
   /* function exit code */
@@ -6185,12 +6577,12 @@ static void *__pyx_f_3src_18multi_dirs_chunker_worker_thread(void *__pyx_v_arg) 
   return __pyx_r;
 }
 
-/* "src/multi_dirs_chunker.pyx":484
+/* "src/multi_dirs_chunker.pyx":553
  * ##################################################
  * 
  * cdef ThreadPool* create_thread_pool(size_t num_threads, const char* base_path, CConfig* config):             # <<<<<<<<<<<<<<
- *     cdef ThreadPool* pool = <ThreadPool*>malloc(sizeof(ThreadPool))
- *     if not pool:
+ *     """
+ *     Initialize the ThreadPool + workers.
  */
 
 static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi_dirs_chunker_create_thread_pool(size_t __pyx_v_num_threads, char const *__pyx_v_base_path, struct __pyx_t_3src_18multi_dirs_chunker_CConfig *__pyx_v_config) {
@@ -6206,17 +6598,17 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "src/multi_dirs_chunker.pyx":485
- * 
- * cdef ThreadPool* create_thread_pool(size_t num_threads, const char* base_path, CConfig* config):
+  /* "src/multi_dirs_chunker.pyx":557
+ *     Initialize the ThreadPool + workers.
+ *     """
  *     cdef ThreadPool* pool = <ThreadPool*>malloc(sizeof(ThreadPool))             # <<<<<<<<<<<<<<
  *     if not pool:
  *         return NULL
  */
   __pyx_v_pool = ((struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *)malloc((sizeof(struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool))));
 
-  /* "src/multi_dirs_chunker.pyx":486
- * cdef ThreadPool* create_thread_pool(size_t num_threads, const char* base_path, CConfig* config):
+  /* "src/multi_dirs_chunker.pyx":558
+ *     """
  *     cdef ThreadPool* pool = <ThreadPool*>malloc(sizeof(ThreadPool))
  *     if not pool:             # <<<<<<<<<<<<<<
  *         return NULL
@@ -6225,7 +6617,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
   __pyx_t_1 = (!(__pyx_v_pool != 0));
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":487
+    /* "src/multi_dirs_chunker.pyx":559
  *     cdef ThreadPool* pool = <ThreadPool*>malloc(sizeof(ThreadPool))
  *     if not pool:
  *         return NULL             # <<<<<<<<<<<<<<
@@ -6235,8 +6627,8 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
     __pyx_r = NULL;
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":486
- * cdef ThreadPool* create_thread_pool(size_t num_threads, const char* base_path, CConfig* config):
+    /* "src/multi_dirs_chunker.pyx":558
+ *     """
  *     cdef ThreadPool* pool = <ThreadPool*>malloc(sizeof(ThreadPool))
  *     if not pool:             # <<<<<<<<<<<<<<
  *         return NULL
@@ -6244,7 +6636,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":489
+  /* "src/multi_dirs_chunker.pyx":561
  *         return NULL
  * 
  *     pool.num_threads = num_threads             # <<<<<<<<<<<<<<
@@ -6253,7 +6645,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
   __pyx_v_pool->num_threads = __pyx_v_num_threads;
 
-  /* "src/multi_dirs_chunker.pyx":490
+  /* "src/multi_dirs_chunker.pyx":562
  * 
  *     pool.num_threads = num_threads
  *     pool.threads = <pthread_t*>malloc(num_threads * sizeof(pthread_t))             # <<<<<<<<<<<<<<
@@ -6262,7 +6654,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
   __pyx_v_pool->threads = ((pthread_t *)malloc((__pyx_v_num_threads * (sizeof(pthread_t)))));
 
-  /* "src/multi_dirs_chunker.pyx":491
+  /* "src/multi_dirs_chunker.pyx":563
  *     pool.num_threads = num_threads
  *     pool.threads = <pthread_t*>malloc(num_threads * sizeof(pthread_t))
  *     if not pool.threads:             # <<<<<<<<<<<<<<
@@ -6272,7 +6664,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
   __pyx_t_1 = (!(__pyx_v_pool->threads != 0));
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":492
+    /* "src/multi_dirs_chunker.pyx":564
  *     pool.threads = <pthread_t*>malloc(num_threads * sizeof(pthread_t))
  *     if not pool.threads:
  *         free(pool)             # <<<<<<<<<<<<<<
@@ -6281,7 +6673,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
     free(__pyx_v_pool);
 
-    /* "src/multi_dirs_chunker.pyx":493
+    /* "src/multi_dirs_chunker.pyx":565
  *     if not pool.threads:
  *         free(pool)
  *         return NULL             # <<<<<<<<<<<<<<
@@ -6291,7 +6683,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
     __pyx_r = NULL;
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":491
+    /* "src/multi_dirs_chunker.pyx":563
  *     pool.num_threads = num_threads
  *     pool.threads = <pthread_t*>malloc(num_threads * sizeof(pthread_t))
  *     if not pool.threads:             # <<<<<<<<<<<<<<
@@ -6300,17 +6692,17 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":495
+  /* "src/multi_dirs_chunker.pyx":567
  *         return NULL
  * 
  *     pool.queue = create_file_queue()             # <<<<<<<<<<<<<<
  *     if not pool.queue:
  *         free(pool.threads)
  */
-  __pyx_t_2 = __pyx_f_3src_18multi_dirs_chunker_create_file_queue(); if (unlikely(__pyx_t_2 == ((struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 495, __pyx_L1_error)
+  __pyx_t_2 = __pyx_f_3src_18multi_dirs_chunker_create_file_queue(); if (unlikely(__pyx_t_2 == ((struct __pyx_t_3src_18multi_dirs_chunker_FileQueue *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 567, __pyx_L1_error)
   __pyx_v_pool->queue = __pyx_t_2;
 
-  /* "src/multi_dirs_chunker.pyx":496
+  /* "src/multi_dirs_chunker.pyx":568
  * 
  *     pool.queue = create_file_queue()
  *     if not pool.queue:             # <<<<<<<<<<<<<<
@@ -6320,7 +6712,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
   __pyx_t_1 = (!(__pyx_v_pool->queue != 0));
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":497
+    /* "src/multi_dirs_chunker.pyx":569
  *     pool.queue = create_file_queue()
  *     if not pool.queue:
  *         free(pool.threads)             # <<<<<<<<<<<<<<
@@ -6329,7 +6721,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
     free(__pyx_v_pool->threads);
 
-    /* "src/multi_dirs_chunker.pyx":498
+    /* "src/multi_dirs_chunker.pyx":570
  *     if not pool.queue:
  *         free(pool.threads)
  *         free(pool)             # <<<<<<<<<<<<<<
@@ -6338,7 +6730,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
     free(__pyx_v_pool);
 
-    /* "src/multi_dirs_chunker.pyx":499
+    /* "src/multi_dirs_chunker.pyx":571
  *         free(pool.threads)
  *         free(pool)
  *         return NULL             # <<<<<<<<<<<<<<
@@ -6348,7 +6740,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
     __pyx_r = NULL;
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":496
+    /* "src/multi_dirs_chunker.pyx":568
  * 
  *     pool.queue = create_file_queue()
  *     if not pool.queue:             # <<<<<<<<<<<<<<
@@ -6357,7 +6749,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":501
+  /* "src/multi_dirs_chunker.pyx":573
  *         return NULL
  * 
  *     pool.base_path = strdup(base_path)             # <<<<<<<<<<<<<<
@@ -6366,7 +6758,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
   __pyx_v_pool->base_path = strdup(__pyx_v_base_path);
 
-  /* "src/multi_dirs_chunker.pyx":502
+  /* "src/multi_dirs_chunker.pyx":574
  * 
  *     pool.base_path = strdup(base_path)
  *     pool.config = config             # <<<<<<<<<<<<<<
@@ -6375,7 +6767,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
   __pyx_v_pool->config = __pyx_v_config;
 
-  /* "src/multi_dirs_chunker.pyx":503
+  /* "src/multi_dirs_chunker.pyx":575
  *     pool.base_path = strdup(base_path)
  *     pool.config = config
  *     pool.should_stop = 0             # <<<<<<<<<<<<<<
@@ -6384,7 +6776,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
   __pyx_v_pool->should_stop = 0;
 
-  /* "src/multi_dirs_chunker.pyx":504
+  /* "src/multi_dirs_chunker.pyx":576
  *     pool.config = config
  *     pool.should_stop = 0
  *     pthread_mutex_init(&pool.mutex, NULL)             # <<<<<<<<<<<<<<
@@ -6393,7 +6785,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
   (void)(pthread_mutex_init((&__pyx_v_pool->mutex), NULL));
 
-  /* "src/multi_dirs_chunker.pyx":505
+  /* "src/multi_dirs_chunker.pyx":577
  *     pool.should_stop = 0
  *     pthread_mutex_init(&pool.mutex, NULL)
  *     pthread_cond_init(&pool.condition, NULL)             # <<<<<<<<<<<<<<
@@ -6402,7 +6794,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
   (void)(pthread_cond_init((&__pyx_v_pool->condition), NULL));
 
-  /* "src/multi_dirs_chunker.pyx":507
+  /* "src/multi_dirs_chunker.pyx":579
  *     pthread_cond_init(&pool.condition, NULL)
  * 
  *     pool.processed_capacity = INITIAL_QUEUE_SIZE             # <<<<<<<<<<<<<<
@@ -6411,7 +6803,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
   __pyx_v_pool->processed_capacity = __pyx_v_3src_18multi_dirs_chunker_INITIAL_QUEUE_SIZE;
 
-  /* "src/multi_dirs_chunker.pyx":508
+  /* "src/multi_dirs_chunker.pyx":580
  * 
  *     pool.processed_capacity = INITIAL_QUEUE_SIZE
  *     pool.processed_count = 0             # <<<<<<<<<<<<<<
@@ -6420,7 +6812,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
   __pyx_v_pool->processed_count = 0;
 
-  /* "src/multi_dirs_chunker.pyx":509
+  /* "src/multi_dirs_chunker.pyx":581
  *     pool.processed_capacity = INITIAL_QUEUE_SIZE
  *     pool.processed_count = 0
  *     pool.processed_files = <FileEntry**>malloc(pool.processed_capacity * sizeof(FileEntry*))             # <<<<<<<<<<<<<<
@@ -6429,7 +6821,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
   __pyx_v_pool->processed_files = ((struct __pyx_t_3src_18multi_dirs_chunker_FileEntry **)malloc((__pyx_v_pool->processed_capacity * (sizeof(struct __pyx_t_3src_18multi_dirs_chunker_FileEntry *)))));
 
-  /* "src/multi_dirs_chunker.pyx":510
+  /* "src/multi_dirs_chunker.pyx":582
  *     pool.processed_count = 0
  *     pool.processed_files = <FileEntry**>malloc(pool.processed_capacity * sizeof(FileEntry*))
  *     if not pool.processed_files:             # <<<<<<<<<<<<<<
@@ -6439,16 +6831,16 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
   __pyx_t_1 = (!(__pyx_v_pool->processed_files != 0));
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":512
+    /* "src/multi_dirs_chunker.pyx":584
  *     if not pool.processed_files:
  *         # cleanup
  *         destroy_file_queue(pool.queue)             # <<<<<<<<<<<<<<
  *         free(pool.threads)
  *         free(pool)
  */
-    __pyx_f_3src_18multi_dirs_chunker_destroy_file_queue(__pyx_v_pool->queue); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 512, __pyx_L1_error)
+    __pyx_f_3src_18multi_dirs_chunker_destroy_file_queue(__pyx_v_pool->queue); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 584, __pyx_L1_error)
 
-    /* "src/multi_dirs_chunker.pyx":513
+    /* "src/multi_dirs_chunker.pyx":585
  *         # cleanup
  *         destroy_file_queue(pool.queue)
  *         free(pool.threads)             # <<<<<<<<<<<<<<
@@ -6457,7 +6849,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
     free(__pyx_v_pool->threads);
 
-    /* "src/multi_dirs_chunker.pyx":514
+    /* "src/multi_dirs_chunker.pyx":586
  *         destroy_file_queue(pool.queue)
  *         free(pool.threads)
  *         free(pool)             # <<<<<<<<<<<<<<
@@ -6466,7 +6858,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
     free(__pyx_v_pool);
 
-    /* "src/multi_dirs_chunker.pyx":515
+    /* "src/multi_dirs_chunker.pyx":587
  *         free(pool.threads)
  *         free(pool)
  *         return NULL             # <<<<<<<<<<<<<<
@@ -6476,7 +6868,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
     __pyx_r = NULL;
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":510
+    /* "src/multi_dirs_chunker.pyx":582
  *     pool.processed_count = 0
  *     pool.processed_files = <FileEntry**>malloc(pool.processed_capacity * sizeof(FileEntry*))
  *     if not pool.processed_files:             # <<<<<<<<<<<<<<
@@ -6485,7 +6877,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":517
+  /* "src/multi_dirs_chunker.pyx":589
  *         return NULL
  * 
  *     pthread_mutex_init(&pool.processed_mutex, NULL)             # <<<<<<<<<<<<<<
@@ -6494,7 +6886,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
   (void)(pthread_mutex_init((&__pyx_v_pool->processed_mutex), NULL));
 
-  /* "src/multi_dirs_chunker.pyx":518
+  /* "src/multi_dirs_chunker.pyx":590
  * 
  *     pthread_mutex_init(&pool.processed_mutex, NULL)
  *     pool.active_count = 0             # <<<<<<<<<<<<<<
@@ -6503,7 +6895,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
   __pyx_v_pool->active_count = 0;
 
-  /* "src/multi_dirs_chunker.pyx":521
+  /* "src/multi_dirs_chunker.pyx":593
  * 
  *     cdef int i
  *     for i in range(num_threads):             # <<<<<<<<<<<<<<
@@ -6515,7 +6907,7 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
   for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
     __pyx_v_i = __pyx_t_5;
 
-    /* "src/multi_dirs_chunker.pyx":522
+    /* "src/multi_dirs_chunker.pyx":594
  *     cdef int i
  *     for i in range(num_threads):
  *         pthread_create(&pool.threads[i], NULL, worker_thread, pool)             # <<<<<<<<<<<<<<
@@ -6525,22 +6917,22 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
     (void)(pthread_create((&(__pyx_v_pool->threads[__pyx_v_i])), NULL, __pyx_f_3src_18multi_dirs_chunker_worker_thread, __pyx_v_pool));
   }
 
-  /* "src/multi_dirs_chunker.pyx":524
+  /* "src/multi_dirs_chunker.pyx":596
  *         pthread_create(&pool.threads[i], NULL, worker_thread, pool)
  * 
  *     return pool             # <<<<<<<<<<<<<<
  * 
- * 
+ * cdef void destroy_thread_pool(ThreadPool* pool):
  */
   __pyx_r = __pyx_v_pool;
   goto __pyx_L0;
 
-  /* "src/multi_dirs_chunker.pyx":484
+  /* "src/multi_dirs_chunker.pyx":553
  * ##################################################
  * 
  * cdef ThreadPool* create_thread_pool(size_t num_threads, const char* base_path, CConfig* config):             # <<<<<<<<<<<<<<
- *     cdef ThreadPool* pool = <ThreadPool*>malloc(sizeof(ThreadPool))
- *     if not pool:
+ *     """
+ *     Initialize the ThreadPool + workers.
  */
 
   /* function exit code */
@@ -6551,8 +6943,8 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
   return __pyx_r;
 }
 
-/* "src/multi_dirs_chunker.pyx":527
- * 
+/* "src/multi_dirs_chunker.pyx":598
+ *     return pool
  * 
  * cdef void destroy_thread_pool(ThreadPool* pool):             # <<<<<<<<<<<<<<
  *     if not pool:
@@ -6560,16 +6952,16 @@ static struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_f_3src_18multi
  */
 
 static void __pyx_f_3src_18multi_dirs_chunker_destroy_thread_pool(struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_v_pool) {
-  int __pyx_v_i;
+  size_t __pyx_v_i;
   int __pyx_t_1;
   size_t __pyx_t_2;
   size_t __pyx_t_3;
-  int __pyx_t_4;
+  size_t __pyx_t_4;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "src/multi_dirs_chunker.pyx":528
+  /* "src/multi_dirs_chunker.pyx":599
  * 
  * cdef void destroy_thread_pool(ThreadPool* pool):
  *     if not pool:             # <<<<<<<<<<<<<<
@@ -6579,16 +6971,16 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_thread_pool(struct __pyx_t
   __pyx_t_1 = (!(__pyx_v_pool != 0));
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":529
+    /* "src/multi_dirs_chunker.pyx":600
  * cdef void destroy_thread_pool(ThreadPool* pool):
  *     if not pool:
  *         return             # <<<<<<<<<<<<<<
  * 
- *     pthread_mutex_lock(&pool.mutex)
+ *     # Signal all workers to stop
  */
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":528
+    /* "src/multi_dirs_chunker.pyx":599
  * 
  * cdef void destroy_thread_pool(ThreadPool* pool):
  *     if not pool:             # <<<<<<<<<<<<<<
@@ -6597,17 +6989,17 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_thread_pool(struct __pyx_t
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":531
- *         return
+  /* "src/multi_dirs_chunker.pyx":603
  * 
+ *     # Signal all workers to stop
  *     pthread_mutex_lock(&pool.mutex)             # <<<<<<<<<<<<<<
  *     pool.should_stop = 1
  *     pthread_cond_broadcast(&pool.condition)
  */
   (void)(pthread_mutex_lock((&__pyx_v_pool->mutex)));
 
-  /* "src/multi_dirs_chunker.pyx":532
- * 
+  /* "src/multi_dirs_chunker.pyx":604
+ *     # Signal all workers to stop
  *     pthread_mutex_lock(&pool.mutex)
  *     pool.should_stop = 1             # <<<<<<<<<<<<<<
  *     pthread_cond_broadcast(&pool.condition)
@@ -6615,7 +7007,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_thread_pool(struct __pyx_t
  */
   __pyx_v_pool->should_stop = 1;
 
-  /* "src/multi_dirs_chunker.pyx":533
+  /* "src/multi_dirs_chunker.pyx":605
  *     pthread_mutex_lock(&pool.mutex)
  *     pool.should_stop = 1
  *     pthread_cond_broadcast(&pool.condition)             # <<<<<<<<<<<<<<
@@ -6624,18 +7016,18 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_thread_pool(struct __pyx_t
  */
   (void)(pthread_cond_broadcast((&__pyx_v_pool->condition)));
 
-  /* "src/multi_dirs_chunker.pyx":534
+  /* "src/multi_dirs_chunker.pyx":606
  *     pool.should_stop = 1
  *     pthread_cond_broadcast(&pool.condition)
  *     pthread_mutex_unlock(&pool.mutex)             # <<<<<<<<<<<<<<
  * 
- *     cdef int i
+ *     cdef size_t i
  */
   (void)(pthread_mutex_unlock((&__pyx_v_pool->mutex)));
 
-  /* "src/multi_dirs_chunker.pyx":537
+  /* "src/multi_dirs_chunker.pyx":609
  * 
- *     cdef int i
+ *     cdef size_t i
  *     for i in range(pool.num_threads):             # <<<<<<<<<<<<<<
  *         pthread_join(pool.threads[i], NULL)
  * 
@@ -6645,162 +7037,75 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_thread_pool(struct __pyx_t
   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "src/multi_dirs_chunker.pyx":538
- *     cdef int i
+    /* "src/multi_dirs_chunker.pyx":610
+ *     cdef size_t i
  *     for i in range(pool.num_threads):
  *         pthread_join(pool.threads[i], NULL)             # <<<<<<<<<<<<<<
  * 
- *     free(pool.threads)
+ *     if pool.threads:
  */
     (void)(pthread_join((__pyx_v_pool->threads[__pyx_v_i]), NULL));
   }
 
-  /* "src/multi_dirs_chunker.pyx":540
+  /* "src/multi_dirs_chunker.pyx":612
  *         pthread_join(pool.threads[i], NULL)
  * 
- *     free(pool.threads)             # <<<<<<<<<<<<<<
- * 
+ *     if pool.threads:             # <<<<<<<<<<<<<<
+ *         free(pool.threads)
  *     if pool.queue:
  */
-  free(__pyx_v_pool->threads);
+  __pyx_t_1 = (__pyx_v_pool->threads != 0);
+  if (__pyx_t_1) {
 
-  /* "src/multi_dirs_chunker.pyx":542
- *     free(pool.threads)
+    /* "src/multi_dirs_chunker.pyx":613
  * 
+ *     if pool.threads:
+ *         free(pool.threads)             # <<<<<<<<<<<<<<
+ *     if pool.queue:
+ *         destroy_file_queue(pool.queue)
+ */
+    free(__pyx_v_pool->threads);
+
+    /* "src/multi_dirs_chunker.pyx":612
+ *         pthread_join(pool.threads[i], NULL)
+ * 
+ *     if pool.threads:             # <<<<<<<<<<<<<<
+ *         free(pool.threads)
+ *     if pool.queue:
+ */
+  }
+
+  /* "src/multi_dirs_chunker.pyx":614
+ *     if pool.threads:
+ *         free(pool.threads)
  *     if pool.queue:             # <<<<<<<<<<<<<<
  *         destroy_file_queue(pool.queue)
- * 
+ *     if pool.base_path:
  */
   __pyx_t_1 = (__pyx_v_pool->queue != 0);
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":543
- * 
+    /* "src/multi_dirs_chunker.pyx":615
+ *         free(pool.threads)
  *     if pool.queue:
  *         destroy_file_queue(pool.queue)             # <<<<<<<<<<<<<<
- * 
- *     for i in range(pool.processed_count):
+ *     if pool.base_path:
+ *         free(pool.base_path)
  */
-    __pyx_f_3src_18multi_dirs_chunker_destroy_file_queue(__pyx_v_pool->queue); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 543, __pyx_L1_error)
+    __pyx_f_3src_18multi_dirs_chunker_destroy_file_queue(__pyx_v_pool->queue); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 615, __pyx_L1_error)
 
-    /* "src/multi_dirs_chunker.pyx":542
- *     free(pool.threads)
- * 
+    /* "src/multi_dirs_chunker.pyx":614
+ *     if pool.threads:
+ *         free(pool.threads)
  *     if pool.queue:             # <<<<<<<<<<<<<<
  *         destroy_file_queue(pool.queue)
- * 
- */
-  }
-
-  /* "src/multi_dirs_chunker.pyx":545
- *         destroy_file_queue(pool.queue)
- * 
- *     for i in range(pool.processed_count):             # <<<<<<<<<<<<<<
- *         if pool.processed_files[i]:
- *             if pool.processed_files[i].path:
- */
-  __pyx_t_2 = __pyx_v_pool->processed_count;
-  __pyx_t_3 = __pyx_t_2;
-  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
-    __pyx_v_i = __pyx_t_4;
-
-    /* "src/multi_dirs_chunker.pyx":546
- * 
- *     for i in range(pool.processed_count):
- *         if pool.processed_files[i]:             # <<<<<<<<<<<<<<
- *             if pool.processed_files[i].path:
- *                 free(pool.processed_files[i].path)
- */
-    __pyx_t_1 = ((__pyx_v_pool->processed_files[__pyx_v_i]) != 0);
-    if (__pyx_t_1) {
-
-      /* "src/multi_dirs_chunker.pyx":547
- *     for i in range(pool.processed_count):
- *         if pool.processed_files[i]:
- *             if pool.processed_files[i].path:             # <<<<<<<<<<<<<<
- *                 free(pool.processed_files[i].path)
- *             if pool.processed_files[i].content:
- */
-      __pyx_t_1 = ((__pyx_v_pool->processed_files[__pyx_v_i])->path != 0);
-      if (__pyx_t_1) {
-
-        /* "src/multi_dirs_chunker.pyx":548
- *         if pool.processed_files[i]:
- *             if pool.processed_files[i].path:
- *                 free(pool.processed_files[i].path)             # <<<<<<<<<<<<<<
- *             if pool.processed_files[i].content:
- *                 free(pool.processed_files[i].content)
- */
-        free((__pyx_v_pool->processed_files[__pyx_v_i])->path);
-
-        /* "src/multi_dirs_chunker.pyx":547
- *     for i in range(pool.processed_count):
- *         if pool.processed_files[i]:
- *             if pool.processed_files[i].path:             # <<<<<<<<<<<<<<
- *                 free(pool.processed_files[i].path)
- *             if pool.processed_files[i].content:
- */
-      }
-
-      /* "src/multi_dirs_chunker.pyx":549
- *             if pool.processed_files[i].path:
- *                 free(pool.processed_files[i].path)
- *             if pool.processed_files[i].content:             # <<<<<<<<<<<<<<
- *                 free(pool.processed_files[i].content)
- *             free(pool.processed_files[i])
- */
-      __pyx_t_1 = ((__pyx_v_pool->processed_files[__pyx_v_i])->content != 0);
-      if (__pyx_t_1) {
-
-        /* "src/multi_dirs_chunker.pyx":550
- *                 free(pool.processed_files[i].path)
- *             if pool.processed_files[i].content:
- *                 free(pool.processed_files[i].content)             # <<<<<<<<<<<<<<
- *             free(pool.processed_files[i])
- *     free(pool.processed_files)
- */
-        free((__pyx_v_pool->processed_files[__pyx_v_i])->content);
-
-        /* "src/multi_dirs_chunker.pyx":549
- *             if pool.processed_files[i].path:
- *                 free(pool.processed_files[i].path)
- *             if pool.processed_files[i].content:             # <<<<<<<<<<<<<<
- *                 free(pool.processed_files[i].content)
- *             free(pool.processed_files[i])
- */
-      }
-
-      /* "src/multi_dirs_chunker.pyx":551
- *             if pool.processed_files[i].content:
- *                 free(pool.processed_files[i].content)
- *             free(pool.processed_files[i])             # <<<<<<<<<<<<<<
- *     free(pool.processed_files)
- * 
- */
-      free((__pyx_v_pool->processed_files[__pyx_v_i]));
-
-      /* "src/multi_dirs_chunker.pyx":546
- * 
- *     for i in range(pool.processed_count):
- *         if pool.processed_files[i]:             # <<<<<<<<<<<<<<
- *             if pool.processed_files[i].path:
- *                 free(pool.processed_files[i].path)
- */
-    }
-  }
-
-  /* "src/multi_dirs_chunker.pyx":552
- *                 free(pool.processed_files[i].content)
- *             free(pool.processed_files[i])
- *     free(pool.processed_files)             # <<<<<<<<<<<<<<
- * 
  *     if pool.base_path:
  */
-  free(__pyx_v_pool->processed_files);
+  }
 
-  /* "src/multi_dirs_chunker.pyx":554
- *     free(pool.processed_files)
- * 
+  /* "src/multi_dirs_chunker.pyx":616
+ *     if pool.queue:
+ *         destroy_file_queue(pool.queue)
  *     if pool.base_path:             # <<<<<<<<<<<<<<
  *         free(pool.base_path)
  * 
@@ -6808,26 +7113,151 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_thread_pool(struct __pyx_t
   __pyx_t_1 = (__pyx_v_pool->base_path != 0);
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":555
- * 
+    /* "src/multi_dirs_chunker.pyx":617
+ *         destroy_file_queue(pool.queue)
  *     if pool.base_path:
  *         free(pool.base_path)             # <<<<<<<<<<<<<<
  * 
- *     pthread_mutex_destroy(&pool.mutex)
+ *     if pool.processed_files:
  */
     free(__pyx_v_pool->base_path);
 
-    /* "src/multi_dirs_chunker.pyx":554
- *     free(pool.processed_files)
- * 
+    /* "src/multi_dirs_chunker.pyx":616
+ *     if pool.queue:
+ *         destroy_file_queue(pool.queue)
  *     if pool.base_path:             # <<<<<<<<<<<<<<
  *         free(pool.base_path)
  * 
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":557
+  /* "src/multi_dirs_chunker.pyx":619
  *         free(pool.base_path)
+ * 
+ *     if pool.processed_files:             # <<<<<<<<<<<<<<
+ *         for i in range(pool.processed_count):
+ *             if pool.processed_files[i]:
+ */
+  __pyx_t_1 = (__pyx_v_pool->processed_files != 0);
+  if (__pyx_t_1) {
+
+    /* "src/multi_dirs_chunker.pyx":620
+ * 
+ *     if pool.processed_files:
+ *         for i in range(pool.processed_count):             # <<<<<<<<<<<<<<
+ *             if pool.processed_files[i]:
+ *                 if pool.processed_files[i].path:
+ */
+    __pyx_t_2 = __pyx_v_pool->processed_count;
+    __pyx_t_3 = __pyx_t_2;
+    for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
+      __pyx_v_i = __pyx_t_4;
+
+      /* "src/multi_dirs_chunker.pyx":621
+ *     if pool.processed_files:
+ *         for i in range(pool.processed_count):
+ *             if pool.processed_files[i]:             # <<<<<<<<<<<<<<
+ *                 if pool.processed_files[i].path:
+ *                     free(pool.processed_files[i].path)
+ */
+      __pyx_t_1 = ((__pyx_v_pool->processed_files[__pyx_v_i]) != 0);
+      if (__pyx_t_1) {
+
+        /* "src/multi_dirs_chunker.pyx":622
+ *         for i in range(pool.processed_count):
+ *             if pool.processed_files[i]:
+ *                 if pool.processed_files[i].path:             # <<<<<<<<<<<<<<
+ *                     free(pool.processed_files[i].path)
+ *                 if pool.processed_files[i].content:
+ */
+        __pyx_t_1 = ((__pyx_v_pool->processed_files[__pyx_v_i])->path != 0);
+        if (__pyx_t_1) {
+
+          /* "src/multi_dirs_chunker.pyx":623
+ *             if pool.processed_files[i]:
+ *                 if pool.processed_files[i].path:
+ *                     free(pool.processed_files[i].path)             # <<<<<<<<<<<<<<
+ *                 if pool.processed_files[i].content:
+ *                     free(pool.processed_files[i].content)
+ */
+          free((__pyx_v_pool->processed_files[__pyx_v_i])->path);
+
+          /* "src/multi_dirs_chunker.pyx":622
+ *         for i in range(pool.processed_count):
+ *             if pool.processed_files[i]:
+ *                 if pool.processed_files[i].path:             # <<<<<<<<<<<<<<
+ *                     free(pool.processed_files[i].path)
+ *                 if pool.processed_files[i].content:
+ */
+        }
+
+        /* "src/multi_dirs_chunker.pyx":624
+ *                 if pool.processed_files[i].path:
+ *                     free(pool.processed_files[i].path)
+ *                 if pool.processed_files[i].content:             # <<<<<<<<<<<<<<
+ *                     free(pool.processed_files[i].content)
+ *                 free(pool.processed_files[i])
+ */
+        __pyx_t_1 = ((__pyx_v_pool->processed_files[__pyx_v_i])->content != 0);
+        if (__pyx_t_1) {
+
+          /* "src/multi_dirs_chunker.pyx":625
+ *                     free(pool.processed_files[i].path)
+ *                 if pool.processed_files[i].content:
+ *                     free(pool.processed_files[i].content)             # <<<<<<<<<<<<<<
+ *                 free(pool.processed_files[i])
+ *         free(pool.processed_files)
+ */
+          free((__pyx_v_pool->processed_files[__pyx_v_i])->content);
+
+          /* "src/multi_dirs_chunker.pyx":624
+ *                 if pool.processed_files[i].path:
+ *                     free(pool.processed_files[i].path)
+ *                 if pool.processed_files[i].content:             # <<<<<<<<<<<<<<
+ *                     free(pool.processed_files[i].content)
+ *                 free(pool.processed_files[i])
+ */
+        }
+
+        /* "src/multi_dirs_chunker.pyx":626
+ *                 if pool.processed_files[i].content:
+ *                     free(pool.processed_files[i].content)
+ *                 free(pool.processed_files[i])             # <<<<<<<<<<<<<<
+ *         free(pool.processed_files)
+ * 
+ */
+        free((__pyx_v_pool->processed_files[__pyx_v_i]));
+
+        /* "src/multi_dirs_chunker.pyx":621
+ *     if pool.processed_files:
+ *         for i in range(pool.processed_count):
+ *             if pool.processed_files[i]:             # <<<<<<<<<<<<<<
+ *                 if pool.processed_files[i].path:
+ *                     free(pool.processed_files[i].path)
+ */
+      }
+    }
+
+    /* "src/multi_dirs_chunker.pyx":627
+ *                     free(pool.processed_files[i].content)
+ *                 free(pool.processed_files[i])
+ *         free(pool.processed_files)             # <<<<<<<<<<<<<<
+ * 
+ *     pthread_mutex_destroy(&pool.mutex)
+ */
+    free(__pyx_v_pool->processed_files);
+
+    /* "src/multi_dirs_chunker.pyx":619
+ *         free(pool.base_path)
+ * 
+ *     if pool.processed_files:             # <<<<<<<<<<<<<<
+ *         for i in range(pool.processed_count):
+ *             if pool.processed_files[i]:
+ */
+  }
+
+  /* "src/multi_dirs_chunker.pyx":629
+ *         free(pool.processed_files)
  * 
  *     pthread_mutex_destroy(&pool.mutex)             # <<<<<<<<<<<<<<
  *     pthread_cond_destroy(&pool.condition)
@@ -6835,7 +7265,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_thread_pool(struct __pyx_t
  */
   (void)(pthread_mutex_destroy((&__pyx_v_pool->mutex)));
 
-  /* "src/multi_dirs_chunker.pyx":558
+  /* "src/multi_dirs_chunker.pyx":630
  * 
  *     pthread_mutex_destroy(&pool.mutex)
  *     pthread_cond_destroy(&pool.condition)             # <<<<<<<<<<<<<<
@@ -6844,7 +7274,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_thread_pool(struct __pyx_t
  */
   (void)(pthread_cond_destroy((&__pyx_v_pool->condition)));
 
-  /* "src/multi_dirs_chunker.pyx":559
+  /* "src/multi_dirs_chunker.pyx":631
  *     pthread_mutex_destroy(&pool.mutex)
  *     pthread_cond_destroy(&pool.condition)
  *     pthread_mutex_destroy(&pool.processed_mutex)             # <<<<<<<<<<<<<<
@@ -6853,17 +7283,17 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_thread_pool(struct __pyx_t
  */
   (void)(pthread_mutex_destroy((&__pyx_v_pool->processed_mutex)));
 
-  /* "src/multi_dirs_chunker.pyx":560
+  /* "src/multi_dirs_chunker.pyx":632
  *     pthread_cond_destroy(&pool.condition)
  *     pthread_mutex_destroy(&pool.processed_mutex)
  *     free(pool)             # <<<<<<<<<<<<<<
  * 
- * 
+ * cdef void thread_pool_wait_until_done(ThreadPool* pool):
  */
   free(__pyx_v_pool);
 
-  /* "src/multi_dirs_chunker.pyx":527
- * 
+  /* "src/multi_dirs_chunker.pyx":598
+ *     return pool
  * 
  * cdef void destroy_thread_pool(ThreadPool* pool):             # <<<<<<<<<<<<<<
  *     if not pool:
@@ -6877,29 +7307,29 @@ static void __pyx_f_3src_18multi_dirs_chunker_destroy_thread_pool(struct __pyx_t
   __pyx_L0:;
 }
 
-/* "src/multi_dirs_chunker.pyx":563
- * 
+/* "src/multi_dirs_chunker.pyx":634
+ *     free(pool)
  * 
  * cdef void thread_pool_wait_until_done(ThreadPool* pool):             # <<<<<<<<<<<<<<
- *     pthread_mutex_lock(&pool.mutex)
- *     while True:
+ *     """
+ *     Block until the queue is empty and all workers are idle.
  */
 
 static void __pyx_f_3src_18multi_dirs_chunker_thread_pool_wait_until_done(struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_v_pool) {
   int __pyx_t_1;
   int __pyx_t_2;
 
-  /* "src/multi_dirs_chunker.pyx":564
- * 
- * cdef void thread_pool_wait_until_done(ThreadPool* pool):
+  /* "src/multi_dirs_chunker.pyx":638
+ *     Block until the queue is empty and all workers are idle.
+ *     """
  *     pthread_mutex_lock(&pool.mutex)             # <<<<<<<<<<<<<<
  *     while True:
  *         if pool.queue.count == 0 and pool.active_count == 0:
  */
   (void)(pthread_mutex_lock((&__pyx_v_pool->mutex)));
 
-  /* "src/multi_dirs_chunker.pyx":565
- * cdef void thread_pool_wait_until_done(ThreadPool* pool):
+  /* "src/multi_dirs_chunker.pyx":639
+ *     """
  *     pthread_mutex_lock(&pool.mutex)
  *     while True:             # <<<<<<<<<<<<<<
  *         if pool.queue.count == 0 and pool.active_count == 0:
@@ -6907,7 +7337,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_thread_pool_wait_until_done(struct
  */
   while (1) {
 
-    /* "src/multi_dirs_chunker.pyx":566
+    /* "src/multi_dirs_chunker.pyx":640
  *     pthread_mutex_lock(&pool.mutex)
  *     while True:
  *         if pool.queue.count == 0 and pool.active_count == 0:             # <<<<<<<<<<<<<<
@@ -6925,7 +7355,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_thread_pool_wait_until_done(struct
     __pyx_L6_bool_binop_done:;
     if (__pyx_t_1) {
 
-      /* "src/multi_dirs_chunker.pyx":567
+      /* "src/multi_dirs_chunker.pyx":641
  *     while True:
  *         if pool.queue.count == 0 and pool.active_count == 0:
  *             pthread_mutex_unlock(&pool.mutex)             # <<<<<<<<<<<<<<
@@ -6934,7 +7364,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_thread_pool_wait_until_done(struct
  */
       (void)(pthread_mutex_unlock((&__pyx_v_pool->mutex)));
 
-      /* "src/multi_dirs_chunker.pyx":568
+      /* "src/multi_dirs_chunker.pyx":642
  *         if pool.queue.count == 0 and pool.active_count == 0:
  *             pthread_mutex_unlock(&pool.mutex)
  *             break             # <<<<<<<<<<<<<<
@@ -6943,7 +7373,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_thread_pool_wait_until_done(struct
  */
       goto __pyx_L4_break;
 
-      /* "src/multi_dirs_chunker.pyx":566
+      /* "src/multi_dirs_chunker.pyx":640
  *     pthread_mutex_lock(&pool.mutex)
  *     while True:
  *         if pool.queue.count == 0 and pool.active_count == 0:             # <<<<<<<<<<<<<<
@@ -6952,7 +7382,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_thread_pool_wait_until_done(struct
  */
     }
 
-    /* "src/multi_dirs_chunker.pyx":569
+    /* "src/multi_dirs_chunker.pyx":643
  *             pthread_mutex_unlock(&pool.mutex)
  *             break
  *         pthread_cond_wait(&pool.condition, &pool.mutex)             # <<<<<<<<<<<<<<
@@ -6963,64 +7393,106 @@ static void __pyx_f_3src_18multi_dirs_chunker_thread_pool_wait_until_done(struct
   }
   __pyx_L4_break:;
 
-  /* "src/multi_dirs_chunker.pyx":563
- * 
+  /* "src/multi_dirs_chunker.pyx":634
+ *     free(pool)
  * 
  * cdef void thread_pool_wait_until_done(ThreadPool* pool):             # <<<<<<<<<<<<<<
- *     pthread_mutex_lock(&pool.mutex)
- *     while True:
+ *     """
+ *     Block until the queue is empty and all workers are idle.
  */
 
   /* function exit code */
 }
 
-/* "src/multi_dirs_chunker.pyx":571
+/* "src/multi_dirs_chunker.pyx":645
  *         pthread_cond_wait(&pool.condition, &pool.mutex)
  * 
  * cdef int compare_file_entries(const void* a, const void* b) noexcept nogil:             # <<<<<<<<<<<<<<
- *     cdef FileEntry* fa = (<FileEntry**>a)[0]
- *     cdef FileEntry* fb = (<FileEntry**>b)[0]
+ *     """
+ *     qsort callback for descending priority, then alphabetical by path.
  */
 
 static int __pyx_f_3src_18multi_dirs_chunker_compare_file_entries(void const *__pyx_v_a, void const *__pyx_v_b) {
   struct __pyx_t_3src_18multi_dirs_chunker_FileEntry *__pyx_v_fa;
   struct __pyx_t_3src_18multi_dirs_chunker_FileEntry *__pyx_v_fb;
+  int __pyx_v_diff;
   int __pyx_r;
+  int __pyx_t_1;
 
-  /* "src/multi_dirs_chunker.pyx":572
- * 
- * cdef int compare_file_entries(const void* a, const void* b) noexcept nogil:
+  /* "src/multi_dirs_chunker.pyx":649
+ *     qsort callback for descending priority, then alphabetical by path.
+ *     """
  *     cdef FileEntry* fa = (<FileEntry**>a)[0]             # <<<<<<<<<<<<<<
  *     cdef FileEntry* fb = (<FileEntry**>b)[0]
- *     return fb.priority - fa.priority
+ *     cdef int diff = fb.priority - fa.priority
  */
   __pyx_v_fa = (((struct __pyx_t_3src_18multi_dirs_chunker_FileEntry **)__pyx_v_a)[0]);
 
-  /* "src/multi_dirs_chunker.pyx":573
- * cdef int compare_file_entries(const void* a, const void* b) noexcept nogil:
+  /* "src/multi_dirs_chunker.pyx":650
+ *     """
  *     cdef FileEntry* fa = (<FileEntry**>a)[0]
  *     cdef FileEntry* fb = (<FileEntry**>b)[0]             # <<<<<<<<<<<<<<
- *     return fb.priority - fa.priority
+ *     cdef int diff = fb.priority - fa.priority
  * 
  */
   __pyx_v_fb = (((struct __pyx_t_3src_18multi_dirs_chunker_FileEntry **)__pyx_v_b)[0]);
 
-  /* "src/multi_dirs_chunker.pyx":574
+  /* "src/multi_dirs_chunker.pyx":651
  *     cdef FileEntry* fa = (<FileEntry**>a)[0]
  *     cdef FileEntry* fb = (<FileEntry**>b)[0]
- *     return fb.priority - fa.priority             # <<<<<<<<<<<<<<
+ *     cdef int diff = fb.priority - fa.priority             # <<<<<<<<<<<<<<
+ * 
+ *     if diff != 0:
+ */
+  __pyx_v_diff = (__pyx_v_fb->priority - __pyx_v_fa->priority);
+
+  /* "src/multi_dirs_chunker.pyx":653
+ *     cdef int diff = fb.priority - fa.priority
+ * 
+ *     if diff != 0:             # <<<<<<<<<<<<<<
+ *         return diff
+ *     else:
+ */
+  __pyx_t_1 = (__pyx_v_diff != 0);
+  if (__pyx_t_1) {
+
+    /* "src/multi_dirs_chunker.pyx":654
+ * 
+ *     if diff != 0:
+ *         return diff             # <<<<<<<<<<<<<<
+ *     else:
+ *         return strcmp(fa.path, fb.path)
+ */
+    __pyx_r = __pyx_v_diff;
+    goto __pyx_L0;
+
+    /* "src/multi_dirs_chunker.pyx":653
+ *     cdef int diff = fb.priority - fa.priority
+ * 
+ *     if diff != 0:             # <<<<<<<<<<<<<<
+ *         return diff
+ *     else:
+ */
+  }
+
+  /* "src/multi_dirs_chunker.pyx":656
+ *         return diff
+ *     else:
+ *         return strcmp(fa.path, fb.path)             # <<<<<<<<<<<<<<
  * 
  * ##################################################
  */
-  __pyx_r = (__pyx_v_fb->priority - __pyx_v_fa->priority);
-  goto __pyx_L0;
+  /*else*/ {
+    __pyx_r = strcmp(__pyx_v_fa->path, __pyx_v_fb->path);
+    goto __pyx_L0;
+  }
 
-  /* "src/multi_dirs_chunker.pyx":571
+  /* "src/multi_dirs_chunker.pyx":645
  *         pthread_cond_wait(&pool.condition, &pool.mutex)
  * 
  * cdef int compare_file_entries(const void* a, const void* b) noexcept nogil:             # <<<<<<<<<<<<<<
- *     cdef FileEntry* fa = (<FileEntry**>a)[0]
- *     cdef FileEntry* fb = (<FileEntry**>b)[0]
+ *     """
+ *     qsort callback for descending priority, then alphabetical by path.
  */
 
   /* function exit code */
@@ -7028,12 +7500,12 @@ static int __pyx_f_3src_18multi_dirs_chunker_compare_file_entries(void const *__
   return __pyx_r;
 }
 
-/* "src/multi_dirs_chunker.pyx":580
+/* "src/multi_dirs_chunker.pyx":662
  * ##################################################
  * 
  * cdef void write_chunk(const char* content, size_t size, int chunk_num, CConfig* config):             # <<<<<<<<<<<<<<
- * 
- *     cdef char filename[1024]
+ *     """
+ *     Write a chunk of data either to stdout or to chunk-N.txt in output_dir.
  */
 
 static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *__pyx_v_content, size_t __pyx_v_size, int __pyx_v_chunk_num, struct __pyx_t_3src_18multi_dirs_chunker_CConfig *__pyx_v_config) {
@@ -7041,7 +7513,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *__pyx_v_co
   FILE *__pyx_v_f;
   int __pyx_t_1;
 
-  /* "src/multi_dirs_chunker.pyx":584
+  /* "src/multi_dirs_chunker.pyx":668
  *     cdef char filename[1024]
  * 
  *     if config.stream:             # <<<<<<<<<<<<<<
@@ -7050,7 +7522,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *__pyx_v_co
  */
   if (__pyx_v_config->stream) {
 
-    /* "src/multi_dirs_chunker.pyx":585
+    /* "src/multi_dirs_chunker.pyx":669
  * 
  *     if config.stream:
  *         fwrite(content, 1, size, stdout)             # <<<<<<<<<<<<<<
@@ -7059,7 +7531,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *__pyx_v_co
  */
     (void)(fwrite(__pyx_v_content, 1, __pyx_v_size, stdout));
 
-    /* "src/multi_dirs_chunker.pyx":586
+    /* "src/multi_dirs_chunker.pyx":670
  *     if config.stream:
  *         fwrite(content, 1, size, stdout)
  *         fflush(stdout)             # <<<<<<<<<<<<<<
@@ -7068,7 +7540,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *__pyx_v_co
  */
     (void)(fflush(stdout));
 
-    /* "src/multi_dirs_chunker.pyx":587
+    /* "src/multi_dirs_chunker.pyx":671
  *         fwrite(content, 1, size, stdout)
  *         fflush(stdout)
  *         return             # <<<<<<<<<<<<<<
@@ -7077,7 +7549,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *__pyx_v_co
  */
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":584
+    /* "src/multi_dirs_chunker.pyx":668
  *     cdef char filename[1024]
  * 
  *     if config.stream:             # <<<<<<<<<<<<<<
@@ -7086,7 +7558,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *__pyx_v_co
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":589
+  /* "src/multi_dirs_chunker.pyx":673
  *         return
  * 
  *     if config.output_dir:             # <<<<<<<<<<<<<<
@@ -7096,7 +7568,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *__pyx_v_co
   __pyx_t_1 = (__pyx_v_config->output_dir != 0);
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":590
+    /* "src/multi_dirs_chunker.pyx":674
  * 
  *     if config.output_dir:
  *         snprintf(filename, 1024, "%s/chunk-%d.txt", config.output_dir, chunk_num)             # <<<<<<<<<<<<<<
@@ -7105,7 +7577,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *__pyx_v_co
  */
     (void)(snprintf(__pyx_v_filename, 0x400, ((char const *)"%s/chunk-%d.txt"), __pyx_v_config->output_dir, __pyx_v_chunk_num));
 
-    /* "src/multi_dirs_chunker.pyx":589
+    /* "src/multi_dirs_chunker.pyx":673
  *         return
  * 
  *     if config.output_dir:             # <<<<<<<<<<<<<<
@@ -7115,7 +7587,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *__pyx_v_co
     goto __pyx_L4;
   }
 
-  /* "src/multi_dirs_chunker.pyx":592
+  /* "src/multi_dirs_chunker.pyx":676
  *         snprintf(filename, 1024, "%s/chunk-%d.txt", config.output_dir, chunk_num)
  *     else:
  *         snprintf(filename, 1024, "chunk-%d.txt", chunk_num)             # <<<<<<<<<<<<<<
@@ -7127,7 +7599,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *__pyx_v_co
   }
   __pyx_L4:;
 
-  /* "src/multi_dirs_chunker.pyx":594
+  /* "src/multi_dirs_chunker.pyx":678
  *         snprintf(filename, 1024, "chunk-%d.txt", chunk_num)
  * 
  *     cdef FILE* f = fopen(filename, "w")             # <<<<<<<<<<<<<<
@@ -7136,7 +7608,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *__pyx_v_co
  */
   __pyx_v_f = fopen(__pyx_v_filename, ((char const *)"w"));
 
-  /* "src/multi_dirs_chunker.pyx":595
+  /* "src/multi_dirs_chunker.pyx":679
  * 
  *     cdef FILE* f = fopen(filename, "w")
  *     if not f:             # <<<<<<<<<<<<<<
@@ -7146,7 +7618,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *__pyx_v_co
   __pyx_t_1 = (!(__pyx_v_f != 0));
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":596
+    /* "src/multi_dirs_chunker.pyx":680
  *     cdef FILE* f = fopen(filename, "w")
  *     if not f:
  *         return             # <<<<<<<<<<<<<<
@@ -7155,7 +7627,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *__pyx_v_co
  */
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":595
+    /* "src/multi_dirs_chunker.pyx":679
  * 
  *     cdef FILE* f = fopen(filename, "w")
  *     if not f:             # <<<<<<<<<<<<<<
@@ -7164,7 +7636,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *__pyx_v_co
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":597
+  /* "src/multi_dirs_chunker.pyx":681
  *     if not f:
  *         return
  *     fwrite(content, 1, size, f)             # <<<<<<<<<<<<<<
@@ -7173,40 +7645,40 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk(char const *__pyx_v_co
  */
   (void)(fwrite(__pyx_v_content, 1, __pyx_v_size, __pyx_v_f));
 
-  /* "src/multi_dirs_chunker.pyx":598
+  /* "src/multi_dirs_chunker.pyx":682
  *         return
  *     fwrite(content, 1, size, f)
  *     fclose(f)             # <<<<<<<<<<<<<<
  * 
- * 
+ * cdef void write_chunk_single_file(const char* content, size_t size, FILE* outfile):
  */
   (void)(fclose(__pyx_v_f));
 
-  /* "src/multi_dirs_chunker.pyx":580
+  /* "src/multi_dirs_chunker.pyx":662
  * ##################################################
  * 
  * cdef void write_chunk(const char* content, size_t size, int chunk_num, CConfig* config):             # <<<<<<<<<<<<<<
- * 
- *     cdef char filename[1024]
+ *     """
+ *     Write a chunk of data either to stdout or to chunk-N.txt in output_dir.
  */
 
   /* function exit code */
   __pyx_L0:;
 }
 
-/* "src/multi_dirs_chunker.pyx":601
- * 
+/* "src/multi_dirs_chunker.pyx":684
+ *     fclose(f)
  * 
  * cdef void write_chunk_single_file(const char* content, size_t size, FILE* outfile):             # <<<<<<<<<<<<<<
  *     """
- *     Single-file aggregator approach, if desired.
+ *     Single-file aggregator approach, if desired (whole_chunk_mode).
  */
 
 static void __pyx_f_3src_18multi_dirs_chunker_write_chunk_single_file(char const *__pyx_v_content, size_t __pyx_v_size, FILE *__pyx_v_outfile) {
   int __pyx_t_1;
 
-  /* "src/multi_dirs_chunker.pyx":605
- *     Single-file aggregator approach, if desired.
+  /* "src/multi_dirs_chunker.pyx":688
+ *     Single-file aggregator approach, if desired (whole_chunk_mode).
  *     """
  *     if not outfile:             # <<<<<<<<<<<<<<
  *         return
@@ -7215,17 +7687,17 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk_single_file(char const
   __pyx_t_1 = (!(__pyx_v_outfile != 0));
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":606
+    /* "src/multi_dirs_chunker.pyx":689
  *     """
  *     if not outfile:
  *         return             # <<<<<<<<<<<<<<
  *     fwrite(content, 1, size, outfile)
- *     # optionally flush: fflush(outfile)
+ *     # optionally fflush(outfile)
  */
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":605
- *     Single-file aggregator approach, if desired.
+    /* "src/multi_dirs_chunker.pyx":688
+ *     Single-file aggregator approach, if desired (whole_chunk_mode).
  *     """
  *     if not outfile:             # <<<<<<<<<<<<<<
  *         return
@@ -7233,33 +7705,159 @@ static void __pyx_f_3src_18multi_dirs_chunker_write_chunk_single_file(char const
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":607
+  /* "src/multi_dirs_chunker.pyx":690
  *     if not outfile:
  *         return
  *     fwrite(content, 1, size, outfile)             # <<<<<<<<<<<<<<
- *     # optionally flush: fflush(outfile)
+ *     # optionally fflush(outfile)
  * 
  */
   (void)(fwrite(__pyx_v_content, 1, __pyx_v_size, __pyx_v_outfile));
 
-  /* "src/multi_dirs_chunker.pyx":601
- * 
+  /* "src/multi_dirs_chunker.pyx":684
+ *     fclose(f)
  * 
  * cdef void write_chunk_single_file(const char* content, size_t size, FILE* outfile):             # <<<<<<<<<<<<<<
  *     """
- *     Single-file aggregator approach, if desired.
+ *     Single-file aggregator approach, if desired (whole_chunk_mode).
  */
 
   /* function exit code */
   __pyx_L0:;
 }
 
-/* "src/multi_dirs_chunker.pyx":615
+/* "src/multi_dirs_chunker.pyx":697
  * ##################################################
  * 
- * cdef void process_chunks(ThreadPool* pool):             # <<<<<<<<<<<<<<
+ * cdef list python_split_tokens(char* c_content):             # <<<<<<<<<<<<<<
+ *     """
+ *     Convert c_content => Python str => str.split() => list of tokens (strings).
+ */
+
+static PyObject *__pyx_f_3src_18multi_dirs_chunker_python_split_tokens(char *__pyx_v_c_content) {
+  Py_ssize_t __pyx_v_length;
+  PyObject *__pyx_v_raw_b = 0;
+  PyObject *__pyx_v_text = 0;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  int __pyx_t_1;
+  PyObject *__pyx_t_2 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("python_split_tokens", 1);
+
+  /* "src/multi_dirs_chunker.pyx":701
+ *     Convert c_content => Python str => str.split() => list of tokens (strings).
+ *     """
+ *     if not c_content:             # <<<<<<<<<<<<<<
+ *         return []
+ *     cdef Py_ssize_t length = <Py_ssize_t>strlen(c_content)
+ */
+  __pyx_t_1 = (!(__pyx_v_c_content != 0));
+  if (__pyx_t_1) {
+
+    /* "src/multi_dirs_chunker.pyx":702
+ *     """
+ *     if not c_content:
+ *         return []             # <<<<<<<<<<<<<<
+ *     cdef Py_ssize_t length = <Py_ssize_t>strlen(c_content)
+ *     cdef bytes raw_b = c_content[:length]
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 702, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_r = ((PyObject*)__pyx_t_2);
+    __pyx_t_2 = 0;
+    goto __pyx_L0;
+
+    /* "src/multi_dirs_chunker.pyx":701
+ *     Convert c_content => Python str => str.split() => list of tokens (strings).
+ *     """
+ *     if not c_content:             # <<<<<<<<<<<<<<
+ *         return []
+ *     cdef Py_ssize_t length = <Py_ssize_t>strlen(c_content)
+ */
+  }
+
+  /* "src/multi_dirs_chunker.pyx":703
+ *     if not c_content:
+ *         return []
+ *     cdef Py_ssize_t length = <Py_ssize_t>strlen(c_content)             # <<<<<<<<<<<<<<
+ *     cdef bytes raw_b = c_content[:length]
+ *     cdef str text = raw_b.decode('utf-8', 'replace')
+ */
+  __pyx_v_length = ((Py_ssize_t)strlen(__pyx_v_c_content));
+
+  /* "src/multi_dirs_chunker.pyx":704
+ *         return []
+ *     cdef Py_ssize_t length = <Py_ssize_t>strlen(c_content)
+ *     cdef bytes raw_b = c_content[:length]             # <<<<<<<<<<<<<<
+ *     cdef str text = raw_b.decode('utf-8', 'replace')
+ *     return text.split()
+ */
+  __pyx_t_2 = __Pyx_PyBytes_FromStringAndSize(__pyx_v_c_content + 0, __pyx_v_length - 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 704, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_v_raw_b = ((PyObject*)__pyx_t_2);
+  __pyx_t_2 = 0;
+
+  /* "src/multi_dirs_chunker.pyx":705
+ *     cdef Py_ssize_t length = <Py_ssize_t>strlen(c_content)
+ *     cdef bytes raw_b = c_content[:length]
+ *     cdef str text = raw_b.decode('utf-8', 'replace')             # <<<<<<<<<<<<<<
+ *     return text.split()
  * 
- *     if not pool or not pool.processed_files or pool.processed_count == 0:
+ */
+  __pyx_t_2 = __Pyx_decode_bytes(__pyx_v_raw_b, 0, PY_SSIZE_T_MAX, NULL, ((char const *)"replace"), PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 705, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_v_text = ((PyObject*)__pyx_t_2);
+  __pyx_t_2 = 0;
+
+  /* "src/multi_dirs_chunker.pyx":706
+ *     cdef bytes raw_b = c_content[:length]
+ *     cdef str text = raw_b.decode('utf-8', 'replace')
+ *     return text.split()             # <<<<<<<<<<<<<<
+ * 
+ * cdef void process_chunks(ThreadPool* pool):
+ */
+  __Pyx_XDECREF(__pyx_r);
+  if (unlikely(__pyx_v_text == Py_None)) {
+    PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "split");
+    __PYX_ERR(0, 706, __pyx_L1_error)
+  }
+  __pyx_t_2 = PyUnicode_Split(__pyx_v_text, ((PyObject *)NULL), -1L); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 706, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_r = ((PyObject*)__pyx_t_2);
+  __pyx_t_2 = 0;
+  goto __pyx_L0;
+
+  /* "src/multi_dirs_chunker.pyx":697
+ * ##################################################
+ * 
+ * cdef list python_split_tokens(char* c_content):             # <<<<<<<<<<<<<<
+ *     """
+ *     Convert c_content => Python str => str.split() => list of tokens (strings).
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_AddTraceback("src.multi_dirs_chunker.python_split_tokens", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = 0;
+  __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_raw_b);
+  __Pyx_XDECREF(__pyx_v_text);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "src/multi_dirs_chunker.pyx":708
+ *     return text.split()
+ * 
+ * cdef void process_chunks(ThreadPool* pool):             # <<<<<<<<<<<<<<
+ *     """
+ *     If token_mode=True, chunk by "max_size tokens" using python_split_tokens.
  */
 
 static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_v_pool) {
@@ -7269,39 +7867,52 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
   int __pyx_v_chunk_number;
   FILE *__pyx_v_aggregator_file;
   char __pyx_v_aggregator_name[0x400];
+  PyObject *__pyx_v_path_bytes = 0;
+  PyObject *__pyx_v_py_path = 0;
+  PyObject *__pyx_v_header_b = 0;
+  PyObject *__pyx_v_sep_b = 0;
+  size_t __pyx_v_sep_len;
   size_t __pyx_v_i;
   struct __pyx_t_3src_18multi_dirs_chunker_FileEntry *__pyx_v_entry;
-  size_t __pyx_v_entry_size;
-  size_t __pyx_v_header_len;
-  size_t __pyx_v_sep_len;
+  PyObject *__pyx_v_tokens = 0;
+  Py_ssize_t __pyx_v_total_tokens;
+  Py_ssize_t __pyx_v_idx;
+  Py_ssize_t __pyx_v_tokens_left;
+  Py_ssize_t __pyx_v_taking_tokens;
+  PyObject *__pyx_v_empty_str = 0;
+  PyObject *__pyx_v_empty_b = 0;
+  size_t __pyx_v_empty_len;
+  PyObject *__pyx_v_chunk_str = 0;
+  PyObject *__pyx_v_chunk_bytes = 0;
+  size_t __pyx_v_cb_len;
+  PyObject *__pyx_v_sub_list = 0;
+  size_t __pyx_v_file_len;
+  size_t __pyx_v_header_len_;
   size_t __pyx_v_total_needed;
   size_t __pyx_v_content_pos;
   size_t __pyx_v_remaining;
   size_t __pyx_v_can_take;
-  size_t __pyx_v_taking;
-  PyObject *__pyx_v_header_b = 0;
-  PyObject *__pyx_v_sep_b = 0;
+  size_t __pyx_v_taking_bytes;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
   size_t __pyx_t_3;
-  size_t __pyx_t_4;
+  Py_ssize_t __pyx_t_4;
   size_t __pyx_t_5;
   size_t __pyx_t_6;
   PyObject *__pyx_t_7 = NULL;
-  Py_ssize_t __pyx_t_8;
-  Py_UCS4 __pyx_t_9;
-  PyObject *__pyx_t_10 = NULL;
-  PyObject *__pyx_t_11 = NULL;
-  char *__pyx_t_12;
+  Py_UCS4 __pyx_t_8;
+  PyObject *__pyx_t_9 = NULL;
+  char *__pyx_t_10;
+  size_t __pyx_t_11;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("process_chunks", 1);
 
-  /* "src/multi_dirs_chunker.pyx":617
- * cdef void process_chunks(ThreadPool* pool):
- * 
+  /* "src/multi_dirs_chunker.pyx":713
+ *     If token_mode=False, chunk by "max_size bytes."
+ *     """
  *     if not pool or not pool.processed_files or pool.processed_count == 0:             # <<<<<<<<<<<<<<
  *         return
  * 
@@ -7323,91 +7934,63 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
   __pyx_L4_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":618
- * 
+    /* "src/multi_dirs_chunker.pyx":714
+ *     """
  *     if not pool or not pool.processed_files or pool.processed_count == 0:
  *         return             # <<<<<<<<<<<<<<
  * 
- *     qsort(pool.processed_files, pool.processed_count, sizeof(FileEntry*), compare_file_entries)
+ *     # Sort by priority
  */
     goto __pyx_L0;
 
-    /* "src/multi_dirs_chunker.pyx":617
- * cdef void process_chunks(ThreadPool* pool):
- * 
+    /* "src/multi_dirs_chunker.pyx":713
+ *     If token_mode=False, chunk by "max_size bytes."
+ *     """
  *     if not pool or not pool.processed_files or pool.processed_count == 0:             # <<<<<<<<<<<<<<
  *         return
  * 
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":620
- *         return
+  /* "src/multi_dirs_chunker.pyx":717
  * 
+ *     # Sort by priority
  *     qsort(pool.processed_files, pool.processed_count, sizeof(FileEntry*), compare_file_entries)             # <<<<<<<<<<<<<<
  * 
- *     cdef size_t chunk_size = pool.config.max_size
+ *     #### cdef all variables up front ####
  */
   qsort(__pyx_v_pool->processed_files, __pyx_v_pool->processed_count, (sizeof(struct __pyx_t_3src_18multi_dirs_chunker_FileEntry *)), __pyx_f_3src_18multi_dirs_chunker_compare_file_entries);
 
-  /* "src/multi_dirs_chunker.pyx":622
- *     qsort(pool.processed_files, pool.processed_count, sizeof(FileEntry*), compare_file_entries)
+  /* "src/multi_dirs_chunker.pyx":720
  * 
+ *     #### cdef all variables up front ####
  *     cdef size_t chunk_size = pool.config.max_size             # <<<<<<<<<<<<<<
  *     cdef char* current_chunk = <char*>malloc(chunk_size + 128)
- *     if not current_chunk:
+ *     cdef size_t chunk_used = 0
  */
   __pyx_t_3 = __pyx_v_pool->config->max_size;
   __pyx_v_chunk_size = __pyx_t_3;
 
-  /* "src/multi_dirs_chunker.pyx":623
- * 
+  /* "src/multi_dirs_chunker.pyx":721
+ *     #### cdef all variables up front ####
  *     cdef size_t chunk_size = pool.config.max_size
  *     cdef char* current_chunk = <char*>malloc(chunk_size + 128)             # <<<<<<<<<<<<<<
- *     if not current_chunk:
- *         return
+ *     cdef size_t chunk_used = 0
+ *     cdef int chunk_number = 0
  */
   __pyx_v_current_chunk = ((char *)malloc((__pyx_v_chunk_size + 0x80)));
 
-  /* "src/multi_dirs_chunker.pyx":624
+  /* "src/multi_dirs_chunker.pyx":722
  *     cdef size_t chunk_size = pool.config.max_size
  *     cdef char* current_chunk = <char*>malloc(chunk_size + 128)
- *     if not current_chunk:             # <<<<<<<<<<<<<<
- *         return
- * 
- */
-  __pyx_t_1 = (!(__pyx_v_current_chunk != 0));
-  if (__pyx_t_1) {
-
-    /* "src/multi_dirs_chunker.pyx":625
- *     cdef char* current_chunk = <char*>malloc(chunk_size + 128)
- *     if not current_chunk:
- *         return             # <<<<<<<<<<<<<<
- * 
- *     cdef size_t chunk_used = 0
- */
-    goto __pyx_L0;
-
-    /* "src/multi_dirs_chunker.pyx":624
- *     cdef size_t chunk_size = pool.config.max_size
- *     cdef char* current_chunk = <char*>malloc(chunk_size + 128)
- *     if not current_chunk:             # <<<<<<<<<<<<<<
- *         return
- * 
- */
-  }
-
-  /* "src/multi_dirs_chunker.pyx":627
- *         return
- * 
  *     cdef size_t chunk_used = 0             # <<<<<<<<<<<<<<
  *     cdef int chunk_number = 0
  *     cdef FILE* aggregator_file = NULL
  */
   __pyx_v_chunk_used = 0;
 
-  /* "src/multi_dirs_chunker.pyx":628
- * 
+  /* "src/multi_dirs_chunker.pyx":723
+ *     cdef char* current_chunk = <char*>malloc(chunk_size + 128)
  *     cdef size_t chunk_used = 0
  *     cdef int chunk_number = 0             # <<<<<<<<<<<<<<
  *     cdef FILE* aggregator_file = NULL
@@ -7415,7 +7998,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
  */
   __pyx_v_chunk_number = 0;
 
-  /* "src/multi_dirs_chunker.pyx":629
+  /* "src/multi_dirs_chunker.pyx":724
  *     cdef size_t chunk_used = 0
  *     cdef int chunk_number = 0
  *     cdef FILE* aggregator_file = NULL             # <<<<<<<<<<<<<<
@@ -7424,17 +8007,110 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
  */
   __pyx_v_aggregator_file = NULL;
 
-  /* "src/multi_dirs_chunker.pyx":632
- *     cdef char aggregator_name[1024]
+  /* "src/multi_dirs_chunker.pyx":731
+ *     cdef str py_path
+ *     cdef bytes header_b
+ *     cdef bytes sep_b = b"\n"             # <<<<<<<<<<<<<<
+ *     cdef size_t sep_len = len(sep_b)
+ *     cdef size_t i
+ */
+  __Pyx_INCREF(__pyx_kp_b__2);
+  __pyx_v_sep_b = __pyx_kp_b__2;
+
+  /* "src/multi_dirs_chunker.pyx":732
+ *     cdef bytes header_b
+ *     cdef bytes sep_b = b"\n"
+ *     cdef size_t sep_len = len(sep_b)             # <<<<<<<<<<<<<<
+ *     cdef size_t i
+ *     cdef FileEntry* entry = NULL
+ */
+  __pyx_t_4 = __Pyx_PyBytes_GET_SIZE(__pyx_v_sep_b); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 732, __pyx_L1_error)
+  __pyx_v_sep_len = __pyx_t_4;
+
+  /* "src/multi_dirs_chunker.pyx":734
+ *     cdef size_t sep_len = len(sep_b)
+ *     cdef size_t i
+ *     cdef FileEntry* entry = NULL             # <<<<<<<<<<<<<<
  * 
+ *     cdef list tokens
+ */
+  __pyx_v_entry = NULL;
+
+  /* "src/multi_dirs_chunker.pyx":737
+ * 
+ *     cdef list tokens
+ *     cdef Py_ssize_t total_tokens = 0             # <<<<<<<<<<<<<<
+ *     cdef Py_ssize_t idx = 0
+ *     cdef Py_ssize_t tokens_left = 0
+ */
+  __pyx_v_total_tokens = 0;
+
+  /* "src/multi_dirs_chunker.pyx":738
+ *     cdef list tokens
+ *     cdef Py_ssize_t total_tokens = 0
+ *     cdef Py_ssize_t idx = 0             # <<<<<<<<<<<<<<
+ *     cdef Py_ssize_t tokens_left = 0
+ *     cdef Py_ssize_t taking_tokens = 0
+ */
+  __pyx_v_idx = 0;
+
+  /* "src/multi_dirs_chunker.pyx":739
+ *     cdef Py_ssize_t total_tokens = 0
+ *     cdef Py_ssize_t idx = 0
+ *     cdef Py_ssize_t tokens_left = 0             # <<<<<<<<<<<<<<
+ *     cdef Py_ssize_t taking_tokens = 0
+ *     cdef str empty_str
+ */
+  __pyx_v_tokens_left = 0;
+
+  /* "src/multi_dirs_chunker.pyx":740
+ *     cdef Py_ssize_t idx = 0
+ *     cdef Py_ssize_t tokens_left = 0
+ *     cdef Py_ssize_t taking_tokens = 0             # <<<<<<<<<<<<<<
+ *     cdef str empty_str
+ *     cdef bytes empty_b
+ */
+  __pyx_v_taking_tokens = 0;
+
+  /* "src/multi_dirs_chunker.pyx":759
+ *     cdef size_t taking_bytes
+ * 
+ *     if not current_chunk:             # <<<<<<<<<<<<<<
+ *         return
+ * 
+ */
+  __pyx_t_1 = (!(__pyx_v_current_chunk != 0));
+  if (__pyx_t_1) {
+
+    /* "src/multi_dirs_chunker.pyx":760
+ * 
+ *     if not current_chunk:
+ *         return             # <<<<<<<<<<<<<<
+ * 
+ *     # aggregator
+ */
+    goto __pyx_L0;
+
+    /* "src/multi_dirs_chunker.pyx":759
+ *     cdef size_t taking_bytes
+ * 
+ *     if not current_chunk:             # <<<<<<<<<<<<<<
+ *         return
+ * 
+ */
+  }
+
+  /* "src/multi_dirs_chunker.pyx":763
+ * 
+ *     # aggregator
  *     if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
  *         if pool.config.stream:
  *             aggregator_file = stdout
  */
   if (__pyx_v_pool->config->whole_chunk_mode) {
 
-    /* "src/multi_dirs_chunker.pyx":633
- * 
+    /* "src/multi_dirs_chunker.pyx":764
+ *     # aggregator
  *     if pool.config.whole_chunk_mode:
  *         if pool.config.stream:             # <<<<<<<<<<<<<<
  *             aggregator_file = stdout
@@ -7442,7 +8118,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
  */
     if (__pyx_v_pool->config->stream) {
 
-      /* "src/multi_dirs_chunker.pyx":634
+      /* "src/multi_dirs_chunker.pyx":765
  *     if pool.config.whole_chunk_mode:
  *         if pool.config.stream:
  *             aggregator_file = stdout             # <<<<<<<<<<<<<<
@@ -7451,8 +8127,8 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
  */
       __pyx_v_aggregator_file = stdout;
 
-      /* "src/multi_dirs_chunker.pyx":633
- * 
+      /* "src/multi_dirs_chunker.pyx":764
+ *     # aggregator
  *     if pool.config.whole_chunk_mode:
  *         if pool.config.stream:             # <<<<<<<<<<<<<<
  *             aggregator_file = stdout
@@ -7461,37 +8137,37 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
       goto __pyx_L9;
     }
 
-    /* "src/multi_dirs_chunker.pyx":636
+    /* "src/multi_dirs_chunker.pyx":767
  *             aggregator_file = stdout
  *         else:
  *             if pool.config.output_dir:             # <<<<<<<<<<<<<<
- *                 snprintf(aggregator_name, 1024, "%s/whole_chunk_mode-output.txt",
- *                          pool.config.output_dir)
+ *                 snprintf(aggregator_name, 1024,
+ *                          "%s/whole_chunk_mode-output.txt",
  */
     /*else*/ {
       __pyx_t_1 = (__pyx_v_pool->config->output_dir != 0);
       if (__pyx_t_1) {
 
-        /* "src/multi_dirs_chunker.pyx":637
+        /* "src/multi_dirs_chunker.pyx":768
  *         else:
  *             if pool.config.output_dir:
- *                 snprintf(aggregator_name, 1024, "%s/whole_chunk_mode-output.txt",             # <<<<<<<<<<<<<<
+ *                 snprintf(aggregator_name, 1024,             # <<<<<<<<<<<<<<
+ *                          "%s/whole_chunk_mode-output.txt",
  *                          pool.config.output_dir)
- *             else:
  */
         (void)(snprintf(__pyx_v_aggregator_name, 0x400, ((char const *)"%s/whole_chunk_mode-output.txt"), __pyx_v_pool->config->output_dir));
 
-        /* "src/multi_dirs_chunker.pyx":636
+        /* "src/multi_dirs_chunker.pyx":767
  *             aggregator_file = stdout
  *         else:
  *             if pool.config.output_dir:             # <<<<<<<<<<<<<<
- *                 snprintf(aggregator_name, 1024, "%s/whole_chunk_mode-output.txt",
- *                          pool.config.output_dir)
+ *                 snprintf(aggregator_name, 1024,
+ *                          "%s/whole_chunk_mode-output.txt",
  */
         goto __pyx_L10;
       }
 
-      /* "src/multi_dirs_chunker.pyx":640
+      /* "src/multi_dirs_chunker.pyx":772
  *                          pool.config.output_dir)
  *             else:
  *                 snprintf(aggregator_name, 1024, "whole_chunk_mode-output.txt")             # <<<<<<<<<<<<<<
@@ -7503,7 +8179,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
       }
       __pyx_L10:;
 
-      /* "src/multi_dirs_chunker.pyx":641
+      /* "src/multi_dirs_chunker.pyx":773
  *             else:
  *                 snprintf(aggregator_name, 1024, "whole_chunk_mode-output.txt")
  *             aggregator_file = fopen(aggregator_name, "w")             # <<<<<<<<<<<<<<
@@ -7512,7 +8188,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
  */
       __pyx_v_aggregator_file = fopen(__pyx_v_aggregator_name, ((char const *)"w"));
 
-      /* "src/multi_dirs_chunker.pyx":642
+      /* "src/multi_dirs_chunker.pyx":774
  *                 snprintf(aggregator_name, 1024, "whole_chunk_mode-output.txt")
  *             aggregator_file = fopen(aggregator_name, "w")
  *             if not aggregator_file:             # <<<<<<<<<<<<<<
@@ -7522,7 +8198,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
       __pyx_t_1 = (!(__pyx_v_aggregator_file != 0));
       if (__pyx_t_1) {
 
-        /* "src/multi_dirs_chunker.pyx":643
+        /* "src/multi_dirs_chunker.pyx":775
  *             aggregator_file = fopen(aggregator_name, "w")
  *             if not aggregator_file:
  *                 free(current_chunk)             # <<<<<<<<<<<<<<
@@ -7531,16 +8207,16 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
  */
         free(__pyx_v_current_chunk);
 
-        /* "src/multi_dirs_chunker.pyx":644
+        /* "src/multi_dirs_chunker.pyx":776
  *             if not aggregator_file:
  *                 free(current_chunk)
  *                 return             # <<<<<<<<<<<<<<
  * 
- *     cdef size_t i
+ *     # main loop
  */
         goto __pyx_L0;
 
-        /* "src/multi_dirs_chunker.pyx":642
+        /* "src/multi_dirs_chunker.pyx":774
  *                 snprintf(aggregator_name, 1024, "whole_chunk_mode-output.txt")
  *             aggregator_file = fopen(aggregator_name, "w")
  *             if not aggregator_file:             # <<<<<<<<<<<<<<
@@ -7551,62 +8227,29 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
     }
     __pyx_L9:;
 
-    /* "src/multi_dirs_chunker.pyx":632
- *     cdef char aggregator_name[1024]
+    /* "src/multi_dirs_chunker.pyx":763
  * 
+ *     # aggregator
  *     if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
  *         if pool.config.stream:
  *             aggregator_file = stdout
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":648
- *     cdef size_t i
+  /* "src/multi_dirs_chunker.pyx":779
  * 
- *     cdef FileEntry* entry = NULL             # <<<<<<<<<<<<<<
- *     cdef size_t entry_size = 0, header_len = 0, sep_len = 0, total_needed = 0
- *     cdef size_t content_pos = 0, remaining = 0, can_take = 0, taking = 0
- */
-  __pyx_v_entry = NULL;
-
-  /* "src/multi_dirs_chunker.pyx":649
- * 
- *     cdef FileEntry* entry = NULL
- *     cdef size_t entry_size = 0, header_len = 0, sep_len = 0, total_needed = 0             # <<<<<<<<<<<<<<
- *     cdef size_t content_pos = 0, remaining = 0, can_take = 0, taking = 0
- *     cdef bytes header_b, sep_b
- */
-  __pyx_v_entry_size = 0;
-  __pyx_v_header_len = 0;
-  __pyx_v_sep_len = 0;
-  __pyx_v_total_needed = 0;
-
-  /* "src/multi_dirs_chunker.pyx":650
- *     cdef FileEntry* entry = NULL
- *     cdef size_t entry_size = 0, header_len = 0, sep_len = 0, total_needed = 0
- *     cdef size_t content_pos = 0, remaining = 0, can_take = 0, taking = 0             # <<<<<<<<<<<<<<
- *     cdef bytes header_b, sep_b
- * 
- */
-  __pyx_v_content_pos = 0;
-  __pyx_v_remaining = 0;
-  __pyx_v_can_take = 0;
-  __pyx_v_taking = 0;
-
-  /* "src/multi_dirs_chunker.pyx":653
- *     cdef bytes header_b, sep_b
- * 
+ *     # main loop
  *     for i in range(pool.processed_count):             # <<<<<<<<<<<<<<
  *         entry = pool.processed_files[i]
  *         if not entry or not entry.content:
  */
   __pyx_t_3 = __pyx_v_pool->processed_count;
-  __pyx_t_4 = __pyx_t_3;
-  for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
-    __pyx_v_i = __pyx_t_5;
+  __pyx_t_5 = __pyx_t_3;
+  for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
+    __pyx_v_i = __pyx_t_6;
 
-    /* "src/multi_dirs_chunker.pyx":654
- * 
+    /* "src/multi_dirs_chunker.pyx":780
+ *     # main loop
  *     for i in range(pool.processed_count):
  *         entry = pool.processed_files[i]             # <<<<<<<<<<<<<<
  *         if not entry or not entry.content:
@@ -7614,7 +8257,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
  */
     __pyx_v_entry = (__pyx_v_pool->processed_files[__pyx_v_i]);
 
-    /* "src/multi_dirs_chunker.pyx":655
+    /* "src/multi_dirs_chunker.pyx":781
  *     for i in range(pool.processed_count):
  *         entry = pool.processed_files[i]
  *         if not entry or not entry.content:             # <<<<<<<<<<<<<<
@@ -7632,16 +8275,16 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
     __pyx_L15_bool_binop_done:;
     if (__pyx_t_1) {
 
-      /* "src/multi_dirs_chunker.pyx":656
+      /* "src/multi_dirs_chunker.pyx":782
  *         entry = pool.processed_files[i]
  *         if not entry or not entry.content:
  *             continue             # <<<<<<<<<<<<<<
  * 
- *         if pool.config.token_mode:
+ *         # Build "File: path\n"
  */
       goto __pyx_L12_continue;
 
-      /* "src/multi_dirs_chunker.pyx":655
+      /* "src/multi_dirs_chunker.pyx":781
  *     for i in range(pool.processed_count):
  *         entry = pool.processed_files[i]
  *         if not entry or not entry.content:             # <<<<<<<<<<<<<<
@@ -7650,262 +8293,524 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
  */
     }
 
-    /* "src/multi_dirs_chunker.pyx":658
- *             continue
+    /* "src/multi_dirs_chunker.pyx":785
+ * 
+ *         # Build "File: path\n"
+ *         path_bytes = entry.path[:strlen(entry.path)]             # <<<<<<<<<<<<<<
+ *         py_path = path_bytes.decode('utf-8', 'replace')
+ *         header_b = f"File: {py_path}\n".encode('utf-8')
+ */
+    __pyx_t_7 = __Pyx_PyBytes_FromStringAndSize(__pyx_v_entry->path + 0, strlen(__pyx_v_entry->path) - 0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 785, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    __Pyx_XDECREF_SET(__pyx_v_path_bytes, ((PyObject*)__pyx_t_7));
+    __pyx_t_7 = 0;
+
+    /* "src/multi_dirs_chunker.pyx":786
+ *         # Build "File: path\n"
+ *         path_bytes = entry.path[:strlen(entry.path)]
+ *         py_path = path_bytes.decode('utf-8', 'replace')             # <<<<<<<<<<<<<<
+ *         header_b = f"File: {py_path}\n".encode('utf-8')
+ * 
+ */
+    __pyx_t_7 = __Pyx_decode_bytes(__pyx_v_path_bytes, 0, PY_SSIZE_T_MAX, NULL, ((char const *)"replace"), PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 786, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    __Pyx_XDECREF_SET(__pyx_v_py_path, ((PyObject*)__pyx_t_7));
+    __pyx_t_7 = 0;
+
+    /* "src/multi_dirs_chunker.pyx":787
+ *         path_bytes = entry.path[:strlen(entry.path)]
+ *         py_path = path_bytes.decode('utf-8', 'replace')
+ *         header_b = f"File: {py_path}\n".encode('utf-8')             # <<<<<<<<<<<<<<
+ * 
+ *         if pool.config.token_mode:
+ */
+    __pyx_t_7 = PyTuple_New(3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 787, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    __pyx_t_4 = 0;
+    __pyx_t_8 = 127;
+    __Pyx_INCREF(__pyx_kp_u_File);
+    __pyx_t_4 += 6;
+    __Pyx_GIVEREF(__pyx_kp_u_File);
+    PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_kp_u_File);
+    __pyx_t_9 = __Pyx_PyUnicode_Unicode(__pyx_v_py_path); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 787, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_9);
+    __pyx_t_8 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) > __pyx_t_8) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) : __pyx_t_8;
+    __pyx_t_4 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_9);
+    __Pyx_GIVEREF(__pyx_t_9);
+    PyTuple_SET_ITEM(__pyx_t_7, 1, __pyx_t_9);
+    __pyx_t_9 = 0;
+    __Pyx_INCREF(__pyx_kp_u__2);
+    __pyx_t_4 += 1;
+    __Pyx_GIVEREF(__pyx_kp_u__2);
+    PyTuple_SET_ITEM(__pyx_t_7, 2, __pyx_kp_u__2);
+    __pyx_t_9 = __Pyx_PyUnicode_Join(__pyx_t_7, 3, __pyx_t_4, __pyx_t_8); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 787, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_9);
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __pyx_t_7 = PyUnicode_AsUTF8String(((PyObject*)__pyx_t_9)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 787, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+    __Pyx_XDECREF_SET(__pyx_v_header_b, ((PyObject*)__pyx_t_7));
+    __pyx_t_7 = 0;
+
+    /* "src/multi_dirs_chunker.pyx":789
+ *         header_b = f"File: {py_path}\n".encode('utf-8')
  * 
  *         if pool.config.token_mode:             # <<<<<<<<<<<<<<
- *             entry_size = count_tokens(entry.content)
- *         else:
+ *             ######## TOKEN MODE ########
+ *             tokens = python_split_tokens(entry.content)
  */
     if (__pyx_v_pool->config->token_mode) {
 
-      /* "src/multi_dirs_chunker.pyx":659
- * 
+      /* "src/multi_dirs_chunker.pyx":791
  *         if pool.config.token_mode:
- *             entry_size = count_tokens(entry.content)             # <<<<<<<<<<<<<<
- *         else:
- *             entry_size = strlen(entry.content)
+ *             ######## TOKEN MODE ########
+ *             tokens = python_split_tokens(entry.content)             # <<<<<<<<<<<<<<
+ *             total_tokens = len(tokens)
+ *             idx = 0
  */
-      __pyx_t_6 = __pyx_f_3src_18multi_dirs_chunker_count_tokens(__pyx_v_entry->content); if (unlikely(__pyx_t_6 == ((size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 659, __pyx_L1_error)
-      __pyx_v_entry_size = __pyx_t_6;
+      __pyx_t_7 = __pyx_f_3src_18multi_dirs_chunker_python_split_tokens(__pyx_v_entry->content); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 791, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_7);
+      __Pyx_XDECREF_SET(__pyx_v_tokens, ((PyObject*)__pyx_t_7));
+      __pyx_t_7 = 0;
 
-      /* "src/multi_dirs_chunker.pyx":658
- *             continue
+      /* "src/multi_dirs_chunker.pyx":792
+ *             ######## TOKEN MODE ########
+ *             tokens = python_split_tokens(entry.content)
+ *             total_tokens = len(tokens)             # <<<<<<<<<<<<<<
+ *             idx = 0
+ * 
+ */
+      if (unlikely(__pyx_v_tokens == Py_None)) {
+        PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
+        __PYX_ERR(0, 792, __pyx_L1_error)
+      }
+      __pyx_t_4 = __Pyx_PyList_GET_SIZE(__pyx_v_tokens); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 792, __pyx_L1_error)
+      __pyx_v_total_tokens = __pyx_t_4;
+
+      /* "src/multi_dirs_chunker.pyx":793
+ *             tokens = python_split_tokens(entry.content)
+ *             total_tokens = len(tokens)
+ *             idx = 0             # <<<<<<<<<<<<<<
+ * 
+ *             if total_tokens == 0:
+ */
+      __pyx_v_idx = 0;
+
+      /* "src/multi_dirs_chunker.pyx":795
+ *             idx = 0
+ * 
+ *             if total_tokens == 0:             # <<<<<<<<<<<<<<
+ *                 # Just "File: path\n\n"
+ *                 empty_str = f"File: {py_path}\n\n"
+ */
+      __pyx_t_1 = (__pyx_v_total_tokens == 0);
+      if (__pyx_t_1) {
+
+        /* "src/multi_dirs_chunker.pyx":797
+ *             if total_tokens == 0:
+ *                 # Just "File: path\n\n"
+ *                 empty_str = f"File: {py_path}\n\n"             # <<<<<<<<<<<<<<
+ *                 empty_b = empty_str.encode('utf-8')
+ *                 empty_len = len(empty_b)
+ */
+        __pyx_t_7 = PyTuple_New(3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 797, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        __pyx_t_4 = 0;
+        __pyx_t_8 = 127;
+        __Pyx_INCREF(__pyx_kp_u_File);
+        __pyx_t_4 += 6;
+        __Pyx_GIVEREF(__pyx_kp_u_File);
+        PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_kp_u_File);
+        __pyx_t_9 = __Pyx_PyUnicode_Unicode(__pyx_v_py_path); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 797, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_9);
+        __pyx_t_8 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) > __pyx_t_8) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_9) : __pyx_t_8;
+        __pyx_t_4 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_9);
+        __Pyx_GIVEREF(__pyx_t_9);
+        PyTuple_SET_ITEM(__pyx_t_7, 1, __pyx_t_9);
+        __pyx_t_9 = 0;
+        __Pyx_INCREF(__pyx_kp_u__3);
+        __pyx_t_4 += 2;
+        __Pyx_GIVEREF(__pyx_kp_u__3);
+        PyTuple_SET_ITEM(__pyx_t_7, 2, __pyx_kp_u__3);
+        __pyx_t_9 = __Pyx_PyUnicode_Join(__pyx_t_7, 3, __pyx_t_4, __pyx_t_8); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 797, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_9);
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __Pyx_XDECREF_SET(__pyx_v_empty_str, ((PyObject*)__pyx_t_9));
+        __pyx_t_9 = 0;
+
+        /* "src/multi_dirs_chunker.pyx":798
+ *                 # Just "File: path\n\n"
+ *                 empty_str = f"File: {py_path}\n\n"
+ *                 empty_b = empty_str.encode('utf-8')             # <<<<<<<<<<<<<<
+ *                 empty_len = len(empty_b)
+ *                 if pool.config.whole_chunk_mode:
+ */
+        __pyx_t_9 = PyUnicode_AsUTF8String(__pyx_v_empty_str); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 798, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_9);
+        __Pyx_XDECREF_SET(__pyx_v_empty_b, ((PyObject*)__pyx_t_9));
+        __pyx_t_9 = 0;
+
+        /* "src/multi_dirs_chunker.pyx":799
+ *                 empty_str = f"File: {py_path}\n\n"
+ *                 empty_b = empty_str.encode('utf-8')
+ *                 empty_len = len(empty_b)             # <<<<<<<<<<<<<<
+ *                 if pool.config.whole_chunk_mode:
+ *                     write_chunk_single_file(<char*>empty_b, empty_len, aggregator_file)
+ */
+        if (unlikely(__pyx_v_empty_b == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
+          __PYX_ERR(0, 799, __pyx_L1_error)
+        }
+        __pyx_t_4 = __Pyx_PyBytes_GET_SIZE(__pyx_v_empty_b); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 799, __pyx_L1_error)
+        __pyx_v_empty_len = __pyx_t_4;
+
+        /* "src/multi_dirs_chunker.pyx":800
+ *                 empty_b = empty_str.encode('utf-8')
+ *                 empty_len = len(empty_b)
+ *                 if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
+ *                     write_chunk_single_file(<char*>empty_b, empty_len, aggregator_file)
+ *                 else:
+ */
+        if (__pyx_v_pool->config->whole_chunk_mode) {
+
+          /* "src/multi_dirs_chunker.pyx":801
+ *                 empty_len = len(empty_b)
+ *                 if pool.config.whole_chunk_mode:
+ *                     write_chunk_single_file(<char*>empty_b, empty_len, aggregator_file)             # <<<<<<<<<<<<<<
+ *                 else:
+ *                     write_chunk(<char*>empty_b, empty_len, chunk_number, pool.config)
+ */
+          if (unlikely(__pyx_v_empty_b == Py_None)) {
+            PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
+            __PYX_ERR(0, 801, __pyx_L1_error)
+          }
+          __pyx_t_10 = __Pyx_PyBytes_AsWritableString(__pyx_v_empty_b); if (unlikely((!__pyx_t_10) && PyErr_Occurred())) __PYX_ERR(0, 801, __pyx_L1_error)
+          __pyx_f_3src_18multi_dirs_chunker_write_chunk_single_file(((char *)__pyx_t_10), __pyx_v_empty_len, __pyx_v_aggregator_file); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 801, __pyx_L1_error)
+
+          /* "src/multi_dirs_chunker.pyx":800
+ *                 empty_b = empty_str.encode('utf-8')
+ *                 empty_len = len(empty_b)
+ *                 if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
+ *                     write_chunk_single_file(<char*>empty_b, empty_len, aggregator_file)
+ *                 else:
+ */
+          goto __pyx_L19;
+        }
+
+        /* "src/multi_dirs_chunker.pyx":803
+ *                     write_chunk_single_file(<char*>empty_b, empty_len, aggregator_file)
+ *                 else:
+ *                     write_chunk(<char*>empty_b, empty_len, chunk_number, pool.config)             # <<<<<<<<<<<<<<
+ *                     chunk_number += 1
+ *                 continue
+ */
+        /*else*/ {
+          if (unlikely(__pyx_v_empty_b == Py_None)) {
+            PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
+            __PYX_ERR(0, 803, __pyx_L1_error)
+          }
+          __pyx_t_10 = __Pyx_PyBytes_AsWritableString(__pyx_v_empty_b); if (unlikely((!__pyx_t_10) && PyErr_Occurred())) __PYX_ERR(0, 803, __pyx_L1_error)
+          __pyx_f_3src_18multi_dirs_chunker_write_chunk(((char *)__pyx_t_10), __pyx_v_empty_len, __pyx_v_chunk_number, __pyx_v_pool->config); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 803, __pyx_L1_error)
+
+          /* "src/multi_dirs_chunker.pyx":804
+ *                 else:
+ *                     write_chunk(<char*>empty_b, empty_len, chunk_number, pool.config)
+ *                     chunk_number += 1             # <<<<<<<<<<<<<<
+ *                 continue
+ * 
+ */
+          __pyx_v_chunk_number = (__pyx_v_chunk_number + 1);
+        }
+        __pyx_L19:;
+
+        /* "src/multi_dirs_chunker.pyx":805
+ *                     write_chunk(<char*>empty_b, empty_len, chunk_number, pool.config)
+ *                     chunk_number += 1
+ *                 continue             # <<<<<<<<<<<<<<
+ * 
+ *             while idx < total_tokens:
+ */
+        goto __pyx_L12_continue;
+
+        /* "src/multi_dirs_chunker.pyx":795
+ *             idx = 0
+ * 
+ *             if total_tokens == 0:             # <<<<<<<<<<<<<<
+ *                 # Just "File: path\n\n"
+ *                 empty_str = f"File: {py_path}\n\n"
+ */
+      }
+
+      /* "src/multi_dirs_chunker.pyx":807
+ *                 continue
+ * 
+ *             while idx < total_tokens:             # <<<<<<<<<<<<<<
+ *                 tokens_left = total_tokens - idx
+ *                 taking_tokens = tokens_left if tokens_left < chunk_size else chunk_size
+ */
+      while (1) {
+        __pyx_t_1 = (__pyx_v_idx < __pyx_v_total_tokens);
+        if (!__pyx_t_1) break;
+
+        /* "src/multi_dirs_chunker.pyx":808
+ * 
+ *             while idx < total_tokens:
+ *                 tokens_left = total_tokens - idx             # <<<<<<<<<<<<<<
+ *                 taking_tokens = tokens_left if tokens_left < chunk_size else chunk_size
+ *                 sub_list = tokens[idx : idx + taking_tokens]
+ */
+        __pyx_v_tokens_left = (__pyx_v_total_tokens - __pyx_v_idx);
+
+        /* "src/multi_dirs_chunker.pyx":809
+ *             while idx < total_tokens:
+ *                 tokens_left = total_tokens - idx
+ *                 taking_tokens = tokens_left if tokens_left < chunk_size else chunk_size             # <<<<<<<<<<<<<<
+ *                 sub_list = tokens[idx : idx + taking_tokens]
+ * 
+ */
+        __pyx_t_1 = (__pyx_v_tokens_left < __pyx_v_chunk_size);
+        if (__pyx_t_1) {
+          __pyx_t_11 = __pyx_v_tokens_left;
+        } else {
+          __pyx_t_11 = __pyx_v_chunk_size;
+        }
+        __pyx_v_taking_tokens = __pyx_t_11;
+
+        /* "src/multi_dirs_chunker.pyx":810
+ *                 tokens_left = total_tokens - idx
+ *                 taking_tokens = tokens_left if tokens_left < chunk_size else chunk_size
+ *                 sub_list = tokens[idx : idx + taking_tokens]             # <<<<<<<<<<<<<<
+ * 
+ *                 chunk_str = f"File: {py_path}\n{' '.join(sub_list)}\n"
+ */
+        if (unlikely(__pyx_v_tokens == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+          __PYX_ERR(0, 810, __pyx_L1_error)
+        }
+        __pyx_t_9 = __Pyx_PyList_GetSlice(__pyx_v_tokens, __pyx_v_idx, (__pyx_v_idx + __pyx_v_taking_tokens)); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 810, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_9);
+        __Pyx_XDECREF_SET(__pyx_v_sub_list, ((PyObject*)__pyx_t_9));
+        __pyx_t_9 = 0;
+
+        /* "src/multi_dirs_chunker.pyx":812
+ *                 sub_list = tokens[idx : idx + taking_tokens]
+ * 
+ *                 chunk_str = f"File: {py_path}\n{' '.join(sub_list)}\n"             # <<<<<<<<<<<<<<
+ *                 chunk_bytes = chunk_str.encode('utf-8')
+ *                 cb_len = len(chunk_bytes)
+ */
+        __pyx_t_9 = PyTuple_New(5); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 812, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_9);
+        __pyx_t_4 = 0;
+        __pyx_t_8 = 127;
+        __Pyx_INCREF(__pyx_kp_u_File);
+        __pyx_t_4 += 6;
+        __Pyx_GIVEREF(__pyx_kp_u_File);
+        PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_kp_u_File);
+        __pyx_t_7 = __Pyx_PyUnicode_Unicode(__pyx_v_py_path); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 812, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        __pyx_t_8 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_7) > __pyx_t_8) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_7) : __pyx_t_8;
+        __pyx_t_4 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_7);
+        __Pyx_GIVEREF(__pyx_t_7);
+        PyTuple_SET_ITEM(__pyx_t_9, 1, __pyx_t_7);
+        __pyx_t_7 = 0;
+        __Pyx_INCREF(__pyx_kp_u__2);
+        __pyx_t_4 += 1;
+        __Pyx_GIVEREF(__pyx_kp_u__2);
+        PyTuple_SET_ITEM(__pyx_t_9, 2, __pyx_kp_u__2);
+        __pyx_t_7 = PyUnicode_Join(__pyx_kp_u__4, __pyx_v_sub_list); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 812, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        __pyx_t_8 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_7) > __pyx_t_8) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_7) : __pyx_t_8;
+        __pyx_t_4 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_7);
+        __Pyx_GIVEREF(__pyx_t_7);
+        PyTuple_SET_ITEM(__pyx_t_9, 3, __pyx_t_7);
+        __pyx_t_7 = 0;
+        __Pyx_INCREF(__pyx_kp_u__2);
+        __pyx_t_4 += 1;
+        __Pyx_GIVEREF(__pyx_kp_u__2);
+        PyTuple_SET_ITEM(__pyx_t_9, 4, __pyx_kp_u__2);
+        __pyx_t_7 = __Pyx_PyUnicode_Join(__pyx_t_9, 5, __pyx_t_4, __pyx_t_8); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 812, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+        __Pyx_XDECREF_SET(__pyx_v_chunk_str, ((PyObject*)__pyx_t_7));
+        __pyx_t_7 = 0;
+
+        /* "src/multi_dirs_chunker.pyx":813
+ * 
+ *                 chunk_str = f"File: {py_path}\n{' '.join(sub_list)}\n"
+ *                 chunk_bytes = chunk_str.encode('utf-8')             # <<<<<<<<<<<<<<
+ *                 cb_len = len(chunk_bytes)
+ * 
+ */
+        __pyx_t_7 = PyUnicode_AsUTF8String(__pyx_v_chunk_str); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 813, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        __Pyx_XDECREF_SET(__pyx_v_chunk_bytes, ((PyObject*)__pyx_t_7));
+        __pyx_t_7 = 0;
+
+        /* "src/multi_dirs_chunker.pyx":814
+ *                 chunk_str = f"File: {py_path}\n{' '.join(sub_list)}\n"
+ *                 chunk_bytes = chunk_str.encode('utf-8')
+ *                 cb_len = len(chunk_bytes)             # <<<<<<<<<<<<<<
+ * 
+ *                 if pool.config.whole_chunk_mode:
+ */
+        if (unlikely(__pyx_v_chunk_bytes == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
+          __PYX_ERR(0, 814, __pyx_L1_error)
+        }
+        __pyx_t_4 = __Pyx_PyBytes_GET_SIZE(__pyx_v_chunk_bytes); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 814, __pyx_L1_error)
+        __pyx_v_cb_len = __pyx_t_4;
+
+        /* "src/multi_dirs_chunker.pyx":816
+ *                 cb_len = len(chunk_bytes)
+ * 
+ *                 if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
+ *                     write_chunk_single_file(<char*>chunk_bytes, cb_len, aggregator_file)
+ *                 else:
+ */
+        if (__pyx_v_pool->config->whole_chunk_mode) {
+
+          /* "src/multi_dirs_chunker.pyx":817
+ * 
+ *                 if pool.config.whole_chunk_mode:
+ *                     write_chunk_single_file(<char*>chunk_bytes, cb_len, aggregator_file)             # <<<<<<<<<<<<<<
+ *                 else:
+ *                     write_chunk(<char*>chunk_bytes, cb_len, chunk_number, pool.config)
+ */
+          if (unlikely(__pyx_v_chunk_bytes == Py_None)) {
+            PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
+            __PYX_ERR(0, 817, __pyx_L1_error)
+          }
+          __pyx_t_10 = __Pyx_PyBytes_AsWritableString(__pyx_v_chunk_bytes); if (unlikely((!__pyx_t_10) && PyErr_Occurred())) __PYX_ERR(0, 817, __pyx_L1_error)
+          __pyx_f_3src_18multi_dirs_chunker_write_chunk_single_file(((char *)__pyx_t_10), __pyx_v_cb_len, __pyx_v_aggregator_file); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 817, __pyx_L1_error)
+
+          /* "src/multi_dirs_chunker.pyx":816
+ *                 cb_len = len(chunk_bytes)
+ * 
+ *                 if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
+ *                     write_chunk_single_file(<char*>chunk_bytes, cb_len, aggregator_file)
+ *                 else:
+ */
+          goto __pyx_L22;
+        }
+
+        /* "src/multi_dirs_chunker.pyx":819
+ *                     write_chunk_single_file(<char*>chunk_bytes, cb_len, aggregator_file)
+ *                 else:
+ *                     write_chunk(<char*>chunk_bytes, cb_len, chunk_number, pool.config)             # <<<<<<<<<<<<<<
+ *                     chunk_number += 1
+ * 
+ */
+        /*else*/ {
+          if (unlikely(__pyx_v_chunk_bytes == Py_None)) {
+            PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
+            __PYX_ERR(0, 819, __pyx_L1_error)
+          }
+          __pyx_t_10 = __Pyx_PyBytes_AsWritableString(__pyx_v_chunk_bytes); if (unlikely((!__pyx_t_10) && PyErr_Occurred())) __PYX_ERR(0, 819, __pyx_L1_error)
+          __pyx_f_3src_18multi_dirs_chunker_write_chunk(((char *)__pyx_t_10), __pyx_v_cb_len, __pyx_v_chunk_number, __pyx_v_pool->config); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 819, __pyx_L1_error)
+
+          /* "src/multi_dirs_chunker.pyx":820
+ *                 else:
+ *                     write_chunk(<char*>chunk_bytes, cb_len, chunk_number, pool.config)
+ *                     chunk_number += 1             # <<<<<<<<<<<<<<
+ * 
+ *         else:
+ */
+          __pyx_v_chunk_number = (__pyx_v_chunk_number + 1);
+        }
+        __pyx_L22:;
+      }
+
+      /* "src/multi_dirs_chunker.pyx":789
+ *         header_b = f"File: {py_path}\n".encode('utf-8')
  * 
  *         if pool.config.token_mode:             # <<<<<<<<<<<<<<
- *             entry_size = count_tokens(entry.content)
- *         else:
+ *             ######## TOKEN MODE ########
+ *             tokens = python_split_tokens(entry.content)
  */
       goto __pyx_L17;
     }
 
-    /* "src/multi_dirs_chunker.pyx":661
- *             entry_size = count_tokens(entry.content)
+    /* "src/multi_dirs_chunker.pyx":824
  *         else:
- *             entry_size = strlen(entry.content)             # <<<<<<<<<<<<<<
- * 
- *         header_b = f"File: {entry.path}\n".encode("utf-8")
+ *             ######## BYTE MODE ########
+ *             file_len = strlen(entry.content)             # <<<<<<<<<<<<<<
+ *             header_len_ = len(header_b)
+ *             total_needed = header_len_ + file_len + sep_len
  */
     /*else*/ {
-      __pyx_v_entry_size = strlen(__pyx_v_entry->content);
-    }
-    __pyx_L17:;
+      __pyx_v_file_len = strlen(__pyx_v_entry->content);
 
-    /* "src/multi_dirs_chunker.pyx":663
- *             entry_size = strlen(entry.content)
- * 
- *         header_b = f"File: {entry.path}\n".encode("utf-8")             # <<<<<<<<<<<<<<
- *         header_len = len(header_b)
- *         sep_b = b"\n"
- */
-    __pyx_t_7 = PyTuple_New(3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 663, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_8 = 0;
-    __pyx_t_9 = 127;
-    __Pyx_INCREF(__pyx_kp_u_File);
-    __pyx_t_8 += 6;
-    __Pyx_GIVEREF(__pyx_kp_u_File);
-    PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_kp_u_File);
-    __pyx_t_10 = __Pyx_PyBytes_FromString(__pyx_v_entry->path); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 663, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_10);
-    __pyx_t_11 = __Pyx_PyObject_FormatSimple(__pyx_t_10, __pyx_empty_unicode); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 663, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_11);
-    __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-    __pyx_t_9 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) > __pyx_t_9) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_11) : __pyx_t_9;
-    __pyx_t_8 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_11);
-    __Pyx_GIVEREF(__pyx_t_11);
-    PyTuple_SET_ITEM(__pyx_t_7, 1, __pyx_t_11);
-    __pyx_t_11 = 0;
-    __Pyx_INCREF(__pyx_kp_u__2);
-    __pyx_t_8 += 1;
-    __Pyx_GIVEREF(__pyx_kp_u__2);
-    PyTuple_SET_ITEM(__pyx_t_7, 2, __pyx_kp_u__2);
-    __pyx_t_11 = __Pyx_PyUnicode_Join(__pyx_t_7, 3, __pyx_t_8, __pyx_t_9); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 663, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_11);
-    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-    __pyx_t_7 = PyUnicode_AsUTF8String(((PyObject*)__pyx_t_11)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 663, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_7);
-    __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    __Pyx_XDECREF_SET(__pyx_v_header_b, ((PyObject*)__pyx_t_7));
-    __pyx_t_7 = 0;
-
-    /* "src/multi_dirs_chunker.pyx":664
- * 
- *         header_b = f"File: {entry.path}\n".encode("utf-8")
- *         header_len = len(header_b)             # <<<<<<<<<<<<<<
- *         sep_b = b"\n"
- *         sep_len = len(sep_b)
- */
-    if (unlikely(__pyx_v_header_b == Py_None)) {
-      PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-      __PYX_ERR(0, 664, __pyx_L1_error)
-    }
-    __pyx_t_8 = __Pyx_PyBytes_GET_SIZE(__pyx_v_header_b); if (unlikely(__pyx_t_8 == ((Py_ssize_t)-1))) __PYX_ERR(0, 664, __pyx_L1_error)
-    __pyx_v_header_len = __pyx_t_8;
-
-    /* "src/multi_dirs_chunker.pyx":665
- *         header_b = f"File: {entry.path}\n".encode("utf-8")
- *         header_len = len(header_b)
- *         sep_b = b"\n"             # <<<<<<<<<<<<<<
- *         sep_len = len(sep_b)
- *         total_needed = header_len + entry_size + sep_len
- */
-    __Pyx_INCREF(__pyx_kp_b__2);
-    __Pyx_XDECREF_SET(__pyx_v_sep_b, __pyx_kp_b__2);
-
-    /* "src/multi_dirs_chunker.pyx":666
- *         header_len = len(header_b)
- *         sep_b = b"\n"
- *         sep_len = len(sep_b)             # <<<<<<<<<<<<<<
- *         total_needed = header_len + entry_size + sep_len
+      /* "src/multi_dirs_chunker.pyx":825
+ *             ######## BYTE MODE ########
+ *             file_len = strlen(entry.content)
+ *             header_len_ = len(header_b)             # <<<<<<<<<<<<<<
+ *             total_needed = header_len_ + file_len + sep_len
  * 
  */
-    __pyx_t_8 = __Pyx_PyBytes_GET_SIZE(__pyx_v_sep_b); if (unlikely(__pyx_t_8 == ((Py_ssize_t)-1))) __PYX_ERR(0, 666, __pyx_L1_error)
-    __pyx_v_sep_len = __pyx_t_8;
-
-    /* "src/multi_dirs_chunker.pyx":667
- *         sep_b = b"\n"
- *         sep_len = len(sep_b)
- *         total_needed = header_len + entry_size + sep_len             # <<<<<<<<<<<<<<
- * 
- *         if chunk_used > 0 and (chunk_used + total_needed > chunk_size):
- */
-    __pyx_v_total_needed = ((__pyx_v_header_len + __pyx_v_entry_size) + __pyx_v_sep_len);
-
-    /* "src/multi_dirs_chunker.pyx":669
- *         total_needed = header_len + entry_size + sep_len
- * 
- *         if chunk_used > 0 and (chunk_used + total_needed > chunk_size):             # <<<<<<<<<<<<<<
- *             if pool.config.whole_chunk_mode:
- *                 write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
- */
-    __pyx_t_2 = (__pyx_v_chunk_used > 0);
-    if (__pyx_t_2) {
-    } else {
-      __pyx_t_1 = __pyx_t_2;
-      goto __pyx_L19_bool_binop_done;
-    }
-    __pyx_t_2 = ((__pyx_v_chunk_used + __pyx_v_total_needed) > __pyx_v_chunk_size);
-    __pyx_t_1 = __pyx_t_2;
-    __pyx_L19_bool_binop_done:;
-    if (__pyx_t_1) {
-
-      /* "src/multi_dirs_chunker.pyx":670
- * 
- *         if chunk_used > 0 and (chunk_used + total_needed > chunk_size):
- *             if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
- *                 write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
- *             else:
- */
-      if (__pyx_v_pool->config->whole_chunk_mode) {
-
-        /* "src/multi_dirs_chunker.pyx":671
- *         if chunk_used > 0 and (chunk_used + total_needed > chunk_size):
- *             if pool.config.whole_chunk_mode:
- *                 write_chunk_single_file(current_chunk, chunk_used, aggregator_file)             # <<<<<<<<<<<<<<
- *             else:
- *                 write_chunk(current_chunk, chunk_used, chunk_number, pool.config)
- */
-        __pyx_f_3src_18multi_dirs_chunker_write_chunk_single_file(__pyx_v_current_chunk, __pyx_v_chunk_used, __pyx_v_aggregator_file); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 671, __pyx_L1_error)
-
-        /* "src/multi_dirs_chunker.pyx":670
- * 
- *         if chunk_used > 0 and (chunk_used + total_needed > chunk_size):
- *             if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
- *                 write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
- *             else:
- */
-        goto __pyx_L21;
+      if (unlikely(__pyx_v_header_b == Py_None)) {
+        PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
+        __PYX_ERR(0, 825, __pyx_L1_error)
       }
+      __pyx_t_4 = __Pyx_PyBytes_GET_SIZE(__pyx_v_header_b); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 825, __pyx_L1_error)
+      __pyx_v_header_len_ = __pyx_t_4;
 
-      /* "src/multi_dirs_chunker.pyx":673
- *                 write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
- *             else:
- *                 write_chunk(current_chunk, chunk_used, chunk_number, pool.config)             # <<<<<<<<<<<<<<
- *             chunk_number += 1
- *             chunk_used = 0
- */
-      /*else*/ {
-        __pyx_f_3src_18multi_dirs_chunker_write_chunk(__pyx_v_current_chunk, __pyx_v_chunk_used, __pyx_v_chunk_number, __pyx_v_pool->config); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 673, __pyx_L1_error)
-      }
-      __pyx_L21:;
-
-      /* "src/multi_dirs_chunker.pyx":674
- *             else:
- *                 write_chunk(current_chunk, chunk_used, chunk_number, pool.config)
- *             chunk_number += 1             # <<<<<<<<<<<<<<
- *             chunk_used = 0
+      /* "src/multi_dirs_chunker.pyx":826
+ *             file_len = strlen(entry.content)
+ *             header_len_ = len(header_b)
+ *             total_needed = header_len_ + file_len + sep_len             # <<<<<<<<<<<<<<
  * 
+ *             if chunk_used > 0 and (chunk_used + total_needed > chunk_size):
  */
-      __pyx_v_chunk_number = (__pyx_v_chunk_number + 1);
+      __pyx_v_total_needed = ((__pyx_v_header_len_ + __pyx_v_file_len) + __pyx_v_sep_len);
 
-      /* "src/multi_dirs_chunker.pyx":675
- *                 write_chunk(current_chunk, chunk_used, chunk_number, pool.config)
- *             chunk_number += 1
- *             chunk_used = 0             # <<<<<<<<<<<<<<
+      /* "src/multi_dirs_chunker.pyx":828
+ *             total_needed = header_len_ + file_len + sep_len
  * 
- *         if total_needed > chunk_size:
- */
-      __pyx_v_chunk_used = 0;
-
-      /* "src/multi_dirs_chunker.pyx":669
- *         total_needed = header_len + entry_size + sep_len
- * 
- *         if chunk_used > 0 and (chunk_used + total_needed > chunk_size):             # <<<<<<<<<<<<<<
- *             if pool.config.whole_chunk_mode:
- *                 write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
- */
-    }
-
-    /* "src/multi_dirs_chunker.pyx":677
- *             chunk_used = 0
- * 
- *         if total_needed > chunk_size:             # <<<<<<<<<<<<<<
- *             if chunk_used > 0:
- *                 if pool.config.whole_chunk_mode:
- */
-    __pyx_t_1 = (__pyx_v_total_needed > __pyx_v_chunk_size);
-    if (__pyx_t_1) {
-
-      /* "src/multi_dirs_chunker.pyx":678
- * 
- *         if total_needed > chunk_size:
- *             if chunk_used > 0:             # <<<<<<<<<<<<<<
+ *             if chunk_used > 0 and (chunk_used + total_needed > chunk_size):             # <<<<<<<<<<<<<<
  *                 if pool.config.whole_chunk_mode:
  *                     write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
  */
-      __pyx_t_1 = (__pyx_v_chunk_used > 0);
+      __pyx_t_2 = (__pyx_v_chunk_used > 0);
+      if (__pyx_t_2) {
+      } else {
+        __pyx_t_1 = __pyx_t_2;
+        goto __pyx_L24_bool_binop_done;
+      }
+      __pyx_t_2 = ((__pyx_v_chunk_used + __pyx_v_total_needed) > __pyx_v_chunk_size);
+      __pyx_t_1 = __pyx_t_2;
+      __pyx_L24_bool_binop_done:;
       if (__pyx_t_1) {
 
-        /* "src/multi_dirs_chunker.pyx":679
- *         if total_needed > chunk_size:
- *             if chunk_used > 0:
+        /* "src/multi_dirs_chunker.pyx":829
+ * 
+ *             if chunk_used > 0 and (chunk_used + total_needed > chunk_size):
  *                 if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
  *                     write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
  *                 else:
  */
         if (__pyx_v_pool->config->whole_chunk_mode) {
 
-          /* "src/multi_dirs_chunker.pyx":680
- *             if chunk_used > 0:
+          /* "src/multi_dirs_chunker.pyx":830
+ *             if chunk_used > 0 and (chunk_used + total_needed > chunk_size):
  *                 if pool.config.whole_chunk_mode:
  *                     write_chunk_single_file(current_chunk, chunk_used, aggregator_file)             # <<<<<<<<<<<<<<
  *                 else:
  *                     write_chunk(current_chunk, chunk_used, chunk_number, pool.config)
  */
-          __pyx_f_3src_18multi_dirs_chunker_write_chunk_single_file(__pyx_v_current_chunk, __pyx_v_chunk_used, __pyx_v_aggregator_file); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 680, __pyx_L1_error)
+          __pyx_f_3src_18multi_dirs_chunker_write_chunk_single_file(__pyx_v_current_chunk, __pyx_v_chunk_used, __pyx_v_aggregator_file); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 830, __pyx_L1_error)
 
-          /* "src/multi_dirs_chunker.pyx":679
- *         if total_needed > chunk_size:
- *             if chunk_used > 0:
+          /* "src/multi_dirs_chunker.pyx":829
+ * 
+ *             if chunk_used > 0 and (chunk_used + total_needed > chunk_size):
  *                 if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
  *                     write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
  *                 else:
  */
-          goto __pyx_L24;
+          goto __pyx_L26;
         }
 
-        /* "src/multi_dirs_chunker.pyx":682
+        /* "src/multi_dirs_chunker.pyx":832
  *                     write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
  *                 else:
  *                     write_chunk(current_chunk, chunk_used, chunk_number, pool.config)             # <<<<<<<<<<<<<<
@@ -7913,11 +8818,11 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
  *                 chunk_used = 0
  */
         /*else*/ {
-          __pyx_f_3src_18multi_dirs_chunker_write_chunk(__pyx_v_current_chunk, __pyx_v_chunk_used, __pyx_v_chunk_number, __pyx_v_pool->config); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 682, __pyx_L1_error)
+          __pyx_f_3src_18multi_dirs_chunker_write_chunk(__pyx_v_current_chunk, __pyx_v_chunk_used, __pyx_v_chunk_number, __pyx_v_pool->config); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 832, __pyx_L1_error)
         }
-        __pyx_L24:;
+        __pyx_L26:;
 
-        /* "src/multi_dirs_chunker.pyx":683
+        /* "src/multi_dirs_chunker.pyx":833
  *                 else:
  *                     write_chunk(current_chunk, chunk_used, chunk_number, pool.config)
  *                 chunk_number += 1             # <<<<<<<<<<<<<<
@@ -7926,328 +8831,425 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
  */
         __pyx_v_chunk_number = (__pyx_v_chunk_number + 1);
 
-        /* "src/multi_dirs_chunker.pyx":684
+        /* "src/multi_dirs_chunker.pyx":834
  *                     write_chunk(current_chunk, chunk_used, chunk_number, pool.config)
  *                 chunk_number += 1
  *                 chunk_used = 0             # <<<<<<<<<<<<<<
  * 
- *             content_pos = 0
+ *             if total_needed > chunk_size:
  */
         __pyx_v_chunk_used = 0;
 
-        /* "src/multi_dirs_chunker.pyx":678
+        /* "src/multi_dirs_chunker.pyx":828
+ *             total_needed = header_len_ + file_len + sep_len
  * 
- *         if total_needed > chunk_size:
- *             if chunk_used > 0:             # <<<<<<<<<<<<<<
+ *             if chunk_used > 0 and (chunk_used + total_needed > chunk_size):             # <<<<<<<<<<<<<<
  *                 if pool.config.whole_chunk_mode:
  *                     write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
  */
       }
 
-      /* "src/multi_dirs_chunker.pyx":686
+      /* "src/multi_dirs_chunker.pyx":836
  *                 chunk_used = 0
  * 
- *             content_pos = 0             # <<<<<<<<<<<<<<
- *             remaining = entry_size
- *             while remaining > 0:
+ *             if total_needed > chunk_size:             # <<<<<<<<<<<<<<
+ *                 # flush leftover
+ *                 if chunk_used > 0:
  */
-      __pyx_v_content_pos = 0;
+      __pyx_t_1 = (__pyx_v_total_needed > __pyx_v_chunk_size);
+      if (__pyx_t_1) {
 
-      /* "src/multi_dirs_chunker.pyx":687
- * 
- *             content_pos = 0
- *             remaining = entry_size             # <<<<<<<<<<<<<<
- *             while remaining > 0:
- *                 can_take = chunk_size - header_len - sep_len
+        /* "src/multi_dirs_chunker.pyx":838
+ *             if total_needed > chunk_size:
+ *                 # flush leftover
+ *                 if chunk_used > 0:             # <<<<<<<<<<<<<<
+ *                     if pool.config.whole_chunk_mode:
+ *                         write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
  */
-      __pyx_v_remaining = __pyx_v_entry_size;
-
-      /* "src/multi_dirs_chunker.pyx":688
- *             content_pos = 0
- *             remaining = entry_size
- *             while remaining > 0:             # <<<<<<<<<<<<<<
- *                 can_take = chunk_size - header_len - sep_len
- *                 taking = can_take if remaining > can_take else remaining
- */
-      while (1) {
-        __pyx_t_1 = (__pyx_v_remaining > 0);
-        if (!__pyx_t_1) break;
-
-        /* "src/multi_dirs_chunker.pyx":689
- *             remaining = entry_size
- *             while remaining > 0:
- *                 can_take = chunk_size - header_len - sep_len             # <<<<<<<<<<<<<<
- *                 taking = can_take if remaining > can_take else remaining
- * 
- */
-        __pyx_v_can_take = ((__pyx_v_chunk_size - __pyx_v_header_len) - __pyx_v_sep_len);
-
-        /* "src/multi_dirs_chunker.pyx":690
- *             while remaining > 0:
- *                 can_take = chunk_size - header_len - sep_len
- *                 taking = can_take if remaining > can_take else remaining             # <<<<<<<<<<<<<<
- * 
- *                 memcpy(current_chunk + chunk_used, <char*>header_b, header_len)
- */
-        __pyx_t_1 = (__pyx_v_remaining > __pyx_v_can_take);
+        __pyx_t_1 = (__pyx_v_chunk_used > 0);
         if (__pyx_t_1) {
-          __pyx_t_6 = __pyx_v_can_take;
-        } else {
-          __pyx_t_6 = __pyx_v_remaining;
-        }
-        __pyx_v_taking = __pyx_t_6;
 
-        /* "src/multi_dirs_chunker.pyx":692
- *                 taking = can_take if remaining > can_take else remaining
- * 
- *                 memcpy(current_chunk + chunk_used, <char*>header_b, header_len)             # <<<<<<<<<<<<<<
- * 
- *                 chunk_used += header_len
+          /* "src/multi_dirs_chunker.pyx":839
+ *                 # flush leftover
+ *                 if chunk_used > 0:
+ *                     if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
+ *                         write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
+ *                     else:
  */
+          if (__pyx_v_pool->config->whole_chunk_mode) {
+
+            /* "src/multi_dirs_chunker.pyx":840
+ *                 if chunk_used > 0:
+ *                     if pool.config.whole_chunk_mode:
+ *                         write_chunk_single_file(current_chunk, chunk_used, aggregator_file)             # <<<<<<<<<<<<<<
+ *                     else:
+ *                         write_chunk(current_chunk, chunk_used, chunk_number, pool.config)
+ */
+            __pyx_f_3src_18multi_dirs_chunker_write_chunk_single_file(__pyx_v_current_chunk, __pyx_v_chunk_used, __pyx_v_aggregator_file); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 840, __pyx_L1_error)
+
+            /* "src/multi_dirs_chunker.pyx":839
+ *                 # flush leftover
+ *                 if chunk_used > 0:
+ *                     if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
+ *                         write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
+ *                     else:
+ */
+            goto __pyx_L29;
+          }
+
+          /* "src/multi_dirs_chunker.pyx":842
+ *                         write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
+ *                     else:
+ *                         write_chunk(current_chunk, chunk_used, chunk_number, pool.config)             # <<<<<<<<<<<<<<
+ *                     chunk_number += 1
+ *                     chunk_used = 0
+ */
+          /*else*/ {
+            __pyx_f_3src_18multi_dirs_chunker_write_chunk(__pyx_v_current_chunk, __pyx_v_chunk_used, __pyx_v_chunk_number, __pyx_v_pool->config); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 842, __pyx_L1_error)
+          }
+          __pyx_L29:;
+
+          /* "src/multi_dirs_chunker.pyx":843
+ *                     else:
+ *                         write_chunk(current_chunk, chunk_used, chunk_number, pool.config)
+ *                     chunk_number += 1             # <<<<<<<<<<<<<<
+ *                     chunk_used = 0
+ * 
+ */
+          __pyx_v_chunk_number = (__pyx_v_chunk_number + 1);
+
+          /* "src/multi_dirs_chunker.pyx":844
+ *                         write_chunk(current_chunk, chunk_used, chunk_number, pool.config)
+ *                     chunk_number += 1
+ *                     chunk_used = 0             # <<<<<<<<<<<<<<
+ * 
+ *                 content_pos = 0
+ */
+          __pyx_v_chunk_used = 0;
+
+          /* "src/multi_dirs_chunker.pyx":838
+ *             if total_needed > chunk_size:
+ *                 # flush leftover
+ *                 if chunk_used > 0:             # <<<<<<<<<<<<<<
+ *                     if pool.config.whole_chunk_mode:
+ *                         write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
+ */
+        }
+
+        /* "src/multi_dirs_chunker.pyx":846
+ *                     chunk_used = 0
+ * 
+ *                 content_pos = 0             # <<<<<<<<<<<<<<
+ *                 remaining = file_len
+ *                 while remaining > 0:
+ */
+        __pyx_v_content_pos = 0;
+
+        /* "src/multi_dirs_chunker.pyx":847
+ * 
+ *                 content_pos = 0
+ *                 remaining = file_len             # <<<<<<<<<<<<<<
+ *                 while remaining > 0:
+ *                     can_take = chunk_size - header_len_ - sep_len
+ */
+        __pyx_v_remaining = __pyx_v_file_len;
+
+        /* "src/multi_dirs_chunker.pyx":848
+ *                 content_pos = 0
+ *                 remaining = file_len
+ *                 while remaining > 0:             # <<<<<<<<<<<<<<
+ *                     can_take = chunk_size - header_len_ - sep_len
+ *                     taking_bytes = can_take if (remaining > can_take) else remaining
+ */
+        while (1) {
+          __pyx_t_1 = (__pyx_v_remaining > 0);
+          if (!__pyx_t_1) break;
+
+          /* "src/multi_dirs_chunker.pyx":849
+ *                 remaining = file_len
+ *                 while remaining > 0:
+ *                     can_take = chunk_size - header_len_ - sep_len             # <<<<<<<<<<<<<<
+ *                     taking_bytes = can_take if (remaining > can_take) else remaining
+ * 
+ */
+          __pyx_v_can_take = ((__pyx_v_chunk_size - __pyx_v_header_len_) - __pyx_v_sep_len);
+
+          /* "src/multi_dirs_chunker.pyx":850
+ *                 while remaining > 0:
+ *                     can_take = chunk_size - header_len_ - sep_len
+ *                     taking_bytes = can_take if (remaining > can_take) else remaining             # <<<<<<<<<<<<<<
+ * 
+ *                     memcpy(current_chunk + chunk_used, <char*>header_b, header_len_)
+ */
+          __pyx_t_1 = (__pyx_v_remaining > __pyx_v_can_take);
+          if (__pyx_t_1) {
+            __pyx_t_11 = __pyx_v_can_take;
+          } else {
+            __pyx_t_11 = __pyx_v_remaining;
+          }
+          __pyx_v_taking_bytes = __pyx_t_11;
+
+          /* "src/multi_dirs_chunker.pyx":852
+ *                     taking_bytes = can_take if (remaining > can_take) else remaining
+ * 
+ *                     memcpy(current_chunk + chunk_used, <char*>header_b, header_len_)             # <<<<<<<<<<<<<<
+ *                     chunk_used += header_len_
+ * 
+ */
+          if (unlikely(__pyx_v_header_b == Py_None)) {
+            PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
+            __PYX_ERR(0, 852, __pyx_L1_error)
+          }
+          __pyx_t_10 = __Pyx_PyBytes_AsWritableString(__pyx_v_header_b); if (unlikely((!__pyx_t_10) && PyErr_Occurred())) __PYX_ERR(0, 852, __pyx_L1_error)
+          (void)(memcpy((__pyx_v_current_chunk + __pyx_v_chunk_used), ((char *)__pyx_t_10), __pyx_v_header_len_));
+
+          /* "src/multi_dirs_chunker.pyx":853
+ * 
+ *                     memcpy(current_chunk + chunk_used, <char*>header_b, header_len_)
+ *                     chunk_used += header_len_             # <<<<<<<<<<<<<<
+ * 
+ *                     memcpy(current_chunk + chunk_used,
+ */
+          __pyx_v_chunk_used = (__pyx_v_chunk_used + __pyx_v_header_len_);
+
+          /* "src/multi_dirs_chunker.pyx":855
+ *                     chunk_used += header_len_
+ * 
+ *                     memcpy(current_chunk + chunk_used,             # <<<<<<<<<<<<<<
+ *                            entry.content + content_pos, taking_bytes)
+ *                     chunk_used += taking_bytes
+ */
+          (void)(memcpy((__pyx_v_current_chunk + __pyx_v_chunk_used), (__pyx_v_entry->content + __pyx_v_content_pos), __pyx_v_taking_bytes));
+
+          /* "src/multi_dirs_chunker.pyx":857
+ *                     memcpy(current_chunk + chunk_used,
+ *                            entry.content + content_pos, taking_bytes)
+ *                     chunk_used += taking_bytes             # <<<<<<<<<<<<<<
+ * 
+ *                     memcpy(current_chunk + chunk_used, <char*>sep_b, sep_len)
+ */
+          __pyx_v_chunk_used = (__pyx_v_chunk_used + __pyx_v_taking_bytes);
+
+          /* "src/multi_dirs_chunker.pyx":859
+ *                     chunk_used += taking_bytes
+ * 
+ *                     memcpy(current_chunk + chunk_used, <char*>sep_b, sep_len)             # <<<<<<<<<<<<<<
+ *                     chunk_used += sep_len
+ * 
+ */
+          __pyx_t_10 = __Pyx_PyBytes_AsWritableString(__pyx_v_sep_b); if (unlikely((!__pyx_t_10) && PyErr_Occurred())) __PYX_ERR(0, 859, __pyx_L1_error)
+          (void)(memcpy((__pyx_v_current_chunk + __pyx_v_chunk_used), ((char *)__pyx_t_10), __pyx_v_sep_len));
+
+          /* "src/multi_dirs_chunker.pyx":860
+ * 
+ *                     memcpy(current_chunk + chunk_used, <char*>sep_b, sep_len)
+ *                     chunk_used += sep_len             # <<<<<<<<<<<<<<
+ * 
+ *                     if pool.config.whole_chunk_mode:
+ */
+          __pyx_v_chunk_used = (__pyx_v_chunk_used + __pyx_v_sep_len);
+
+          /* "src/multi_dirs_chunker.pyx":862
+ *                     chunk_used += sep_len
+ * 
+ *                     if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
+ *                         write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
+ *                     else:
+ */
+          if (__pyx_v_pool->config->whole_chunk_mode) {
+
+            /* "src/multi_dirs_chunker.pyx":863
+ * 
+ *                     if pool.config.whole_chunk_mode:
+ *                         write_chunk_single_file(current_chunk, chunk_used, aggregator_file)             # <<<<<<<<<<<<<<
+ *                     else:
+ *                         write_chunk(current_chunk, chunk_used, chunk_number, pool.config)
+ */
+            __pyx_f_3src_18multi_dirs_chunker_write_chunk_single_file(__pyx_v_current_chunk, __pyx_v_chunk_used, __pyx_v_aggregator_file); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 863, __pyx_L1_error)
+
+            /* "src/multi_dirs_chunker.pyx":862
+ *                     chunk_used += sep_len
+ * 
+ *                     if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
+ *                         write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
+ *                     else:
+ */
+            goto __pyx_L32;
+          }
+
+          /* "src/multi_dirs_chunker.pyx":865
+ *                         write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
+ *                     else:
+ *                         write_chunk(current_chunk, chunk_used, chunk_number, pool.config)             # <<<<<<<<<<<<<<
+ *                     chunk_number += 1
+ * 
+ */
+          /*else*/ {
+            __pyx_f_3src_18multi_dirs_chunker_write_chunk(__pyx_v_current_chunk, __pyx_v_chunk_used, __pyx_v_chunk_number, __pyx_v_pool->config); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 865, __pyx_L1_error)
+          }
+          __pyx_L32:;
+
+          /* "src/multi_dirs_chunker.pyx":866
+ *                     else:
+ *                         write_chunk(current_chunk, chunk_used, chunk_number, pool.config)
+ *                     chunk_number += 1             # <<<<<<<<<<<<<<
+ * 
+ *                     content_pos += taking_bytes
+ */
+          __pyx_v_chunk_number = (__pyx_v_chunk_number + 1);
+
+          /* "src/multi_dirs_chunker.pyx":868
+ *                     chunk_number += 1
+ * 
+ *                     content_pos += taking_bytes             # <<<<<<<<<<<<<<
+ *                     remaining -= taking_bytes
+ *                     chunk_used = 0
+ */
+          __pyx_v_content_pos = (__pyx_v_content_pos + __pyx_v_taking_bytes);
+
+          /* "src/multi_dirs_chunker.pyx":869
+ * 
+ *                     content_pos += taking_bytes
+ *                     remaining -= taking_bytes             # <<<<<<<<<<<<<<
+ *                     chunk_used = 0
+ * 
+ */
+          __pyx_v_remaining = (__pyx_v_remaining - __pyx_v_taking_bytes);
+
+          /* "src/multi_dirs_chunker.pyx":870
+ *                     content_pos += taking_bytes
+ *                     remaining -= taking_bytes
+ *                     chunk_used = 0             # <<<<<<<<<<<<<<
+ * 
+ *             else:
+ */
+          __pyx_v_chunk_used = 0;
+        }
+
+        /* "src/multi_dirs_chunker.pyx":836
+ *                 chunk_used = 0
+ * 
+ *             if total_needed > chunk_size:             # <<<<<<<<<<<<<<
+ *                 # flush leftover
+ *                 if chunk_used > 0:
+ */
+        goto __pyx_L27;
+      }
+
+      /* "src/multi_dirs_chunker.pyx":874
+ *             else:
+ *                 # fits in chunk
+ *                 memcpy(current_chunk + chunk_used, <char*>header_b, header_len_)             # <<<<<<<<<<<<<<
+ *                 chunk_used += header_len_
+ * 
+ */
+      /*else*/ {
         if (unlikely(__pyx_v_header_b == Py_None)) {
           PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
-          __PYX_ERR(0, 692, __pyx_L1_error)
+          __PYX_ERR(0, 874, __pyx_L1_error)
         }
-        __pyx_t_12 = __Pyx_PyBytes_AsWritableString(__pyx_v_header_b); if (unlikely((!__pyx_t_12) && PyErr_Occurred())) __PYX_ERR(0, 692, __pyx_L1_error)
-        (void)(memcpy((__pyx_v_current_chunk + __pyx_v_chunk_used), ((char *)__pyx_t_12), __pyx_v_header_len));
+        __pyx_t_10 = __Pyx_PyBytes_AsWritableString(__pyx_v_header_b); if (unlikely((!__pyx_t_10) && PyErr_Occurred())) __PYX_ERR(0, 874, __pyx_L1_error)
+        (void)(memcpy((__pyx_v_current_chunk + __pyx_v_chunk_used), ((char *)__pyx_t_10), __pyx_v_header_len_));
 
-        /* "src/multi_dirs_chunker.pyx":694
- *                 memcpy(current_chunk + chunk_used, <char*>header_b, header_len)
+        /* "src/multi_dirs_chunker.pyx":875
+ *                 # fits in chunk
+ *                 memcpy(current_chunk + chunk_used, <char*>header_b, header_len_)
+ *                 chunk_used += header_len_             # <<<<<<<<<<<<<<
  * 
- *                 chunk_used += header_len             # <<<<<<<<<<<<<<
- * 
- *                 memcpy(current_chunk + chunk_used, entry.content + content_pos, taking)
+ *                 memcpy(current_chunk + chunk_used, entry.content, file_len)
  */
-        __pyx_v_chunk_used = (__pyx_v_chunk_used + __pyx_v_header_len);
+        __pyx_v_chunk_used = (__pyx_v_chunk_used + __pyx_v_header_len_);
 
-        /* "src/multi_dirs_chunker.pyx":696
- *                 chunk_used += header_len
+        /* "src/multi_dirs_chunker.pyx":877
+ *                 chunk_used += header_len_
  * 
- *                 memcpy(current_chunk + chunk_used, entry.content + content_pos, taking)             # <<<<<<<<<<<<<<
- *                 chunk_used += taking
+ *                 memcpy(current_chunk + chunk_used, entry.content, file_len)             # <<<<<<<<<<<<<<
+ *                 chunk_used += file_len
  * 
  */
-        (void)(memcpy((__pyx_v_current_chunk + __pyx_v_chunk_used), (__pyx_v_entry->content + __pyx_v_content_pos), __pyx_v_taking));
+        (void)(memcpy((__pyx_v_current_chunk + __pyx_v_chunk_used), __pyx_v_entry->content, __pyx_v_file_len));
 
-        /* "src/multi_dirs_chunker.pyx":697
+        /* "src/multi_dirs_chunker.pyx":878
  * 
- *                 memcpy(current_chunk + chunk_used, entry.content + content_pos, taking)
- *                 chunk_used += taking             # <<<<<<<<<<<<<<
+ *                 memcpy(current_chunk + chunk_used, entry.content, file_len)
+ *                 chunk_used += file_len             # <<<<<<<<<<<<<<
  * 
  *                 memcpy(current_chunk + chunk_used, <char*>sep_b, sep_len)
  */
-        __pyx_v_chunk_used = (__pyx_v_chunk_used + __pyx_v_taking);
+        __pyx_v_chunk_used = (__pyx_v_chunk_used + __pyx_v_file_len);
 
-        /* "src/multi_dirs_chunker.pyx":699
- *                 chunk_used += taking
+        /* "src/multi_dirs_chunker.pyx":880
+ *                 chunk_used += file_len
  * 
  *                 memcpy(current_chunk + chunk_used, <char*>sep_b, sep_len)             # <<<<<<<<<<<<<<
  *                 chunk_used += sep_len
  * 
  */
-        __pyx_t_12 = __Pyx_PyBytes_AsWritableString(__pyx_v_sep_b); if (unlikely((!__pyx_t_12) && PyErr_Occurred())) __PYX_ERR(0, 699, __pyx_L1_error)
-        (void)(memcpy((__pyx_v_current_chunk + __pyx_v_chunk_used), ((char *)__pyx_t_12), __pyx_v_sep_len));
+        __pyx_t_10 = __Pyx_PyBytes_AsWritableString(__pyx_v_sep_b); if (unlikely((!__pyx_t_10) && PyErr_Occurred())) __PYX_ERR(0, 880, __pyx_L1_error)
+        (void)(memcpy((__pyx_v_current_chunk + __pyx_v_chunk_used), ((char *)__pyx_t_10), __pyx_v_sep_len));
 
-        /* "src/multi_dirs_chunker.pyx":700
+        /* "src/multi_dirs_chunker.pyx":881
  * 
  *                 memcpy(current_chunk + chunk_used, <char*>sep_b, sep_len)
  *                 chunk_used += sep_len             # <<<<<<<<<<<<<<
  * 
- *                 if pool.config.whole_chunk_mode:
+ *     # finalize for byte mode
  */
         __pyx_v_chunk_used = (__pyx_v_chunk_used + __pyx_v_sep_len);
-
-        /* "src/multi_dirs_chunker.pyx":702
- *                 chunk_used += sep_len
- * 
- *                 if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
- *                     write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
- *                 else:
- */
-        if (__pyx_v_pool->config->whole_chunk_mode) {
-
-          /* "src/multi_dirs_chunker.pyx":703
- * 
- *                 if pool.config.whole_chunk_mode:
- *                     write_chunk_single_file(current_chunk, chunk_used, aggregator_file)             # <<<<<<<<<<<<<<
- *                 else:
- *                     write_chunk(current_chunk, chunk_used, chunk_number, pool.config)
- */
-          __pyx_f_3src_18multi_dirs_chunker_write_chunk_single_file(__pyx_v_current_chunk, __pyx_v_chunk_used, __pyx_v_aggregator_file); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 703, __pyx_L1_error)
-
-          /* "src/multi_dirs_chunker.pyx":702
- *                 chunk_used += sep_len
- * 
- *                 if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
- *                     write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
- *                 else:
- */
-          goto __pyx_L27;
-        }
-
-        /* "src/multi_dirs_chunker.pyx":705
- *                     write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
- *                 else:
- *                     write_chunk(current_chunk, chunk_used, chunk_number, pool.config)             # <<<<<<<<<<<<<<
- *                 chunk_number += 1
- *                 content_pos += taking
- */
-        /*else*/ {
-          __pyx_f_3src_18multi_dirs_chunker_write_chunk(__pyx_v_current_chunk, __pyx_v_chunk_used, __pyx_v_chunk_number, __pyx_v_pool->config); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 705, __pyx_L1_error)
-        }
-        __pyx_L27:;
-
-        /* "src/multi_dirs_chunker.pyx":706
- *                 else:
- *                     write_chunk(current_chunk, chunk_used, chunk_number, pool.config)
- *                 chunk_number += 1             # <<<<<<<<<<<<<<
- *                 content_pos += taking
- *                 remaining -= taking
- */
-        __pyx_v_chunk_number = (__pyx_v_chunk_number + 1);
-
-        /* "src/multi_dirs_chunker.pyx":707
- *                     write_chunk(current_chunk, chunk_used, chunk_number, pool.config)
- *                 chunk_number += 1
- *                 content_pos += taking             # <<<<<<<<<<<<<<
- *                 remaining -= taking
- *                 chunk_used = 0
- */
-        __pyx_v_content_pos = (__pyx_v_content_pos + __pyx_v_taking);
-
-        /* "src/multi_dirs_chunker.pyx":708
- *                 chunk_number += 1
- *                 content_pos += taking
- *                 remaining -= taking             # <<<<<<<<<<<<<<
- *                 chunk_used = 0
- *         else:
- */
-        __pyx_v_remaining = (__pyx_v_remaining - __pyx_v_taking);
-
-        /* "src/multi_dirs_chunker.pyx":709
- *                 content_pos += taking
- *                 remaining -= taking
- *                 chunk_used = 0             # <<<<<<<<<<<<<<
- *         else:
- *             memcpy(current_chunk + chunk_used, <char*>header_b, header_len)
- */
-        __pyx_v_chunk_used = 0;
       }
-
-      /* "src/multi_dirs_chunker.pyx":677
- *             chunk_used = 0
- * 
- *         if total_needed > chunk_size:             # <<<<<<<<<<<<<<
- *             if chunk_used > 0:
- *                 if pool.config.whole_chunk_mode:
- */
-      goto __pyx_L22;
+      __pyx_L27:;
     }
-
-    /* "src/multi_dirs_chunker.pyx":711
- *                 chunk_used = 0
- *         else:
- *             memcpy(current_chunk + chunk_used, <char*>header_b, header_len)             # <<<<<<<<<<<<<<
- * 
- *             chunk_used += header_len
- */
-    /*else*/ {
-      if (unlikely(__pyx_v_header_b == Py_None)) {
-        PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
-        __PYX_ERR(0, 711, __pyx_L1_error)
-      }
-      __pyx_t_12 = __Pyx_PyBytes_AsWritableString(__pyx_v_header_b); if (unlikely((!__pyx_t_12) && PyErr_Occurred())) __PYX_ERR(0, 711, __pyx_L1_error)
-      (void)(memcpy((__pyx_v_current_chunk + __pyx_v_chunk_used), ((char *)__pyx_t_12), __pyx_v_header_len));
-
-      /* "src/multi_dirs_chunker.pyx":713
- *             memcpy(current_chunk + chunk_used, <char*>header_b, header_len)
- * 
- *             chunk_used += header_len             # <<<<<<<<<<<<<<
- * 
- *             memcpy(current_chunk + chunk_used, entry.content, entry_size)
- */
-      __pyx_v_chunk_used = (__pyx_v_chunk_used + __pyx_v_header_len);
-
-      /* "src/multi_dirs_chunker.pyx":715
- *             chunk_used += header_len
- * 
- *             memcpy(current_chunk + chunk_used, entry.content, entry_size)             # <<<<<<<<<<<<<<
- *             chunk_used += entry_size
- * 
- */
-      (void)(memcpy((__pyx_v_current_chunk + __pyx_v_chunk_used), __pyx_v_entry->content, __pyx_v_entry_size));
-
-      /* "src/multi_dirs_chunker.pyx":716
- * 
- *             memcpy(current_chunk + chunk_used, entry.content, entry_size)
- *             chunk_used += entry_size             # <<<<<<<<<<<<<<
- * 
- *             memcpy(current_chunk + chunk_used, <char*>sep_b, sep_len)
- */
-      __pyx_v_chunk_used = (__pyx_v_chunk_used + __pyx_v_entry_size);
-
-      /* "src/multi_dirs_chunker.pyx":718
- *             chunk_used += entry_size
- * 
- *             memcpy(current_chunk + chunk_used, <char*>sep_b, sep_len)             # <<<<<<<<<<<<<<
- *             chunk_used += sep_len
- * 
- */
-      __pyx_t_12 = __Pyx_PyBytes_AsWritableString(__pyx_v_sep_b); if (unlikely((!__pyx_t_12) && PyErr_Occurred())) __PYX_ERR(0, 718, __pyx_L1_error)
-      (void)(memcpy((__pyx_v_current_chunk + __pyx_v_chunk_used), ((char *)__pyx_t_12), __pyx_v_sep_len));
-
-      /* "src/multi_dirs_chunker.pyx":719
- * 
- *             memcpy(current_chunk + chunk_used, <char*>sep_b, sep_len)
- *             chunk_used += sep_len             # <<<<<<<<<<<<<<
- * 
- *     if chunk_used > 0:
- */
-      __pyx_v_chunk_used = (__pyx_v_chunk_used + __pyx_v_sep_len);
-    }
-    __pyx_L22:;
+    __pyx_L17:;
     __pyx_L12_continue:;
   }
 
-  /* "src/multi_dirs_chunker.pyx":721
- *             chunk_used += sep_len
+  /* "src/multi_dirs_chunker.pyx":884
  * 
- *     if chunk_used > 0:             # <<<<<<<<<<<<<<
+ *     # finalize for byte mode
+ *     if not pool.config.token_mode and chunk_used > 0:             # <<<<<<<<<<<<<<
  *         if pool.config.whole_chunk_mode:
  *             write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
  */
-  __pyx_t_1 = (__pyx_v_chunk_used > 0);
+  __pyx_t_2 = (!__pyx_v_pool->config->token_mode);
+  if (__pyx_t_2) {
+  } else {
+    __pyx_t_1 = __pyx_t_2;
+    goto __pyx_L34_bool_binop_done;
+  }
+  __pyx_t_2 = (__pyx_v_chunk_used > 0);
+  __pyx_t_1 = __pyx_t_2;
+  __pyx_L34_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":722
- * 
- *     if chunk_used > 0:
+    /* "src/multi_dirs_chunker.pyx":885
+ *     # finalize for byte mode
+ *     if not pool.config.token_mode and chunk_used > 0:
  *         if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
  *             write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
  *         else:
  */
     if (__pyx_v_pool->config->whole_chunk_mode) {
 
-      /* "src/multi_dirs_chunker.pyx":723
- *     if chunk_used > 0:
+      /* "src/multi_dirs_chunker.pyx":886
+ *     if not pool.config.token_mode and chunk_used > 0:
  *         if pool.config.whole_chunk_mode:
  *             write_chunk_single_file(current_chunk, chunk_used, aggregator_file)             # <<<<<<<<<<<<<<
  *         else:
  *             write_chunk(current_chunk, chunk_used, chunk_number, pool.config)
  */
-      __pyx_f_3src_18multi_dirs_chunker_write_chunk_single_file(__pyx_v_current_chunk, __pyx_v_chunk_used, __pyx_v_aggregator_file); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 723, __pyx_L1_error)
+      __pyx_f_3src_18multi_dirs_chunker_write_chunk_single_file(__pyx_v_current_chunk, __pyx_v_chunk_used, __pyx_v_aggregator_file); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 886, __pyx_L1_error)
 
-      /* "src/multi_dirs_chunker.pyx":722
- * 
- *     if chunk_used > 0:
+      /* "src/multi_dirs_chunker.pyx":885
+ *     # finalize for byte mode
+ *     if not pool.config.token_mode and chunk_used > 0:
  *         if pool.config.whole_chunk_mode:             # <<<<<<<<<<<<<<
  *             write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
  *         else:
  */
-      goto __pyx_L29;
+      goto __pyx_L36;
     }
 
-    /* "src/multi_dirs_chunker.pyx":725
+    /* "src/multi_dirs_chunker.pyx":888
  *             write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
  *         else:
  *             write_chunk(current_chunk, chunk_used, chunk_number, pool.config)             # <<<<<<<<<<<<<<
@@ -8255,20 +9257,20 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
  *     free(current_chunk)
  */
     /*else*/ {
-      __pyx_f_3src_18multi_dirs_chunker_write_chunk(__pyx_v_current_chunk, __pyx_v_chunk_used, __pyx_v_chunk_number, __pyx_v_pool->config); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 725, __pyx_L1_error)
+      __pyx_f_3src_18multi_dirs_chunker_write_chunk(__pyx_v_current_chunk, __pyx_v_chunk_used, __pyx_v_chunk_number, __pyx_v_pool->config); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 888, __pyx_L1_error)
     }
-    __pyx_L29:;
+    __pyx_L36:;
 
-    /* "src/multi_dirs_chunker.pyx":721
- *             chunk_used += sep_len
+    /* "src/multi_dirs_chunker.pyx":884
  * 
- *     if chunk_used > 0:             # <<<<<<<<<<<<<<
+ *     # finalize for byte mode
+ *     if not pool.config.token_mode and chunk_used > 0:             # <<<<<<<<<<<<<<
  *         if pool.config.whole_chunk_mode:
  *             write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":727
+  /* "src/multi_dirs_chunker.pyx":890
  *             write_chunk(current_chunk, chunk_used, chunk_number, pool.config)
  * 
  *     free(current_chunk)             # <<<<<<<<<<<<<<
@@ -8277,7 +9279,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
  */
   free(__pyx_v_current_chunk);
 
-  /* "src/multi_dirs_chunker.pyx":729
+  /* "src/multi_dirs_chunker.pyx":892
  *     free(current_chunk)
  * 
  *     if pool.config.whole_chunk_mode and aggregator_file and aggregator_file != stdout:             # <<<<<<<<<<<<<<
@@ -8287,20 +9289,20 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
   if (__pyx_v_pool->config->whole_chunk_mode) {
   } else {
     __pyx_t_1 = __pyx_v_pool->config->whole_chunk_mode;
-    goto __pyx_L31_bool_binop_done;
+    goto __pyx_L38_bool_binop_done;
   }
   __pyx_t_2 = (__pyx_v_aggregator_file != 0);
   if (__pyx_t_2) {
   } else {
     __pyx_t_1 = __pyx_t_2;
-    goto __pyx_L31_bool_binop_done;
+    goto __pyx_L38_bool_binop_done;
   }
   __pyx_t_2 = (__pyx_v_aggregator_file != stdout);
   __pyx_t_1 = __pyx_t_2;
-  __pyx_L31_bool_binop_done:;
+  __pyx_L38_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":730
+    /* "src/multi_dirs_chunker.pyx":893
  * 
  *     if pool.config.whole_chunk_mode and aggregator_file and aggregator_file != stdout:
  *         fclose(aggregator_file)             # <<<<<<<<<<<<<<
@@ -8309,7 +9311,7 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
  */
     (void)(fclose(__pyx_v_aggregator_file));
 
-    /* "src/multi_dirs_chunker.pyx":729
+    /* "src/multi_dirs_chunker.pyx":892
  *     free(current_chunk)
  * 
  *     if pool.config.whole_chunk_mode and aggregator_file and aggregator_file != stdout:             # <<<<<<<<<<<<<<
@@ -8318,28 +9320,35 @@ static void __pyx_f_3src_18multi_dirs_chunker_process_chunks(struct __pyx_t_3src
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":615
- * ##################################################
+  /* "src/multi_dirs_chunker.pyx":708
+ *     return text.split()
  * 
  * cdef void process_chunks(ThreadPool* pool):             # <<<<<<<<<<<<<<
- * 
- *     if not pool or not pool.processed_files or pool.processed_count == 0:
+ *     """
+ *     If token_mode=True, chunk by "max_size tokens" using python_split_tokens.
  */
 
   /* function exit code */
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_7);
-  __Pyx_XDECREF(__pyx_t_10);
-  __Pyx_XDECREF(__pyx_t_11);
+  __Pyx_XDECREF(__pyx_t_9);
   __Pyx_AddTraceback("src.multi_dirs_chunker.process_chunks", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_path_bytes);
+  __Pyx_XDECREF(__pyx_v_py_path);
   __Pyx_XDECREF(__pyx_v_header_b);
   __Pyx_XDECREF(__pyx_v_sep_b);
+  __Pyx_XDECREF(__pyx_v_tokens);
+  __Pyx_XDECREF(__pyx_v_empty_str);
+  __Pyx_XDECREF(__pyx_v_empty_b);
+  __Pyx_XDECREF(__pyx_v_chunk_str);
+  __Pyx_XDECREF(__pyx_v_chunk_bytes);
+  __Pyx_XDECREF(__pyx_v_sub_list);
   __Pyx_RefNannyFinishContext();
 }
 
-/* "src/multi_dirs_chunker.pyx":742
+/* "src/multi_dirs_chunker.pyx":908
  *         bint is_pool_active
  * 
  *     def __cinit__(self,             # <<<<<<<<<<<<<<
@@ -8377,12 +9386,12 @@ static int __pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_1__cinit__(PyObj
   __pyx_kwvalues = __Pyx_KwValues_VARARGS(__pyx_args, __pyx_nargs);
   {
     PyObject **__pyx_pyargnames[] = {&__pyx_n_s_user_ignore,&__pyx_n_s_user_unignore,&__pyx_n_s_binary_extensions,&__pyx_n_s_priority_rules,&__pyx_n_s_max_size,&__pyx_n_s_token_mode,&__pyx_n_s_output_dir,&__pyx_n_s_stream,&__pyx_n_s_num_threads,&__pyx_n_s_whole_chunk_mode,0};
-    values[0] = __Pyx_Arg_NewRef_VARARGS(__pyx_k__3);
-    values[1] = __Pyx_Arg_NewRef_VARARGS(__pyx_k__4);
-    values[2] = __Pyx_Arg_NewRef_VARARGS(__pyx_k__5);
-    values[3] = __Pyx_Arg_NewRef_VARARGS(__pyx_k__6);
+    values[0] = __Pyx_Arg_NewRef_VARARGS(__pyx_k__5);
+    values[1] = __Pyx_Arg_NewRef_VARARGS(__pyx_k__6);
+    values[2] = __Pyx_Arg_NewRef_VARARGS(__pyx_k__7);
+    values[3] = __Pyx_Arg_NewRef_VARARGS(__pyx_k__8);
 
-    /* "src/multi_dirs_chunker.pyx":749
+    /* "src/multi_dirs_chunker.pyx":915
  *                   size_t max_size = 10*1024*1024,
  *                   bint token_mode=False,
  *                   str output_dir=None,             # <<<<<<<<<<<<<<
@@ -8422,75 +9431,75 @@ static int __pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_1__cinit__(PyObj
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_VARARGS(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_user_ignore);
           if (value) { values[0] = __Pyx_Arg_NewRef_VARARGS(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 742, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 908, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  1:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_VARARGS(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_user_unignore);
           if (value) { values[1] = __Pyx_Arg_NewRef_VARARGS(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 742, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 908, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_VARARGS(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_binary_extensions);
           if (value) { values[2] = __Pyx_Arg_NewRef_VARARGS(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 742, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 908, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_VARARGS(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_priority_rules);
           if (value) { values[3] = __Pyx_Arg_NewRef_VARARGS(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 742, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 908, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_VARARGS(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_max_size);
           if (value) { values[4] = __Pyx_Arg_NewRef_VARARGS(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 742, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 908, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_VARARGS(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_token_mode);
           if (value) { values[5] = __Pyx_Arg_NewRef_VARARGS(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 742, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 908, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_VARARGS(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_output_dir);
           if (value) { values[6] = __Pyx_Arg_NewRef_VARARGS(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 742, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 908, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  7:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_VARARGS(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_stream);
           if (value) { values[7] = __Pyx_Arg_NewRef_VARARGS(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 742, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 908, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  8:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_VARARGS(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_num_threads);
           if (value) { values[8] = __Pyx_Arg_NewRef_VARARGS(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 742, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 908, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  9:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_VARARGS(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_whole_chunk_mode);
           if (value) { values[9] = __Pyx_Arg_NewRef_VARARGS(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 742, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 908, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "__cinit__") < 0)) __PYX_ERR(0, 742, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "__cinit__") < 0)) __PYX_ERR(0, 908, __pyx_L3_error)
       }
     } else {
       switch (__pyx_nargs) {
@@ -8523,15 +9532,15 @@ static int __pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_1__cinit__(PyObj
     __pyx_v_binary_extensions = ((PyObject*)values[2]);
     __pyx_v_priority_rules = ((PyObject*)values[3]);
     if (values[4]) {
-      __pyx_v_max_size = __Pyx_PyInt_As_size_t(values[4]); if (unlikely((__pyx_v_max_size == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 747, __pyx_L3_error)
+      __pyx_v_max_size = __Pyx_PyInt_As_size_t(values[4]); if (unlikely((__pyx_v_max_size == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 913, __pyx_L3_error)
     } else {
       __pyx_v_max_size = ((size_t)0xa00000);
     }
     if (values[5]) {
-      __pyx_v_token_mode = __Pyx_PyObject_IsTrue(values[5]); if (unlikely((__pyx_v_token_mode == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 748, __pyx_L3_error)
+      __pyx_v_token_mode = __Pyx_PyObject_IsTrue(values[5]); if (unlikely((__pyx_v_token_mode == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 914, __pyx_L3_error)
     } else {
 
-      /* "src/multi_dirs_chunker.pyx":748
+      /* "src/multi_dirs_chunker.pyx":914
  *                   list priority_rules = [],
  *                   size_t max_size = 10*1024*1024,
  *                   bint token_mode=False,             # <<<<<<<<<<<<<<
@@ -8542,10 +9551,10 @@ static int __pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_1__cinit__(PyObj
     }
     __pyx_v_output_dir = ((PyObject*)values[6]);
     if (values[7]) {
-      __pyx_v_stream = __Pyx_PyObject_IsTrue(values[7]); if (unlikely((__pyx_v_stream == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 750, __pyx_L3_error)
+      __pyx_v_stream = __Pyx_PyObject_IsTrue(values[7]); if (unlikely((__pyx_v_stream == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 916, __pyx_L3_error)
     } else {
 
-      /* "src/multi_dirs_chunker.pyx":750
+      /* "src/multi_dirs_chunker.pyx":916
  *                   bint token_mode=False,
  *                   str output_dir=None,
  *                   bint stream=False,             # <<<<<<<<<<<<<<
@@ -8555,15 +9564,15 @@ static int __pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_1__cinit__(PyObj
       __pyx_v_stream = ((int)0);
     }
     if (values[8]) {
-      __pyx_v_num_threads = __Pyx_PyInt_As_size_t(values[8]); if (unlikely((__pyx_v_num_threads == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 751, __pyx_L3_error)
+      __pyx_v_num_threads = __Pyx_PyInt_As_size_t(values[8]); if (unlikely((__pyx_v_num_threads == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 917, __pyx_L3_error)
     } else {
       __pyx_v_num_threads = ((size_t)4);
     }
     if (values[9]) {
-      __pyx_v_whole_chunk_mode = __Pyx_PyObject_IsTrue(values[9]); if (unlikely((__pyx_v_whole_chunk_mode == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 752, __pyx_L3_error)
+      __pyx_v_whole_chunk_mode = __Pyx_PyObject_IsTrue(values[9]); if (unlikely((__pyx_v_whole_chunk_mode == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 918, __pyx_L3_error)
     } else {
 
-      /* "src/multi_dirs_chunker.pyx":752
+      /* "src/multi_dirs_chunker.pyx":918
  *                   bint stream=False,
  *                   size_t num_threads=4,
  *                   bint whole_chunk_mode=False             # <<<<<<<<<<<<<<
@@ -8575,7 +9584,7 @@ static int __pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_1__cinit__(PyObj
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 0, 10, __pyx_nargs); __PYX_ERR(0, 742, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 0, 10, __pyx_nargs); __PYX_ERR(0, 908, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -8589,14 +9598,14 @@ static int __pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_1__cinit__(PyObj
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_user_ignore), (&PyList_Type), 1, "user_ignore", 1))) __PYX_ERR(0, 743, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_user_unignore), (&PyList_Type), 1, "user_unignore", 1))) __PYX_ERR(0, 744, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_binary_extensions), (&PyList_Type), 1, "binary_extensions", 1))) __PYX_ERR(0, 745, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_priority_rules), (&PyList_Type), 1, "priority_rules", 1))) __PYX_ERR(0, 746, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_output_dir), (&PyUnicode_Type), 1, "output_dir", 1))) __PYX_ERR(0, 749, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_user_ignore), (&PyList_Type), 1, "user_ignore", 1))) __PYX_ERR(0, 909, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_user_unignore), (&PyList_Type), 1, "user_unignore", 1))) __PYX_ERR(0, 910, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_binary_extensions), (&PyList_Type), 1, "binary_extensions", 1))) __PYX_ERR(0, 911, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_priority_rules), (&PyList_Type), 1, "priority_rules", 1))) __PYX_ERR(0, 912, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_output_dir), (&PyUnicode_Type), 1, "output_dir", 1))) __PYX_ERR(0, 915, __pyx_L1_error)
   __pyx_r = __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(((struct __pyx_obj_3src_18multi_dirs_chunker_ParallelChunker *)__pyx_v_self), __pyx_v_user_ignore, __pyx_v_user_unignore, __pyx_v_binary_extensions, __pyx_v_priority_rules, __pyx_v_max_size, __pyx_v_token_mode, __pyx_v_output_dir, __pyx_v_stream, __pyx_v_num_threads, __pyx_v_whole_chunk_mode);
 
-  /* "src/multi_dirs_chunker.pyx":742
+  /* "src/multi_dirs_chunker.pyx":908
  *         bint is_pool_active
  * 
  *     def __cinit__(self,             # <<<<<<<<<<<<<<
@@ -8630,25 +9639,24 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
   size_t __pyx_t_5;
   size_t __pyx_t_6;
   int __pyx_t_7;
-  PyObject *__pyx_t_8 = NULL;
-  int __pyx_t_9;
-  struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_t_10;
+  int __pyx_t_8;
+  struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *__pyx_t_9;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__cinit__", 1);
 
-  /* "src/multi_dirs_chunker.pyx":757
- *         cdef bytes ext_bytes
+  /* "src/multi_dirs_chunker.pyx":923
  * 
+ *         # Populate CConfig
  *         self.c_config.max_size = max_size             # <<<<<<<<<<<<<<
  *         self.c_config.token_mode = token_mode
  *         self.c_config.stream = stream
  */
   __pyx_v_self->c_config.max_size = __pyx_v_max_size;
 
-  /* "src/multi_dirs_chunker.pyx":758
- * 
+  /* "src/multi_dirs_chunker.pyx":924
+ *         # Populate CConfig
  *         self.c_config.max_size = max_size
  *         self.c_config.token_mode = token_mode             # <<<<<<<<<<<<<<
  *         self.c_config.stream = stream
@@ -8656,7 +9664,7 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
  */
   __pyx_v_self->c_config.token_mode = __pyx_v_token_mode;
 
-  /* "src/multi_dirs_chunker.pyx":759
+  /* "src/multi_dirs_chunker.pyx":925
  *         self.c_config.max_size = max_size
  *         self.c_config.token_mode = token_mode
  *         self.c_config.stream = stream             # <<<<<<<<<<<<<<
@@ -8665,7 +9673,7 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
  */
   __pyx_v_self->c_config.stream = __pyx_v_stream;
 
-  /* "src/multi_dirs_chunker.pyx":761
+  /* "src/multi_dirs_chunker.pyx":927
  *         self.c_config.stream = stream
  * 
  *         if output_dir is not None:             # <<<<<<<<<<<<<<
@@ -8675,17 +9683,17 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
   __pyx_t_1 = (__pyx_v_output_dir != ((PyObject*)Py_None));
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":762
+    /* "src/multi_dirs_chunker.pyx":928
  * 
  *         if output_dir is not None:
  *             self.c_config.output_dir = make_c_string(output_dir)             # <<<<<<<<<<<<<<
  *         else:
  *             self.c_config.output_dir = NULL
  */
-    __pyx_t_2 = __pyx_f_3src_18multi_dirs_chunker_make_c_string(__pyx_v_output_dir); if (unlikely(__pyx_t_2 == ((char *)NULL))) __PYX_ERR(0, 762, __pyx_L1_error)
+    __pyx_t_2 = __pyx_f_3src_18multi_dirs_chunker_make_c_string(__pyx_v_output_dir); if (unlikely(__pyx_t_2 == ((char *)NULL))) __PYX_ERR(0, 928, __pyx_L1_error)
     __pyx_v_self->c_config.output_dir = __pyx_t_2;
 
-    /* "src/multi_dirs_chunker.pyx":761
+    /* "src/multi_dirs_chunker.pyx":927
  *         self.c_config.stream = stream
  * 
  *         if output_dir is not None:             # <<<<<<<<<<<<<<
@@ -8695,7 +9703,7 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
     goto __pyx_L3;
   }
 
-  /* "src/multi_dirs_chunker.pyx":764
+  /* "src/multi_dirs_chunker.pyx":930
  *             self.c_config.output_dir = make_c_string(output_dir)
  *         else:
  *             self.c_config.output_dir = NULL             # <<<<<<<<<<<<<<
@@ -8707,40 +9715,40 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
   }
   __pyx_L3:;
 
-  /* "src/multi_dirs_chunker.pyx":766
+  /* "src/multi_dirs_chunker.pyx":932
  *             self.c_config.output_dir = NULL
  * 
  *         self.c_config.whole_chunk_mode = whole_chunk_mode             # <<<<<<<<<<<<<<
  * 
- *         merge_ignore_patterns(&self.c_config, user_ignore, user_unignore)
+ *         # Merge ignore patterns
  */
   __pyx_v_self->c_config.whole_chunk_mode = __pyx_v_whole_chunk_mode;
 
-  /* "src/multi_dirs_chunker.pyx":768
- *         self.c_config.whole_chunk_mode = whole_chunk_mode
+  /* "src/multi_dirs_chunker.pyx":935
  * 
+ *         # Merge ignore patterns
  *         merge_ignore_patterns(&self.c_config, user_ignore, user_unignore)             # <<<<<<<<<<<<<<
  * 
- *         self.c_config.num_binary_exts = len(binary_extensions)
+ *         # Binary extensions
  */
-  __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns((&__pyx_v_self->c_config), __pyx_v_user_ignore, __pyx_v_user_unignore); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 768, __pyx_L1_error)
+  __pyx_f_3src_18multi_dirs_chunker_merge_ignore_patterns((&__pyx_v_self->c_config), __pyx_v_user_ignore, __pyx_v_user_unignore); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 935, __pyx_L1_error)
 
-  /* "src/multi_dirs_chunker.pyx":770
- *         merge_ignore_patterns(&self.c_config, user_ignore, user_unignore)
+  /* "src/multi_dirs_chunker.pyx":938
  * 
+ *         # Binary extensions
  *         self.c_config.num_binary_exts = len(binary_extensions)             # <<<<<<<<<<<<<<
  *         if self.c_config.num_binary_exts > 0:
  *             self.c_config.binary_exts = <char**>malloc(self.c_config.num_binary_exts * sizeof(char*))
  */
   if (unlikely(__pyx_v_binary_extensions == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 770, __pyx_L1_error)
+    __PYX_ERR(0, 938, __pyx_L1_error)
   }
-  __pyx_t_3 = __Pyx_PyList_GET_SIZE(__pyx_v_binary_extensions); if (unlikely(__pyx_t_3 == ((Py_ssize_t)-1))) __PYX_ERR(0, 770, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyList_GET_SIZE(__pyx_v_binary_extensions); if (unlikely(__pyx_t_3 == ((Py_ssize_t)-1))) __PYX_ERR(0, 938, __pyx_L1_error)
   __pyx_v_self->c_config.num_binary_exts = __pyx_t_3;
 
-  /* "src/multi_dirs_chunker.pyx":771
- * 
+  /* "src/multi_dirs_chunker.pyx":939
+ *         # Binary extensions
  *         self.c_config.num_binary_exts = len(binary_extensions)
  *         if self.c_config.num_binary_exts > 0:             # <<<<<<<<<<<<<<
  *             self.c_config.binary_exts = <char**>malloc(self.c_config.num_binary_exts * sizeof(char*))
@@ -8749,7 +9757,7 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
   __pyx_t_1 = (__pyx_v_self->c_config.num_binary_exts > 0);
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":772
+    /* "src/multi_dirs_chunker.pyx":940
  *         self.c_config.num_binary_exts = len(binary_extensions)
  *         if self.c_config.num_binary_exts > 0:
  *             self.c_config.binary_exts = <char**>malloc(self.c_config.num_binary_exts * sizeof(char*))             # <<<<<<<<<<<<<<
@@ -8758,7 +9766,7 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
  */
     __pyx_v_self->c_config.binary_exts = ((char **)malloc((__pyx_v_self->c_config.num_binary_exts * (sizeof(char *)))));
 
-    /* "src/multi_dirs_chunker.pyx":773
+    /* "src/multi_dirs_chunker.pyx":941
  *         if self.c_config.num_binary_exts > 0:
  *             self.c_config.binary_exts = <char**>malloc(self.c_config.num_binary_exts * sizeof(char*))
  *             if not self.c_config.binary_exts:             # <<<<<<<<<<<<<<
@@ -8768,20 +9776,20 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
     __pyx_t_1 = (!(__pyx_v_self->c_config.binary_exts != 0));
     if (unlikely(__pyx_t_1)) {
 
-      /* "src/multi_dirs_chunker.pyx":774
+      /* "src/multi_dirs_chunker.pyx":942
  *             self.c_config.binary_exts = <char**>malloc(self.c_config.num_binary_exts * sizeof(char*))
  *             if not self.c_config.binary_exts:
  *                 raise MemoryError("Failed to allocate binary_exts")             # <<<<<<<<<<<<<<
  * 
  *             for i in range(self.c_config.num_binary_exts):
  */
-      __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 774, __pyx_L1_error)
+      __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__9, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 942, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_Raise(__pyx_t_4, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-      __PYX_ERR(0, 774, __pyx_L1_error)
+      __PYX_ERR(0, 942, __pyx_L1_error)
 
-      /* "src/multi_dirs_chunker.pyx":773
+      /* "src/multi_dirs_chunker.pyx":941
  *         if self.c_config.num_binary_exts > 0:
  *             self.c_config.binary_exts = <char**>malloc(self.c_config.num_binary_exts * sizeof(char*))
  *             if not self.c_config.binary_exts:             # <<<<<<<<<<<<<<
@@ -8790,7 +9798,7 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
  */
     }
 
-    /* "src/multi_dirs_chunker.pyx":776
+    /* "src/multi_dirs_chunker.pyx":944
  *                 raise MemoryError("Failed to allocate binary_exts")
  * 
  *             for i in range(self.c_config.num_binary_exts):             # <<<<<<<<<<<<<<
@@ -8802,7 +9810,7 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
     for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
       __pyx_v_i = __pyx_t_7;
 
-      /* "src/multi_dirs_chunker.pyx":777
+      /* "src/multi_dirs_chunker.pyx":945
  * 
  *             for i in range(self.c_config.num_binary_exts):
  *                 self.c_config.binary_exts[i] = make_c_string(binary_extensions[i])             # <<<<<<<<<<<<<<
@@ -8811,18 +9819,18 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
  */
       if (unlikely(__pyx_v_binary_extensions == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 777, __pyx_L1_error)
+        __PYX_ERR(0, 945, __pyx_L1_error)
       }
-      __pyx_t_4 = __Pyx_GetItemInt_List(__pyx_v_binary_extensions, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 777, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_4);
-      if (!(likely(PyUnicode_CheckExact(__pyx_t_4))||((__pyx_t_4) == Py_None) || __Pyx_RaiseUnexpectedTypeError("unicode", __pyx_t_4))) __PYX_ERR(0, 777, __pyx_L1_error)
-      __pyx_t_2 = __pyx_f_3src_18multi_dirs_chunker_make_c_string(((PyObject*)__pyx_t_4)); if (unlikely(__pyx_t_2 == ((char *)NULL))) __PYX_ERR(0, 777, __pyx_L1_error)
+      if (!(likely(PyUnicode_CheckExact(PyList_GET_ITEM(__pyx_v_binary_extensions, __pyx_v_i)))||((PyList_GET_ITEM(__pyx_v_binary_extensions, __pyx_v_i)) == Py_None) || __Pyx_RaiseUnexpectedTypeError("unicode", PyList_GET_ITEM(__pyx_v_binary_extensions, __pyx_v_i)))) __PYX_ERR(0, 945, __pyx_L1_error)
+      __pyx_t_4 = PyList_GET_ITEM(__pyx_v_binary_extensions, __pyx_v_i);
+      __Pyx_INCREF(__pyx_t_4);
+      __pyx_t_2 = __pyx_f_3src_18multi_dirs_chunker_make_c_string(((PyObject*)__pyx_t_4)); if (unlikely(__pyx_t_2 == ((char *)NULL))) __PYX_ERR(0, 945, __pyx_L1_error)
       (__pyx_v_self->c_config.binary_exts[__pyx_v_i]) = __pyx_t_2;
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     }
 
-    /* "src/multi_dirs_chunker.pyx":771
- * 
+    /* "src/multi_dirs_chunker.pyx":939
+ *         # Binary extensions
  *         self.c_config.num_binary_exts = len(binary_extensions)
  *         if self.c_config.num_binary_exts > 0:             # <<<<<<<<<<<<<<
  *             self.c_config.binary_exts = <char**>malloc(self.c_config.num_binary_exts * sizeof(char*))
@@ -8831,34 +9839,34 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
     goto __pyx_L4;
   }
 
-  /* "src/multi_dirs_chunker.pyx":779
+  /* "src/multi_dirs_chunker.pyx":947
  *                 self.c_config.binary_exts[i] = make_c_string(binary_extensions[i])
  *         else:
  *             self.c_config.binary_exts = NULL             # <<<<<<<<<<<<<<
  * 
- *         self.c_config.num_priority_rules = len(priority_rules)
+ *         # Priority rules
  */
   /*else*/ {
     __pyx_v_self->c_config.binary_exts = NULL;
   }
   __pyx_L4:;
 
-  /* "src/multi_dirs_chunker.pyx":781
- *             self.c_config.binary_exts = NULL
+  /* "src/multi_dirs_chunker.pyx":950
  * 
+ *         # Priority rules
  *         self.c_config.num_priority_rules = len(priority_rules)             # <<<<<<<<<<<<<<
  *         if self.c_config.num_priority_rules > 0:
  *             self.c_config.priority_rules = <CPriorityRule*>malloc(
  */
   if (unlikely(__pyx_v_priority_rules == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 781, __pyx_L1_error)
+    __PYX_ERR(0, 950, __pyx_L1_error)
   }
-  __pyx_t_3 = __Pyx_PyList_GET_SIZE(__pyx_v_priority_rules); if (unlikely(__pyx_t_3 == ((Py_ssize_t)-1))) __PYX_ERR(0, 781, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyList_GET_SIZE(__pyx_v_priority_rules); if (unlikely(__pyx_t_3 == ((Py_ssize_t)-1))) __PYX_ERR(0, 950, __pyx_L1_error)
   __pyx_v_self->c_config.num_priority_rules = __pyx_t_3;
 
-  /* "src/multi_dirs_chunker.pyx":782
- * 
+  /* "src/multi_dirs_chunker.pyx":951
+ *         # Priority rules
  *         self.c_config.num_priority_rules = len(priority_rules)
  *         if self.c_config.num_priority_rules > 0:             # <<<<<<<<<<<<<<
  *             self.c_config.priority_rules = <CPriorityRule*>malloc(
@@ -8867,7 +9875,7 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
   __pyx_t_1 = (__pyx_v_self->c_config.num_priority_rules > 0);
   if (__pyx_t_1) {
 
-    /* "src/multi_dirs_chunker.pyx":783
+    /* "src/multi_dirs_chunker.pyx":952
  *         self.c_config.num_priority_rules = len(priority_rules)
  *         if self.c_config.num_priority_rules > 0:
  *             self.c_config.priority_rules = <CPriorityRule*>malloc(             # <<<<<<<<<<<<<<
@@ -8876,7 +9884,7 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
  */
     __pyx_v_self->c_config.priority_rules = ((struct __pyx_t_3src_18multi_dirs_chunker_CPriorityRule *)malloc((__pyx_v_self->c_config.num_priority_rules * (sizeof(struct __pyx_t_3src_18multi_dirs_chunker_CPriorityRule)))));
 
-    /* "src/multi_dirs_chunker.pyx":786
+    /* "src/multi_dirs_chunker.pyx":955
  *                 self.c_config.num_priority_rules * sizeof(CPriorityRule)
  *             )
  *             if not self.c_config.priority_rules:             # <<<<<<<<<<<<<<
@@ -8886,20 +9894,20 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
     __pyx_t_1 = (!(__pyx_v_self->c_config.priority_rules != 0));
     if (unlikely(__pyx_t_1)) {
 
-      /* "src/multi_dirs_chunker.pyx":787
+      /* "src/multi_dirs_chunker.pyx":956
  *             )
  *             if not self.c_config.priority_rules:
  *                 raise MemoryError("Failed to allocate priority_rules")             # <<<<<<<<<<<<<<
  * 
  *             for i in range(self.c_config.num_priority_rules):
  */
-      __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__8, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 787, __pyx_L1_error)
+      __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__10, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 956, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_Raise(__pyx_t_4, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-      __PYX_ERR(0, 787, __pyx_L1_error)
+      __PYX_ERR(0, 956, __pyx_L1_error)
 
-      /* "src/multi_dirs_chunker.pyx":786
+      /* "src/multi_dirs_chunker.pyx":955
  *                 self.c_config.num_priority_rules * sizeof(CPriorityRule)
  *             )
  *             if not self.c_config.priority_rules:             # <<<<<<<<<<<<<<
@@ -8908,7 +9916,7 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
  */
     }
 
-    /* "src/multi_dirs_chunker.pyx":789
+    /* "src/multi_dirs_chunker.pyx":958
  *                 raise MemoryError("Failed to allocate priority_rules")
  * 
  *             for i in range(self.c_config.num_priority_rules):             # <<<<<<<<<<<<<<
@@ -8920,7 +9928,7 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
     for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
       __pyx_v_i = __pyx_t_7;
 
-      /* "src/multi_dirs_chunker.pyx":790
+      /* "src/multi_dirs_chunker.pyx":959
  * 
  *             for i in range(self.c_config.num_priority_rules):
  *                 self.c_config.priority_rules[i].pattern = make_c_string(priority_rules[i][0])             # <<<<<<<<<<<<<<
@@ -8929,19 +9937,16 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
  */
       if (unlikely(__pyx_v_priority_rules == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 790, __pyx_L1_error)
+        __PYX_ERR(0, 959, __pyx_L1_error)
       }
-      __pyx_t_4 = __Pyx_GetItemInt_List(__pyx_v_priority_rules, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 790, __pyx_L1_error)
+      __pyx_t_4 = __Pyx_GetItemInt(PyList_GET_ITEM(__pyx_v_priority_rules, __pyx_v_i), 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 959, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
-      __pyx_t_8 = __Pyx_GetItemInt(__pyx_t_4, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 790, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_8);
-      __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-      if (!(likely(PyUnicode_CheckExact(__pyx_t_8))||((__pyx_t_8) == Py_None) || __Pyx_RaiseUnexpectedTypeError("unicode", __pyx_t_8))) __PYX_ERR(0, 790, __pyx_L1_error)
-      __pyx_t_2 = __pyx_f_3src_18multi_dirs_chunker_make_c_string(((PyObject*)__pyx_t_8)); if (unlikely(__pyx_t_2 == ((char *)NULL))) __PYX_ERR(0, 790, __pyx_L1_error)
+      if (!(likely(PyUnicode_CheckExact(__pyx_t_4))||((__pyx_t_4) == Py_None) || __Pyx_RaiseUnexpectedTypeError("unicode", __pyx_t_4))) __PYX_ERR(0, 959, __pyx_L1_error)
+      __pyx_t_2 = __pyx_f_3src_18multi_dirs_chunker_make_c_string(((PyObject*)__pyx_t_4)); if (unlikely(__pyx_t_2 == ((char *)NULL))) __PYX_ERR(0, 959, __pyx_L1_error)
       (__pyx_v_self->c_config.priority_rules[__pyx_v_i]).pattern = __pyx_t_2;
-      __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+      __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-      /* "src/multi_dirs_chunker.pyx":791
+      /* "src/multi_dirs_chunker.pyx":960
  *             for i in range(self.c_config.num_priority_rules):
  *                 self.c_config.priority_rules[i].pattern = make_c_string(priority_rules[i][0])
  *                 self.c_config.priority_rules[i].score = priority_rules[i][1]             # <<<<<<<<<<<<<<
@@ -8950,20 +9955,17 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
  */
       if (unlikely(__pyx_v_priority_rules == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 791, __pyx_L1_error)
+        __PYX_ERR(0, 960, __pyx_L1_error)
       }
-      __pyx_t_8 = __Pyx_GetItemInt_List(__pyx_v_priority_rules, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 791, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_8);
-      __pyx_t_4 = __Pyx_GetItemInt(__pyx_t_8, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 791, __pyx_L1_error)
+      __pyx_t_4 = __Pyx_GetItemInt(PyList_GET_ITEM(__pyx_v_priority_rules, __pyx_v_i), 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 960, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
-      __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-      __pyx_t_9 = __Pyx_PyInt_As_int(__pyx_t_4); if (unlikely((__pyx_t_9 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 791, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_PyInt_As_int(__pyx_t_4); if (unlikely((__pyx_t_8 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 960, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-      (__pyx_v_self->c_config.priority_rules[__pyx_v_i]).score = __pyx_t_9;
+      (__pyx_v_self->c_config.priority_rules[__pyx_v_i]).score = __pyx_t_8;
     }
 
-    /* "src/multi_dirs_chunker.pyx":782
- * 
+    /* "src/multi_dirs_chunker.pyx":951
+ *         # Priority rules
  *         self.c_config.num_priority_rules = len(priority_rules)
  *         if self.c_config.num_priority_rules > 0:             # <<<<<<<<<<<<<<
  *             self.c_config.priority_rules = <CPriorityRule*>malloc(
@@ -8972,30 +9974,30 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
     goto __pyx_L8;
   }
 
-  /* "src/multi_dirs_chunker.pyx":793
+  /* "src/multi_dirs_chunker.pyx":962
  *                 self.c_config.priority_rules[i].score = priority_rules[i][1]
  *         else:
  *             self.c_config.priority_rules = NULL             # <<<<<<<<<<<<<<
  * 
- *         self.pool = create_thread_pool(num_threads, b".", &self.c_config)
+ *         # Create the pool of worker threads
  */
   /*else*/ {
     __pyx_v_self->c_config.priority_rules = NULL;
   }
   __pyx_L8:;
 
-  /* "src/multi_dirs_chunker.pyx":795
- *             self.c_config.priority_rules = NULL
+  /* "src/multi_dirs_chunker.pyx":965
  * 
+ *         # Create the pool of worker threads
  *         self.pool = create_thread_pool(num_threads, b".", &self.c_config)             # <<<<<<<<<<<<<<
  *         if not self.pool:
  *             raise MemoryError("Failed to create thread pool")
  */
-  __pyx_t_10 = __pyx_f_3src_18multi_dirs_chunker_create_thread_pool(__pyx_v_num_threads, ((char const *)"."), (&__pyx_v_self->c_config)); if (unlikely(__pyx_t_10 == ((struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 795, __pyx_L1_error)
-  __pyx_v_self->pool = __pyx_t_10;
+  __pyx_t_9 = __pyx_f_3src_18multi_dirs_chunker_create_thread_pool(__pyx_v_num_threads, ((char const *)"."), (&__pyx_v_self->c_config)); if (unlikely(__pyx_t_9 == ((struct __pyx_t_3src_18multi_dirs_chunker_ThreadPool *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 965, __pyx_L1_error)
+  __pyx_v_self->pool = __pyx_t_9;
 
-  /* "src/multi_dirs_chunker.pyx":796
- * 
+  /* "src/multi_dirs_chunker.pyx":966
+ *         # Create the pool of worker threads
  *         self.pool = create_thread_pool(num_threads, b".", &self.c_config)
  *         if not self.pool:             # <<<<<<<<<<<<<<
  *             raise MemoryError("Failed to create thread pool")
@@ -9004,21 +10006,21 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
   __pyx_t_1 = (!(__pyx_v_self->pool != 0));
   if (unlikely(__pyx_t_1)) {
 
-    /* "src/multi_dirs_chunker.pyx":797
+    /* "src/multi_dirs_chunker.pyx":967
  *         self.pool = create_thread_pool(num_threads, b".", &self.c_config)
  *         if not self.pool:
  *             raise MemoryError("Failed to create thread pool")             # <<<<<<<<<<<<<<
  * 
  *         self.is_pool_active = True
  */
-    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__9, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 797, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_MemoryError, __pyx_tuple__11, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 967, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_Raise(__pyx_t_4, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __PYX_ERR(0, 797, __pyx_L1_error)
+    __PYX_ERR(0, 967, __pyx_L1_error)
 
-    /* "src/multi_dirs_chunker.pyx":796
- * 
+    /* "src/multi_dirs_chunker.pyx":966
+ *         # Create the pool of worker threads
  *         self.pool = create_thread_pool(num_threads, b".", &self.c_config)
  *         if not self.pool:             # <<<<<<<<<<<<<<
  *             raise MemoryError("Failed to create thread pool")
@@ -9026,7 +10028,7 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":799
+  /* "src/multi_dirs_chunker.pyx":969
  *             raise MemoryError("Failed to create thread pool")
  * 
  *         self.is_pool_active = True             # <<<<<<<<<<<<<<
@@ -9035,7 +10037,7 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
  */
   __pyx_v_self->is_pool_active = 1;
 
-  /* "src/multi_dirs_chunker.pyx":742
+  /* "src/multi_dirs_chunker.pyx":908
  *         bint is_pool_active
  * 
  *     def __cinit__(self,             # <<<<<<<<<<<<<<
@@ -9048,7 +10050,6 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_XDECREF(__pyx_t_8);
   __Pyx_AddTraceback("src.multi_dirs_chunker.ParallelChunker.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
@@ -9056,12 +10057,12 @@ static int __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker___cinit__(struct
   return __pyx_r;
 }
 
-/* "src/multi_dirs_chunker.pyx":801
+/* "src/multi_dirs_chunker.pyx":971
  *         self.is_pool_active = True
  * 
  *     def process_directories(self, list dirs):             # <<<<<<<<<<<<<<
- *         if not self.is_pool_active:
- *             raise RuntimeError("Pool is already destroyed.")
+ *         """
+ *         Public method: queue up one or more directories, wait for completion, then chunk.
  */
 
 /* Python wrapper */
@@ -9072,7 +10073,8 @@ PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-static PyMethodDef __pyx_mdef_3src_18multi_dirs_chunker_15ParallelChunker_3process_directories = {"process_directories", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_3process_directories, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
+PyDoc_STRVAR(__pyx_doc_3src_18multi_dirs_chunker_15ParallelChunker_2process_directories, "\n        Public method: queue up one or more directories, wait for completion, then chunk.\n        ");
+static PyMethodDef __pyx_mdef_3src_18multi_dirs_chunker_15ParallelChunker_3process_directories = {"process_directories", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_3process_directories, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_3src_18multi_dirs_chunker_15ParallelChunker_2process_directories};
 static PyObject *__pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_3process_directories(PyObject *__pyx_v_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
@@ -9117,12 +10119,12 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 801, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 971, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "process_directories") < 0)) __PYX_ERR(0, 801, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "process_directories") < 0)) __PYX_ERR(0, 971, __pyx_L3_error)
       }
     } else if (unlikely(__pyx_nargs != 1)) {
       goto __pyx_L5_argtuple_error;
@@ -9133,7 +10135,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("process_directories", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 801, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("process_directories", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 971, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -9147,7 +10149,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_dirs), (&PyList_Type), 1, "dirs", 1))) __PYX_ERR(0, 801, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_dirs), (&PyList_Type), 1, "dirs", 1))) __PYX_ERR(0, 971, __pyx_L1_error)
   __pyx_r = __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_2process_directories(((struct __pyx_obj_3src_18multi_dirs_chunker_ParallelChunker *)__pyx_v_self), __pyx_v_dirs);
 
   /* function exit code */
@@ -9183,9 +10185,9 @@ static PyObject *__pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_2process_d
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("process_directories", 1);
 
-  /* "src/multi_dirs_chunker.pyx":802
- * 
- *     def process_directories(self, list dirs):
+  /* "src/multi_dirs_chunker.pyx":975
+ *         Public method: queue up one or more directories, wait for completion, then chunk.
+ *         """
  *         if not self.is_pool_active:             # <<<<<<<<<<<<<<
  *             raise RuntimeError("Pool is already destroyed.")
  * 
@@ -9193,29 +10195,29 @@ static PyObject *__pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_2process_d
   __pyx_t_1 = (!__pyx_v_self->is_pool_active);
   if (unlikely(__pyx_t_1)) {
 
-    /* "src/multi_dirs_chunker.pyx":803
- *     def process_directories(self, list dirs):
+    /* "src/multi_dirs_chunker.pyx":976
+ *         """
  *         if not self.is_pool_active:
  *             raise RuntimeError("Pool is already destroyed.")             # <<<<<<<<<<<<<<
  * 
  *         cdef bytes b_dir
  */
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__10, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 803, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__12, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 976, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_Raise(__pyx_t_2, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __PYX_ERR(0, 803, __pyx_L1_error)
+    __PYX_ERR(0, 976, __pyx_L1_error)
 
-    /* "src/multi_dirs_chunker.pyx":802
- * 
- *     def process_directories(self, list dirs):
+    /* "src/multi_dirs_chunker.pyx":975
+ *         Public method: queue up one or more directories, wait for completion, then chunk.
+ *         """
  *         if not self.is_pool_active:             # <<<<<<<<<<<<<<
  *             raise RuntimeError("Pool is already destroyed.")
  * 
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":806
+  /* "src/multi_dirs_chunker.pyx":979
  * 
  *         cdef bytes b_dir
  *         for d in dirs:             # <<<<<<<<<<<<<<
@@ -9224,7 +10226,7 @@ static PyObject *__pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_2process_d
  */
   if (unlikely(__pyx_v_dirs == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 806, __pyx_L1_error)
+    __PYX_ERR(0, 979, __pyx_L1_error)
   }
   __pyx_t_2 = __pyx_v_dirs; __Pyx_INCREF(__pyx_t_2);
   __pyx_t_3 = 0;
@@ -9232,27 +10234,27 @@ static PyObject *__pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_2process_d
     {
       Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_2);
       #if !CYTHON_ASSUME_SAFE_MACROS
-      if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 806, __pyx_L1_error)
+      if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 979, __pyx_L1_error)
       #endif
       if (__pyx_t_3 >= __pyx_temp) break;
     }
     #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-    __pyx_t_4 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_4); __pyx_t_3++; if (unlikely((0 < 0))) __PYX_ERR(0, 806, __pyx_L1_error)
+    __pyx_t_4 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_4); __pyx_t_3++; if (unlikely((0 < 0))) __PYX_ERR(0, 979, __pyx_L1_error)
     #else
-    __pyx_t_4 = __Pyx_PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 806, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 979, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     #endif
     __Pyx_XDECREF_SET(__pyx_v_d, __pyx_t_4);
     __pyx_t_4 = 0;
 
-    /* "src/multi_dirs_chunker.pyx":807
+    /* "src/multi_dirs_chunker.pyx":980
  *         cdef bytes b_dir
  *         for d in dirs:
  *             b_dir = d.encode('utf-8')             # <<<<<<<<<<<<<<
  *             process_directory(self.pool, b_dir)
  * 
  */
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_d, __pyx_n_s_encode); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 807, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_d, __pyx_n_s_encode); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 980, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __pyx_t_6 = NULL;
     __pyx_t_7 = 0;
@@ -9272,15 +10274,15 @@ static PyObject *__pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_2process_d
       PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_kp_u_utf_8};
       __pyx_t_4 = __Pyx_PyObject_FastCall(__pyx_t_5, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
       __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-      if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 807, __pyx_L1_error)
+      if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 980, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     }
-    if (!(likely(PyBytes_CheckExact(__pyx_t_4))||((__pyx_t_4) == Py_None) || __Pyx_RaiseUnexpectedTypeError("bytes", __pyx_t_4))) __PYX_ERR(0, 807, __pyx_L1_error)
+    if (!(likely(PyBytes_CheckExact(__pyx_t_4))||((__pyx_t_4) == Py_None) || __Pyx_RaiseUnexpectedTypeError("bytes", __pyx_t_4))) __PYX_ERR(0, 980, __pyx_L1_error)
     __Pyx_XDECREF_SET(__pyx_v_b_dir, ((PyObject*)__pyx_t_4));
     __pyx_t_4 = 0;
 
-    /* "src/multi_dirs_chunker.pyx":808
+    /* "src/multi_dirs_chunker.pyx":981
  *         for d in dirs:
  *             b_dir = d.encode('utf-8')
  *             process_directory(self.pool, b_dir)             # <<<<<<<<<<<<<<
@@ -9289,12 +10291,12 @@ static PyObject *__pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_2process_d
  */
     if (unlikely(__pyx_v_b_dir == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
-      __PYX_ERR(0, 808, __pyx_L1_error)
+      __PYX_ERR(0, 981, __pyx_L1_error)
     }
-    __pyx_t_8 = __Pyx_PyBytes_AsString(__pyx_v_b_dir); if (unlikely((!__pyx_t_8) && PyErr_Occurred())) __PYX_ERR(0, 808, __pyx_L1_error)
-    __pyx_f_3src_18multi_dirs_chunker_process_directory(__pyx_v_self->pool, __pyx_t_8); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 808, __pyx_L1_error)
+    __pyx_t_8 = __Pyx_PyBytes_AsString(__pyx_v_b_dir); if (unlikely((!__pyx_t_8) && PyErr_Occurred())) __PYX_ERR(0, 981, __pyx_L1_error)
+    __pyx_f_3src_18multi_dirs_chunker_process_directory(__pyx_v_self->pool, __pyx_t_8); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 981, __pyx_L1_error)
 
-    /* "src/multi_dirs_chunker.pyx":806
+    /* "src/multi_dirs_chunker.pyx":979
  * 
  *         cdef bytes b_dir
  *         for d in dirs:             # <<<<<<<<<<<<<<
@@ -9304,30 +10306,30 @@ static PyObject *__pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_2process_d
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "src/multi_dirs_chunker.pyx":810
+  /* "src/multi_dirs_chunker.pyx":983
  *             process_directory(self.pool, b_dir)
  * 
  *         thread_pool_wait_until_done(self.pool)             # <<<<<<<<<<<<<<
  *         process_chunks(self.pool)
  * 
  */
-  __pyx_f_3src_18multi_dirs_chunker_thread_pool_wait_until_done(__pyx_v_self->pool); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 810, __pyx_L1_error)
+  __pyx_f_3src_18multi_dirs_chunker_thread_pool_wait_until_done(__pyx_v_self->pool); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 983, __pyx_L1_error)
 
-  /* "src/multi_dirs_chunker.pyx":811
+  /* "src/multi_dirs_chunker.pyx":984
  * 
  *         thread_pool_wait_until_done(self.pool)
  *         process_chunks(self.pool)             # <<<<<<<<<<<<<<
  * 
  *     def close(self):
  */
-  __pyx_f_3src_18multi_dirs_chunker_process_chunks(__pyx_v_self->pool); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 811, __pyx_L1_error)
+  __pyx_f_3src_18multi_dirs_chunker_process_chunks(__pyx_v_self->pool); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 984, __pyx_L1_error)
 
-  /* "src/multi_dirs_chunker.pyx":801
+  /* "src/multi_dirs_chunker.pyx":971
  *         self.is_pool_active = True
  * 
  *     def process_directories(self, list dirs):             # <<<<<<<<<<<<<<
- *         if not self.is_pool_active:
- *             raise RuntimeError("Pool is already destroyed.")
+ *         """
+ *         Public method: queue up one or more directories, wait for completion, then chunk.
  */
 
   /* function exit code */
@@ -9348,12 +10350,12 @@ static PyObject *__pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_2process_d
   return __pyx_r;
 }
 
-/* "src/multi_dirs_chunker.pyx":813
+/* "src/multi_dirs_chunker.pyx":986
  *         process_chunks(self.pool)
  * 
  *     def close(self):             # <<<<<<<<<<<<<<
- *         if self.is_pool_active:
- *             destroy_thread_pool(self.pool)
+ *         """
+ *         Shut down the pool if it's still active.
  */
 
 /* Python wrapper */
@@ -9364,7 +10366,8 @@ PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-static PyMethodDef __pyx_mdef_3src_18multi_dirs_chunker_15ParallelChunker_5close = {"close", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_5close, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
+PyDoc_STRVAR(__pyx_doc_3src_18multi_dirs_chunker_15ParallelChunker_4close, "\n        Shut down the pool if it's still active.\n        ");
+static PyMethodDef __pyx_mdef_3src_18multi_dirs_chunker_15ParallelChunker_5close = {"close", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_5close, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_3src_18multi_dirs_chunker_15ParallelChunker_4close};
 static PyObject *__pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_5close(PyObject *__pyx_v_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
@@ -9405,25 +10408,25 @@ static PyObject *__pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_4close(str
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("close", 1);
 
-  /* "src/multi_dirs_chunker.pyx":814
- * 
- *     def close(self):
+  /* "src/multi_dirs_chunker.pyx":990
+ *         Shut down the pool if it's still active.
+ *         """
  *         if self.is_pool_active:             # <<<<<<<<<<<<<<
  *             destroy_thread_pool(self.pool)
  *             self.is_pool_active = False
  */
   if (__pyx_v_self->is_pool_active) {
 
-    /* "src/multi_dirs_chunker.pyx":815
- *     def close(self):
+    /* "src/multi_dirs_chunker.pyx":991
+ *         """
  *         if self.is_pool_active:
  *             destroy_thread_pool(self.pool)             # <<<<<<<<<<<<<<
  *             self.is_pool_active = False
  * 
  */
-    __pyx_f_3src_18multi_dirs_chunker_destroy_thread_pool(__pyx_v_self->pool); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 815, __pyx_L1_error)
+    __pyx_f_3src_18multi_dirs_chunker_destroy_thread_pool(__pyx_v_self->pool); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 991, __pyx_L1_error)
 
-    /* "src/multi_dirs_chunker.pyx":816
+    /* "src/multi_dirs_chunker.pyx":992
  *         if self.is_pool_active:
  *             destroy_thread_pool(self.pool)
  *             self.is_pool_active = False             # <<<<<<<<<<<<<<
@@ -9432,21 +10435,21 @@ static PyObject *__pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_4close(str
  */
     __pyx_v_self->is_pool_active = 0;
 
-    /* "src/multi_dirs_chunker.pyx":814
- * 
- *     def close(self):
+    /* "src/multi_dirs_chunker.pyx":990
+ *         Shut down the pool if it's still active.
+ *         """
  *         if self.is_pool_active:             # <<<<<<<<<<<<<<
  *             destroy_thread_pool(self.pool)
  *             self.is_pool_active = False
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":813
+  /* "src/multi_dirs_chunker.pyx":986
  *         process_chunks(self.pool)
  * 
  *     def close(self):             # <<<<<<<<<<<<<<
- *         if self.is_pool_active:
- *             destroy_thread_pool(self.pool)
+ *         """
+ *         Shut down the pool if it's still active.
  */
 
   /* function exit code */
@@ -9461,7 +10464,7 @@ static PyObject *__pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_4close(str
   return __pyx_r;
 }
 
-/* "src/multi_dirs_chunker.pyx":818
+/* "src/multi_dirs_chunker.pyx":994
  *             self.is_pool_active = False
  * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
@@ -9498,14 +10501,14 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__dealloc__", 1);
 
-  /* "src/multi_dirs_chunker.pyx":819
+  /* "src/multi_dirs_chunker.pyx":995
  * 
  *     def __dealloc__(self):
  *         self.close()             # <<<<<<<<<<<<<<
  * 
- *         if self.c_config.output_dir:
+ *         # Free the strings allocated in c_config
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_close); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 819, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_close); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 995, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   __pyx_t_4 = 0;
@@ -9525,15 +10528,15 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
     PyObject *__pyx_callargs[2] = {__pyx_t_3, NULL};
     __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_2, __pyx_callargs+1-__pyx_t_4, 0+__pyx_t_4);
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 819, __pyx_L1_error)
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 995, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "src/multi_dirs_chunker.pyx":821
- *         self.close()
+  /* "src/multi_dirs_chunker.pyx":998
  * 
+ *         # Free the strings allocated in c_config
  *         if self.c_config.output_dir:             # <<<<<<<<<<<<<<
  *             free(self.c_config.output_dir)
  * 
@@ -9541,8 +10544,8 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
   __pyx_t_5 = (__pyx_v_self->c_config.output_dir != 0);
   if (__pyx_t_5) {
 
-    /* "src/multi_dirs_chunker.pyx":822
- * 
+    /* "src/multi_dirs_chunker.pyx":999
+ *         # Free the strings allocated in c_config
  *         if self.c_config.output_dir:
  *             free(self.c_config.output_dir)             # <<<<<<<<<<<<<<
  * 
@@ -9550,16 +10553,16 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
  */
     free(__pyx_v_self->c_config.output_dir);
 
-    /* "src/multi_dirs_chunker.pyx":821
- *         self.close()
+    /* "src/multi_dirs_chunker.pyx":998
  * 
+ *         # Free the strings allocated in c_config
  *         if self.c_config.output_dir:             # <<<<<<<<<<<<<<
  *             free(self.c_config.output_dir)
  * 
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":824
+  /* "src/multi_dirs_chunker.pyx":1001
  *             free(self.c_config.output_dir)
  * 
  *         if self.c_config.ignore_patterns:             # <<<<<<<<<<<<<<
@@ -9569,7 +10572,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
   __pyx_t_5 = (__pyx_v_self->c_config.ignore_patterns != 0);
   if (__pyx_t_5) {
 
-    /* "src/multi_dirs_chunker.pyx":825
+    /* "src/multi_dirs_chunker.pyx":1002
  * 
  *         if self.c_config.ignore_patterns:
  *             for i in range(self.c_config.num_ignore):             # <<<<<<<<<<<<<<
@@ -9581,7 +10584,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
     for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
       __pyx_v_i = __pyx_t_8;
 
-      /* "src/multi_dirs_chunker.pyx":826
+      /* "src/multi_dirs_chunker.pyx":1003
  *         if self.c_config.ignore_patterns:
  *             for i in range(self.c_config.num_ignore):
  *                 if self.c_config.ignore_patterns[i]:             # <<<<<<<<<<<<<<
@@ -9591,7 +10594,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
       __pyx_t_5 = ((__pyx_v_self->c_config.ignore_patterns[__pyx_v_i]) != 0);
       if (__pyx_t_5) {
 
-        /* "src/multi_dirs_chunker.pyx":827
+        /* "src/multi_dirs_chunker.pyx":1004
  *             for i in range(self.c_config.num_ignore):
  *                 if self.c_config.ignore_patterns[i]:
  *                     free(self.c_config.ignore_patterns[i])             # <<<<<<<<<<<<<<
@@ -9600,7 +10603,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
  */
         free((__pyx_v_self->c_config.ignore_patterns[__pyx_v_i]));
 
-        /* "src/multi_dirs_chunker.pyx":826
+        /* "src/multi_dirs_chunker.pyx":1003
  *         if self.c_config.ignore_patterns:
  *             for i in range(self.c_config.num_ignore):
  *                 if self.c_config.ignore_patterns[i]:             # <<<<<<<<<<<<<<
@@ -9610,7 +10613,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
       }
     }
 
-    /* "src/multi_dirs_chunker.pyx":828
+    /* "src/multi_dirs_chunker.pyx":1005
  *                 if self.c_config.ignore_patterns[i]:
  *                     free(self.c_config.ignore_patterns[i])
  *             free(self.c_config.ignore_patterns)             # <<<<<<<<<<<<<<
@@ -9619,7 +10622,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
  */
     free(__pyx_v_self->c_config.ignore_patterns);
 
-    /* "src/multi_dirs_chunker.pyx":824
+    /* "src/multi_dirs_chunker.pyx":1001
  *             free(self.c_config.output_dir)
  * 
  *         if self.c_config.ignore_patterns:             # <<<<<<<<<<<<<<
@@ -9628,7 +10631,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":830
+  /* "src/multi_dirs_chunker.pyx":1007
  *             free(self.c_config.ignore_patterns)
  * 
  *         if self.c_config.unignore_patterns:             # <<<<<<<<<<<<<<
@@ -9638,7 +10641,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
   __pyx_t_5 = (__pyx_v_self->c_config.unignore_patterns != 0);
   if (__pyx_t_5) {
 
-    /* "src/multi_dirs_chunker.pyx":831
+    /* "src/multi_dirs_chunker.pyx":1008
  * 
  *         if self.c_config.unignore_patterns:
  *             for i in range(self.c_config.num_unignore):             # <<<<<<<<<<<<<<
@@ -9650,7 +10653,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
     for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
       __pyx_v_i = __pyx_t_8;
 
-      /* "src/multi_dirs_chunker.pyx":832
+      /* "src/multi_dirs_chunker.pyx":1009
  *         if self.c_config.unignore_patterns:
  *             for i in range(self.c_config.num_unignore):
  *                 if self.c_config.unignore_patterns[i]:             # <<<<<<<<<<<<<<
@@ -9660,7 +10663,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
       __pyx_t_5 = ((__pyx_v_self->c_config.unignore_patterns[__pyx_v_i]) != 0);
       if (__pyx_t_5) {
 
-        /* "src/multi_dirs_chunker.pyx":833
+        /* "src/multi_dirs_chunker.pyx":1010
  *             for i in range(self.c_config.num_unignore):
  *                 if self.c_config.unignore_patterns[i]:
  *                     free(self.c_config.unignore_patterns[i])             # <<<<<<<<<<<<<<
@@ -9669,7 +10672,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
  */
         free((__pyx_v_self->c_config.unignore_patterns[__pyx_v_i]));
 
-        /* "src/multi_dirs_chunker.pyx":832
+        /* "src/multi_dirs_chunker.pyx":1009
  *         if self.c_config.unignore_patterns:
  *             for i in range(self.c_config.num_unignore):
  *                 if self.c_config.unignore_patterns[i]:             # <<<<<<<<<<<<<<
@@ -9679,7 +10682,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
       }
     }
 
-    /* "src/multi_dirs_chunker.pyx":834
+    /* "src/multi_dirs_chunker.pyx":1011
  *                 if self.c_config.unignore_patterns[i]:
  *                     free(self.c_config.unignore_patterns[i])
  *             free(self.c_config.unignore_patterns)             # <<<<<<<<<<<<<<
@@ -9688,7 +10691,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
  */
     free(__pyx_v_self->c_config.unignore_patterns);
 
-    /* "src/multi_dirs_chunker.pyx":830
+    /* "src/multi_dirs_chunker.pyx":1007
  *             free(self.c_config.ignore_patterns)
  * 
  *         if self.c_config.unignore_patterns:             # <<<<<<<<<<<<<<
@@ -9697,7 +10700,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":836
+  /* "src/multi_dirs_chunker.pyx":1013
  *             free(self.c_config.unignore_patterns)
  * 
  *         if self.c_config.binary_exts:             # <<<<<<<<<<<<<<
@@ -9707,7 +10710,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
   __pyx_t_5 = (__pyx_v_self->c_config.binary_exts != 0);
   if (__pyx_t_5) {
 
-    /* "src/multi_dirs_chunker.pyx":837
+    /* "src/multi_dirs_chunker.pyx":1014
  * 
  *         if self.c_config.binary_exts:
  *             for i in range(self.c_config.num_binary_exts):             # <<<<<<<<<<<<<<
@@ -9719,7 +10722,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
     for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
       __pyx_v_i = __pyx_t_8;
 
-      /* "src/multi_dirs_chunker.pyx":838
+      /* "src/multi_dirs_chunker.pyx":1015
  *         if self.c_config.binary_exts:
  *             for i in range(self.c_config.num_binary_exts):
  *                 if self.c_config.binary_exts[i]:             # <<<<<<<<<<<<<<
@@ -9729,7 +10732,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
       __pyx_t_5 = ((__pyx_v_self->c_config.binary_exts[__pyx_v_i]) != 0);
       if (__pyx_t_5) {
 
-        /* "src/multi_dirs_chunker.pyx":839
+        /* "src/multi_dirs_chunker.pyx":1016
  *             for i in range(self.c_config.num_binary_exts):
  *                 if self.c_config.binary_exts[i]:
  *                     free(self.c_config.binary_exts[i])             # <<<<<<<<<<<<<<
@@ -9738,7 +10741,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
  */
         free((__pyx_v_self->c_config.binary_exts[__pyx_v_i]));
 
-        /* "src/multi_dirs_chunker.pyx":838
+        /* "src/multi_dirs_chunker.pyx":1015
  *         if self.c_config.binary_exts:
  *             for i in range(self.c_config.num_binary_exts):
  *                 if self.c_config.binary_exts[i]:             # <<<<<<<<<<<<<<
@@ -9748,7 +10751,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
       }
     }
 
-    /* "src/multi_dirs_chunker.pyx":840
+    /* "src/multi_dirs_chunker.pyx":1017
  *                 if self.c_config.binary_exts[i]:
  *                     free(self.c_config.binary_exts[i])
  *             free(self.c_config.binary_exts)             # <<<<<<<<<<<<<<
@@ -9757,7 +10760,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
  */
     free(__pyx_v_self->c_config.binary_exts);
 
-    /* "src/multi_dirs_chunker.pyx":836
+    /* "src/multi_dirs_chunker.pyx":1013
  *             free(self.c_config.unignore_patterns)
  * 
  *         if self.c_config.binary_exts:             # <<<<<<<<<<<<<<
@@ -9766,7 +10769,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":842
+  /* "src/multi_dirs_chunker.pyx":1019
  *             free(self.c_config.binary_exts)
  * 
  *         if self.c_config.priority_rules:             # <<<<<<<<<<<<<<
@@ -9776,7 +10779,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
   __pyx_t_5 = (__pyx_v_self->c_config.priority_rules != 0);
   if (__pyx_t_5) {
 
-    /* "src/multi_dirs_chunker.pyx":843
+    /* "src/multi_dirs_chunker.pyx":1020
  * 
  *         if self.c_config.priority_rules:
  *             for i in range(self.c_config.num_priority_rules):             # <<<<<<<<<<<<<<
@@ -9788,7 +10791,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
     for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
       __pyx_v_i = __pyx_t_8;
 
-      /* "src/multi_dirs_chunker.pyx":844
+      /* "src/multi_dirs_chunker.pyx":1021
  *         if self.c_config.priority_rules:
  *             for i in range(self.c_config.num_priority_rules):
  *                 if self.c_config.priority_rules[i].pattern:             # <<<<<<<<<<<<<<
@@ -9798,16 +10801,15 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
       __pyx_t_5 = ((__pyx_v_self->c_config.priority_rules[__pyx_v_i]).pattern != 0);
       if (__pyx_t_5) {
 
-        /* "src/multi_dirs_chunker.pyx":845
+        /* "src/multi_dirs_chunker.pyx":1022
  *             for i in range(self.c_config.num_priority_rules):
  *                 if self.c_config.priority_rules[i].pattern:
  *                     free(self.c_config.priority_rules[i].pattern)             # <<<<<<<<<<<<<<
  *             free(self.c_config.priority_rules)
- * 
  */
         free((__pyx_v_self->c_config.priority_rules[__pyx_v_i]).pattern);
 
-        /* "src/multi_dirs_chunker.pyx":844
+        /* "src/multi_dirs_chunker.pyx":1021
  *         if self.c_config.priority_rules:
  *             for i in range(self.c_config.num_priority_rules):
  *                 if self.c_config.priority_rules[i].pattern:             # <<<<<<<<<<<<<<
@@ -9817,15 +10819,14 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
       }
     }
 
-    /* "src/multi_dirs_chunker.pyx":846
+    /* "src/multi_dirs_chunker.pyx":1023
  *                 if self.c_config.priority_rules[i].pattern:
  *                     free(self.c_config.priority_rules[i].pattern)
  *             free(self.c_config.priority_rules)             # <<<<<<<<<<<<<<
- * 
  */
     free(__pyx_v_self->c_config.priority_rules);
 
-    /* "src/multi_dirs_chunker.pyx":842
+    /* "src/multi_dirs_chunker.pyx":1019
  *             free(self.c_config.binary_exts)
  * 
  *         if self.c_config.priority_rules:             # <<<<<<<<<<<<<<
@@ -9834,7 +10835,7 @@ static void __pyx_pf_3src_18multi_dirs_chunker_15ParallelChunker_6__dealloc__(st
  */
   }
 
-  /* "src/multi_dirs_chunker.pyx":818
+  /* "src/multi_dirs_chunker.pyx":994
  *             self.is_pool_active = False
  * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
@@ -10114,8 +11115,8 @@ static void __pyx_tp_dealloc_3src_18multi_dirs_chunker_ParallelChunker(PyObject 
 }
 
 static PyMethodDef __pyx_methods_3src_18multi_dirs_chunker_ParallelChunker[] = {
-  {"process_directories", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_3process_directories, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0},
-  {"close", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_5close, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0},
+  {"process_directories", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_3process_directories, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_3src_18multi_dirs_chunker_15ParallelChunker_2process_directories},
+  {"close", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_5close, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_3src_18multi_dirs_chunker_15ParallelChunker_4close},
   {"__reduce_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_9__reduce_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0},
   {"__setstate_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3src_18multi_dirs_chunker_15ParallelChunker_11__setstate_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0},
   {0, 0, 0, 0}
@@ -10123,6 +11124,7 @@ static PyMethodDef __pyx_methods_3src_18multi_dirs_chunker_ParallelChunker[] = {
 #if CYTHON_USE_TYPE_SPECS
 static PyType_Slot __pyx_type_3src_18multi_dirs_chunker_ParallelChunker_slots[] = {
   {Py_tp_dealloc, (void *)__pyx_tp_dealloc_3src_18multi_dirs_chunker_ParallelChunker},
+  {Py_tp_doc, (void *)PyDoc_STR("\n    Python-facing class that wraps the entire C-based pipeline.\n    ")},
   {Py_tp_methods, (void *)__pyx_methods_3src_18multi_dirs_chunker_ParallelChunker},
   {Py_tp_new, (void *)__pyx_tp_new_3src_18multi_dirs_chunker_ParallelChunker},
   {0, 0},
@@ -10167,7 +11169,7 @@ static PyTypeObject __pyx_type_3src_18multi_dirs_chunker_ParallelChunker = {
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE, /*tp_flags*/
-  0, /*tp_doc*/
+  PyDoc_STR("\n    Python-facing class that wraps the entire C-based pipeline.\n    "), /*tp_doc*/
   0, /*tp_traverse*/
   0, /*tp_clear*/
   0, /*tp_richcompare*/
@@ -10243,6 +11245,7 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_kp_u_Failed_to_create_thread_pool, __pyx_k_Failed_to_create_thread_pool, sizeof(__pyx_k_Failed_to_create_thread_pool), 0, 1, 0, 0},
     {&__pyx_kp_u_File, __pyx_k_File, sizeof(__pyx_k_File), 0, 1, 0, 0},
     {&__pyx_n_s_MemoryError, __pyx_k_MemoryError, sizeof(__pyx_k_MemoryError), 0, 0, 1, 1},
+    {&__pyx_kp_u_None, __pyx_k_None, sizeof(__pyx_k_None), 0, 1, 0, 0},
     {&__pyx_n_s_ParallelChunker, __pyx_k_ParallelChunker, sizeof(__pyx_k_ParallelChunker), 0, 0, 1, 1},
     {&__pyx_n_s_ParallelChunker___reduce_cython, __pyx_k_ParallelChunker___reduce_cython, sizeof(__pyx_k_ParallelChunker___reduce_cython), 0, 0, 1, 1},
     {&__pyx_n_s_ParallelChunker___setstate_cytho, __pyx_k_ParallelChunker___setstate_cytho, sizeof(__pyx_k_ParallelChunker___setstate_cytho), 0, 0, 1, 1},
@@ -10251,9 +11254,11 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_kp_u_Pool_is_already_destroyed, __pyx_k_Pool_is_already_destroyed, sizeof(__pyx_k_Pool_is_already_destroyed), 0, 1, 0, 0},
     {&__pyx_n_s_RuntimeError, __pyx_k_RuntimeError, sizeof(__pyx_k_RuntimeError), 0, 0, 1, 1},
     {&__pyx_n_s_TypeError, __pyx_k_TypeError, sizeof(__pyx_k_TypeError), 0, 0, 1, 1},
-    {&__pyx_n_s__19, __pyx_k__19, sizeof(__pyx_k__19), 0, 0, 1, 1},
     {&__pyx_kp_b__2, __pyx_k__2, sizeof(__pyx_k__2), 0, 0, 0, 0},
     {&__pyx_kp_u__2, __pyx_k__2, sizeof(__pyx_k__2), 0, 1, 0, 0},
+    {&__pyx_n_s__21, __pyx_k__21, sizeof(__pyx_k__21), 0, 0, 1, 1},
+    {&__pyx_kp_u__3, __pyx_k__3, sizeof(__pyx_k__3), 0, 1, 0, 0},
+    {&__pyx_kp_u__4, __pyx_k__4, sizeof(__pyx_k__4), 0, 1, 0, 0},
     {&__pyx_n_s_asyncio_coroutines, __pyx_k_asyncio_coroutines, sizeof(__pyx_k_asyncio_coroutines), 0, 0, 1, 1},
     {&__pyx_n_s_b_dir, __pyx_k_b_dir, sizeof(__pyx_k_b_dir), 0, 0, 1, 1},
     {&__pyx_n_s_binary_extensions, __pyx_k_binary_extensions, sizeof(__pyx_k_binary_extensions), 0, 0, 1, 1},
@@ -10312,9 +11317,9 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
 /* #### Code section: cached_builtins ### */
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
   __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) __PYX_ERR(0, 141, __pyx_L1_error)
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 165, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 163, __pyx_L1_error)
   __pyx_builtin_enumerate = __Pyx_GetBuiltinName(__pyx_n_s_enumerate); if (!__pyx_builtin_enumerate) __PYX_ERR(0, 187, __pyx_L1_error)
-  __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(0, 803, __pyx_L1_error)
+  __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(0, 976, __pyx_L1_error)
   __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) __PYX_ERR(1, 2, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
@@ -10337,91 +11342,91 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
 
-  /* "src/multi_dirs_chunker.pyx":774
+  /* "src/multi_dirs_chunker.pyx":942
  *             self.c_config.binary_exts = <char**>malloc(self.c_config.num_binary_exts * sizeof(char*))
  *             if not self.c_config.binary_exts:
  *                 raise MemoryError("Failed to allocate binary_exts")             # <<<<<<<<<<<<<<
  * 
  *             for i in range(self.c_config.num_binary_exts):
  */
-  __pyx_tuple__7 = PyTuple_Pack(1, __pyx_kp_u_Failed_to_allocate_binary_exts); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 774, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__7);
-  __Pyx_GIVEREF(__pyx_tuple__7);
+  __pyx_tuple__9 = PyTuple_Pack(1, __pyx_kp_u_Failed_to_allocate_binary_exts); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 942, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__9);
+  __Pyx_GIVEREF(__pyx_tuple__9);
 
-  /* "src/multi_dirs_chunker.pyx":787
+  /* "src/multi_dirs_chunker.pyx":956
  *             )
  *             if not self.c_config.priority_rules:
  *                 raise MemoryError("Failed to allocate priority_rules")             # <<<<<<<<<<<<<<
  * 
  *             for i in range(self.c_config.num_priority_rules):
  */
-  __pyx_tuple__8 = PyTuple_Pack(1, __pyx_kp_u_Failed_to_allocate_priority_rule); if (unlikely(!__pyx_tuple__8)) __PYX_ERR(0, 787, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__8);
-  __Pyx_GIVEREF(__pyx_tuple__8);
+  __pyx_tuple__10 = PyTuple_Pack(1, __pyx_kp_u_Failed_to_allocate_priority_rule); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 956, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__10);
+  __Pyx_GIVEREF(__pyx_tuple__10);
 
-  /* "src/multi_dirs_chunker.pyx":797
+  /* "src/multi_dirs_chunker.pyx":967
  *         self.pool = create_thread_pool(num_threads, b".", &self.c_config)
  *         if not self.pool:
  *             raise MemoryError("Failed to create thread pool")             # <<<<<<<<<<<<<<
  * 
  *         self.is_pool_active = True
  */
-  __pyx_tuple__9 = PyTuple_Pack(1, __pyx_kp_u_Failed_to_create_thread_pool); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 797, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__9);
-  __Pyx_GIVEREF(__pyx_tuple__9);
+  __pyx_tuple__11 = PyTuple_Pack(1, __pyx_kp_u_Failed_to_create_thread_pool); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(0, 967, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__11);
+  __Pyx_GIVEREF(__pyx_tuple__11);
 
-  /* "src/multi_dirs_chunker.pyx":803
- *     def process_directories(self, list dirs):
+  /* "src/multi_dirs_chunker.pyx":976
+ *         """
  *         if not self.is_pool_active:
  *             raise RuntimeError("Pool is already destroyed.")             # <<<<<<<<<<<<<<
  * 
  *         cdef bytes b_dir
  */
-  __pyx_tuple__10 = PyTuple_Pack(1, __pyx_kp_u_Pool_is_already_destroyed); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 803, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__10);
-  __Pyx_GIVEREF(__pyx_tuple__10);
+  __pyx_tuple__12 = PyTuple_Pack(1, __pyx_kp_u_Pool_is_already_destroyed); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 976, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__12);
+  __Pyx_GIVEREF(__pyx_tuple__12);
 
   /* "src/multi_dirs_chunker.pyx":125
  * # 2) Built-in ignore patterns
  * ##################################################
  * cdef tuple BUILT_IN_IGNORES = (b".git", b".idea", b"__pycache__", b"*.pyc", b"*.pyo", b"node_modules", b"target")             # <<<<<<<<<<<<<<
- * 
+ * cdef int NUM_BUILTIN_IGNORES = 7
  * 
  */
-  __pyx_tuple__11 = PyTuple_Pack(7, __pyx_kp_b_git, __pyx_kp_b_idea, __pyx_n_b_pycache, __pyx_kp_b_pyc, __pyx_kp_b_pyo, __pyx_n_b_node_modules, __pyx_n_b_target); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(0, 125, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__11);
-  __Pyx_GIVEREF(__pyx_tuple__11);
+  __pyx_tuple__13 = PyTuple_Pack(7, __pyx_kp_b_git, __pyx_kp_b_idea, __pyx_n_b_pycache, __pyx_kp_b_pyc, __pyx_kp_b_pyo, __pyx_n_b_node_modules, __pyx_n_b_target); if (unlikely(!__pyx_tuple__13)) __PYX_ERR(0, 125, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__13);
+  __Pyx_GIVEREF(__pyx_tuple__13);
 
-  /* "src/multi_dirs_chunker.pyx":801
+  /* "src/multi_dirs_chunker.pyx":971
  *         self.is_pool_active = True
  * 
  *     def process_directories(self, list dirs):             # <<<<<<<<<<<<<<
- *         if not self.is_pool_active:
- *             raise RuntimeError("Pool is already destroyed.")
+ *         """
+ *         Public method: queue up one or more directories, wait for completion, then chunk.
  */
-  __pyx_tuple__12 = PyTuple_Pack(4, __pyx_n_s_self, __pyx_n_s_dirs, __pyx_n_s_b_dir, __pyx_n_s_d); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 801, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__12);
-  __Pyx_GIVEREF(__pyx_tuple__12);
-  __pyx_codeobj__13 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__12, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_multi_dirs_chunker_pyx, __pyx_n_s_process_directories, 801, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__13)) __PYX_ERR(0, 801, __pyx_L1_error)
+  __pyx_tuple__14 = PyTuple_Pack(4, __pyx_n_s_self, __pyx_n_s_dirs, __pyx_n_s_b_dir, __pyx_n_s_d); if (unlikely(!__pyx_tuple__14)) __PYX_ERR(0, 971, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__14);
+  __Pyx_GIVEREF(__pyx_tuple__14);
+  __pyx_codeobj__15 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__14, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_multi_dirs_chunker_pyx, __pyx_n_s_process_directories, 971, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__15)) __PYX_ERR(0, 971, __pyx_L1_error)
 
-  /* "src/multi_dirs_chunker.pyx":813
+  /* "src/multi_dirs_chunker.pyx":986
  *         process_chunks(self.pool)
  * 
  *     def close(self):             # <<<<<<<<<<<<<<
- *         if self.is_pool_active:
- *             destroy_thread_pool(self.pool)
+ *         """
+ *         Shut down the pool if it's still active.
  */
-  __pyx_tuple__14 = PyTuple_Pack(1, __pyx_n_s_self); if (unlikely(!__pyx_tuple__14)) __PYX_ERR(0, 813, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__14);
-  __Pyx_GIVEREF(__pyx_tuple__14);
-  __pyx_codeobj__15 = (PyObject*)__Pyx_PyCode_New(1, 0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__14, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_multi_dirs_chunker_pyx, __pyx_n_s_close, 813, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__15)) __PYX_ERR(0, 813, __pyx_L1_error)
+  __pyx_tuple__16 = PyTuple_Pack(1, __pyx_n_s_self); if (unlikely(!__pyx_tuple__16)) __PYX_ERR(0, 986, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__16);
+  __Pyx_GIVEREF(__pyx_tuple__16);
+  __pyx_codeobj__17 = (PyObject*)__Pyx_PyCode_New(1, 0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__16, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src_multi_dirs_chunker_pyx, __pyx_n_s_close, 986, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__17)) __PYX_ERR(0, 986, __pyx_L1_error)
 
   /* "(tree fragment)":1
  * def __reduce_cython__(self):             # <<<<<<<<<<<<<<
  *     raise TypeError, "no default __reduce__ due to non-trivial __cinit__"
  * def __setstate_cython__(self, __pyx_state):
  */
-  __pyx_codeobj__16 = (PyObject*)__Pyx_PyCode_New(1, 0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__14, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_reduce_cython, 1, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__16)) __PYX_ERR(1, 1, __pyx_L1_error)
+  __pyx_codeobj__18 = (PyObject*)__Pyx_PyCode_New(1, 0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__16, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_reduce_cython, 1, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__18)) __PYX_ERR(1, 1, __pyx_L1_error)
 
   /* "(tree fragment)":3
  * def __reduce_cython__(self):
@@ -10429,10 +11434,10 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * def __setstate_cython__(self, __pyx_state):             # <<<<<<<<<<<<<<
  *     raise TypeError, "no default __reduce__ due to non-trivial __cinit__"
  */
-  __pyx_tuple__17 = PyTuple_Pack(2, __pyx_n_s_self, __pyx_n_s_pyx_state); if (unlikely(!__pyx_tuple__17)) __PYX_ERR(1, 3, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__17);
-  __Pyx_GIVEREF(__pyx_tuple__17);
-  __pyx_codeobj__18 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__17, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_setstate_cython, 3, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__18)) __PYX_ERR(1, 3, __pyx_L1_error)
+  __pyx_tuple__19 = PyTuple_Pack(2, __pyx_n_s_self, __pyx_n_s_pyx_state); if (unlikely(!__pyx_tuple__19)) __PYX_ERR(1, 3, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__19);
+  __Pyx_GIVEREF(__pyx_tuple__19);
+  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_setstate_cython, 3, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) __PYX_ERR(1, 3, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -10495,15 +11500,15 @@ static int __Pyx_modinit_type_init_code(void) {
   __Pyx_RefNannySetupContext("__Pyx_modinit_type_init_code", 0);
   /*--- Type init code ---*/
   #if CYTHON_USE_TYPE_SPECS
-  __pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker = (PyTypeObject *) __Pyx_PyType_FromModuleAndSpec(__pyx_m, &__pyx_type_3src_18multi_dirs_chunker_ParallelChunker_spec, NULL); if (unlikely(!__pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker)) __PYX_ERR(0, 736, __pyx_L1_error)
-  if (__Pyx_fix_up_extension_type_from_spec(&__pyx_type_3src_18multi_dirs_chunker_ParallelChunker_spec, __pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker) < 0) __PYX_ERR(0, 736, __pyx_L1_error)
+  __pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker = (PyTypeObject *) __Pyx_PyType_FromModuleAndSpec(__pyx_m, &__pyx_type_3src_18multi_dirs_chunker_ParallelChunker_spec, NULL); if (unlikely(!__pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker)) __PYX_ERR(0, 899, __pyx_L1_error)
+  if (__Pyx_fix_up_extension_type_from_spec(&__pyx_type_3src_18multi_dirs_chunker_ParallelChunker_spec, __pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker) < 0) __PYX_ERR(0, 899, __pyx_L1_error)
   #else
   __pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker = &__pyx_type_3src_18multi_dirs_chunker_ParallelChunker;
   #endif
   #if !CYTHON_COMPILING_IN_LIMITED_API
   #endif
   #if !CYTHON_USE_TYPE_SPECS
-  if (__Pyx_PyType_Ready(__pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker) < 0) __PYX_ERR(0, 736, __pyx_L1_error)
+  if (__Pyx_PyType_Ready(__pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker) < 0) __PYX_ERR(0, 899, __pyx_L1_error)
   #endif
   #if PY_MAJOR_VERSION < 3
   __pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker->tp_print = 0;
@@ -10513,9 +11518,9 @@ static int __Pyx_modinit_type_init_code(void) {
     __pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker->tp_getattro = __Pyx_PyObject_GenericGetAttr;
   }
   #endif
-  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_ParallelChunker, (PyObject *) __pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker) < 0) __PYX_ERR(0, 736, __pyx_L1_error)
+  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_ParallelChunker, (PyObject *) __pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker) < 0) __PYX_ERR(0, 899, __pyx_L1_error)
   #if !CYTHON_COMPILING_IN_LIMITED_API
-  if (__Pyx_setup_reduce((PyObject *) __pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker) < 0) __PYX_ERR(0, 736, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject *) __pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker) < 0) __PYX_ERR(0, 899, __pyx_L1_error)
   #endif
   __Pyx_RefNannyFinishContext();
   return 0;
@@ -10826,7 +11831,7 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "src/multi_dirs_chunker.pyx":66
+  /* "src/multi_dirs_chunker.pyx":68
  * ##################################################
  * 
  * cdef int INITIAL_QUEUE_SIZE = 1024             # <<<<<<<<<<<<<<
@@ -10839,107 +11844,107 @@ if (!__Pyx_RefNanny) {
  * # 2) Built-in ignore patterns
  * ##################################################
  * cdef tuple BUILT_IN_IGNORES = (b".git", b".idea", b"__pycache__", b"*.pyc", b"*.pyo", b"node_modules", b"target")             # <<<<<<<<<<<<<<
- * 
+ * cdef int NUM_BUILTIN_IGNORES = 7
  * 
  */
-  __Pyx_INCREF(__pyx_tuple__11);
+  __Pyx_INCREF(__pyx_tuple__13);
   __Pyx_XGOTREF(__pyx_v_3src_18multi_dirs_chunker_BUILT_IN_IGNORES);
-  __Pyx_DECREF_SET(__pyx_v_3src_18multi_dirs_chunker_BUILT_IN_IGNORES, __pyx_tuple__11);
-  __Pyx_GIVEREF(__pyx_tuple__11);
+  __Pyx_DECREF_SET(__pyx_v_3src_18multi_dirs_chunker_BUILT_IN_IGNORES, __pyx_tuple__13);
+  __Pyx_GIVEREF(__pyx_tuple__13);
 
-  /* "src/multi_dirs_chunker.pyx":128
- * 
- * 
+  /* "src/multi_dirs_chunker.pyx":126
+ * ##################################################
+ * cdef tuple BUILT_IN_IGNORES = (b".git", b".idea", b"__pycache__", b"*.pyc", b"*.pyo", b"node_modules", b"target")
  * cdef int NUM_BUILTIN_IGNORES = 7             # <<<<<<<<<<<<<<
  * 
- * 
+ * ##################################################
  */
   __pyx_v_3src_18multi_dirs_chunker_NUM_BUILTIN_IGNORES = 7;
 
-  /* "src/multi_dirs_chunker.pyx":743
+  /* "src/multi_dirs_chunker.pyx":909
  * 
  *     def __cinit__(self,
  *                   list user_ignore = [],             # <<<<<<<<<<<<<<
  *                   list user_unignore = [],
  *                   list binary_extensions = ["exe","dll","so"],
  */
-  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 743, __pyx_L1_error)
+  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 909, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_k__3 = ((PyObject*)__pyx_t_2);
+  __pyx_k__5 = ((PyObject*)__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "src/multi_dirs_chunker.pyx":744
+  /* "src/multi_dirs_chunker.pyx":910
  *     def __cinit__(self,
  *                   list user_ignore = [],
  *                   list user_unignore = [],             # <<<<<<<<<<<<<<
  *                   list binary_extensions = ["exe","dll","so"],
  *                   list priority_rules = [],
  */
-  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 744, __pyx_L1_error)
+  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 910, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_k__4 = ((PyObject*)__pyx_t_2);
+  __pyx_k__6 = ((PyObject*)__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "src/multi_dirs_chunker.pyx":745
+  /* "src/multi_dirs_chunker.pyx":911
  *                   list user_ignore = [],
  *                   list user_unignore = [],
  *                   list binary_extensions = ["exe","dll","so"],             # <<<<<<<<<<<<<<
  *                   list priority_rules = [],
  *                   size_t max_size = 10*1024*1024,
  */
-  __pyx_t_2 = PyList_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 745, __pyx_L1_error)
+  __pyx_t_2 = PyList_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 911, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_INCREF(__pyx_n_u_exe);
   __Pyx_GIVEREF(__pyx_n_u_exe);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_2, 0, __pyx_n_u_exe)) __PYX_ERR(0, 745, __pyx_L1_error);
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_2, 0, __pyx_n_u_exe)) __PYX_ERR(0, 911, __pyx_L1_error);
   __Pyx_INCREF(__pyx_n_u_dll);
   __Pyx_GIVEREF(__pyx_n_u_dll);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_2, 1, __pyx_n_u_dll)) __PYX_ERR(0, 745, __pyx_L1_error);
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_2, 1, __pyx_n_u_dll)) __PYX_ERR(0, 911, __pyx_L1_error);
   __Pyx_INCREF(__pyx_n_u_so);
   __Pyx_GIVEREF(__pyx_n_u_so);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_2, 2, __pyx_n_u_so)) __PYX_ERR(0, 745, __pyx_L1_error);
-  __pyx_k__5 = ((PyObject*)__pyx_t_2);
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_2, 2, __pyx_n_u_so)) __PYX_ERR(0, 911, __pyx_L1_error);
+  __pyx_k__7 = ((PyObject*)__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "src/multi_dirs_chunker.pyx":746
+  /* "src/multi_dirs_chunker.pyx":912
  *                   list user_unignore = [],
  *                   list binary_extensions = ["exe","dll","so"],
  *                   list priority_rules = [],             # <<<<<<<<<<<<<<
  *                   size_t max_size = 10*1024*1024,
  *                   bint token_mode=False,
  */
-  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 746, __pyx_L1_error)
+  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 912, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_k__6 = ((PyObject*)__pyx_t_2);
+  __pyx_k__8 = ((PyObject*)__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "src/multi_dirs_chunker.pyx":801
+  /* "src/multi_dirs_chunker.pyx":971
  *         self.is_pool_active = True
  * 
  *     def process_directories(self, list dirs):             # <<<<<<<<<<<<<<
- *         if not self.is_pool_active:
- *             raise RuntimeError("Pool is already destroyed.")
+ *         """
+ *         Public method: queue up one or more directories, wait for completion, then chunk.
  */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_18multi_dirs_chunker_15ParallelChunker_3process_directories, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ParallelChunker_process_director, NULL, __pyx_n_s_src_multi_dirs_chunker, __pyx_d, ((PyObject *)__pyx_codeobj__13)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 801, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_18multi_dirs_chunker_15ParallelChunker_3process_directories, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ParallelChunker_process_director, NULL, __pyx_n_s_src_multi_dirs_chunker, __pyx_d, ((PyObject *)__pyx_codeobj__15)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 971, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (__Pyx_SetItemOnTypeDict((PyObject *)__pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker, __pyx_n_s_process_directories, __pyx_t_2) < 0) __PYX_ERR(0, 801, __pyx_L1_error)
+  if (__Pyx_SetItemOnTypeDict((PyObject *)__pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker, __pyx_n_s_process_directories, __pyx_t_2) < 0) __PYX_ERR(0, 971, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   PyType_Modified(__pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker);
 
-  /* "src/multi_dirs_chunker.pyx":813
+  /* "src/multi_dirs_chunker.pyx":986
  *         process_chunks(self.pool)
  * 
  *     def close(self):             # <<<<<<<<<<<<<<
- *         if self.is_pool_active:
- *             destroy_thread_pool(self.pool)
+ *         """
+ *         Shut down the pool if it's still active.
  */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_18multi_dirs_chunker_15ParallelChunker_5close, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ParallelChunker_close, NULL, __pyx_n_s_src_multi_dirs_chunker, __pyx_d, ((PyObject *)__pyx_codeobj__15)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 813, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_18multi_dirs_chunker_15ParallelChunker_5close, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ParallelChunker_close, NULL, __pyx_n_s_src_multi_dirs_chunker, __pyx_d, ((PyObject *)__pyx_codeobj__17)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 986, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (__Pyx_SetItemOnTypeDict((PyObject *)__pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker, __pyx_n_s_close, __pyx_t_2) < 0) __PYX_ERR(0, 813, __pyx_L1_error)
+  if (__Pyx_SetItemOnTypeDict((PyObject *)__pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker, __pyx_n_s_close, __pyx_t_2) < 0) __PYX_ERR(0, 986, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   PyType_Modified(__pyx_ptype_3src_18multi_dirs_chunker_ParallelChunker);
 
@@ -10948,7 +11953,7 @@ if (!__Pyx_RefNanny) {
  *     raise TypeError, "no default __reduce__ due to non-trivial __cinit__"
  * def __setstate_cython__(self, __pyx_state):
  */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_18multi_dirs_chunker_15ParallelChunker_9__reduce_cython__, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ParallelChunker___reduce_cython, NULL, __pyx_n_s_src_multi_dirs_chunker, __pyx_d, ((PyObject *)__pyx_codeobj__16)); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 1, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_18multi_dirs_chunker_15ParallelChunker_9__reduce_cython__, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ParallelChunker___reduce_cython, NULL, __pyx_n_s_src_multi_dirs_chunker, __pyx_d, ((PyObject *)__pyx_codeobj__18)); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_reduce_cython, __pyx_t_2) < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -10959,15 +11964,15 @@ if (!__Pyx_RefNanny) {
  * def __setstate_cython__(self, __pyx_state):             # <<<<<<<<<<<<<<
  *     raise TypeError, "no default __reduce__ due to non-trivial __cinit__"
  */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_18multi_dirs_chunker_15ParallelChunker_11__setstate_cython__, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ParallelChunker___setstate_cytho, NULL, __pyx_n_s_src_multi_dirs_chunker, __pyx_d, ((PyObject *)__pyx_codeobj__18)); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 3, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3src_18multi_dirs_chunker_15ParallelChunker_11__setstate_cython__, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ParallelChunker___setstate_cytho, NULL, __pyx_n_s_src_multi_dirs_chunker, __pyx_d, ((PyObject *)__pyx_codeobj__20)); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 3, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_setstate_cython, __pyx_t_2) < 0) __PYX_ERR(1, 3, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "src/multi_dirs_chunker.pyx":1
- * # multi_dirs_chunker.pyx             # <<<<<<<<<<<<<<
+ * # cython: language_level=3, boundscheck=False, cdivision=True, wraparound=False             # <<<<<<<<<<<<<<
+ * # multi_dirs_chunker.pyx
  * 
- * from libc.stdlib cimport malloc, free, realloc, qsort
  */
   __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
@@ -11386,101 +12391,6 @@ bad:
     return;
 }
 #endif
-
-/* GetItemInt */
-static PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j) {
-    PyObject *r;
-    if (unlikely(!j)) return NULL;
-    r = PyObject_GetItem(o, j);
-    Py_DECREF(j);
-    return r;
-}
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_List_Fast(PyObject *o, Py_ssize_t i,
-                                                              CYTHON_NCP_UNUSED int wraparound,
-                                                              CYTHON_NCP_UNUSED int boundscheck) {
-#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-    Py_ssize_t wrapped_i = i;
-    if (wraparound & unlikely(i < 0)) {
-        wrapped_i += PyList_GET_SIZE(o);
-    }
-    if ((!boundscheck) || likely(__Pyx_is_valid_index(wrapped_i, PyList_GET_SIZE(o)))) {
-        PyObject *r = PyList_GET_ITEM(o, wrapped_i);
-        Py_INCREF(r);
-        return r;
-    }
-    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
-#else
-    return PySequence_GetItem(o, i);
-#endif
-}
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Tuple_Fast(PyObject *o, Py_ssize_t i,
-                                                              CYTHON_NCP_UNUSED int wraparound,
-                                                              CYTHON_NCP_UNUSED int boundscheck) {
-#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-    Py_ssize_t wrapped_i = i;
-    if (wraparound & unlikely(i < 0)) {
-        wrapped_i += PyTuple_GET_SIZE(o);
-    }
-    if ((!boundscheck) || likely(__Pyx_is_valid_index(wrapped_i, PyTuple_GET_SIZE(o)))) {
-        PyObject *r = PyTuple_GET_ITEM(o, wrapped_i);
-        Py_INCREF(r);
-        return r;
-    }
-    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
-#else
-    return PySequence_GetItem(o, i);
-#endif
-}
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i, int is_list,
-                                                     CYTHON_NCP_UNUSED int wraparound,
-                                                     CYTHON_NCP_UNUSED int boundscheck) {
-#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS && CYTHON_USE_TYPE_SLOTS
-    if (is_list || PyList_CheckExact(o)) {
-        Py_ssize_t n = ((!wraparound) | likely(i >= 0)) ? i : i + PyList_GET_SIZE(o);
-        if ((!boundscheck) || (likely(__Pyx_is_valid_index(n, PyList_GET_SIZE(o))))) {
-            PyObject *r = PyList_GET_ITEM(o, n);
-            Py_INCREF(r);
-            return r;
-        }
-    }
-    else if (PyTuple_CheckExact(o)) {
-        Py_ssize_t n = ((!wraparound) | likely(i >= 0)) ? i : i + PyTuple_GET_SIZE(o);
-        if ((!boundscheck) || likely(__Pyx_is_valid_index(n, PyTuple_GET_SIZE(o)))) {
-            PyObject *r = PyTuple_GET_ITEM(o, n);
-            Py_INCREF(r);
-            return r;
-        }
-    } else {
-        PyMappingMethods *mm = Py_TYPE(o)->tp_as_mapping;
-        PySequenceMethods *sm = Py_TYPE(o)->tp_as_sequence;
-        if (mm && mm->mp_subscript) {
-            PyObject *r, *key = PyInt_FromSsize_t(i);
-            if (unlikely(!key)) return NULL;
-            r = mm->mp_subscript(o, key);
-            Py_DECREF(key);
-            return r;
-        }
-        if (likely(sm && sm->sq_item)) {
-            if (wraparound && unlikely(i < 0) && likely(sm->sq_length)) {
-                Py_ssize_t l = sm->sq_length(o);
-                if (likely(l >= 0)) {
-                    i += l;
-                } else {
-                    if (!PyErr_ExceptionMatches(PyExc_OverflowError))
-                        return NULL;
-                    PyErr_Clear();
-                }
-            }
-            return sm->sq_item(o, i);
-        }
-    }
-#else
-    if (is_list || !PyMapping_Check(o)) {
-        return PySequence_GetItem(o, i);
-    }
-#endif
-    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
-}
 
 /* PyFunctionFastCall */
 #if CYTHON_FAST_PYCALL && !CYTHON_VECTORCALL
@@ -11994,6 +12904,40 @@ static void __Pyx_WriteUnraisable(const char *name, int clineno,
 #endif
 }
 
+/* decode_c_bytes */
+static CYTHON_INLINE PyObject* __Pyx_decode_c_bytes(
+         const char* cstring, Py_ssize_t length, Py_ssize_t start, Py_ssize_t stop,
+         const char* encoding, const char* errors,
+         PyObject* (*decode_func)(const char *s, Py_ssize_t size, const char *errors)) {
+    if (unlikely((start < 0) | (stop < 0))) {
+        if (start < 0) {
+            start += length;
+            if (start < 0)
+                start = 0;
+        }
+        if (stop < 0)
+            stop += length;
+    }
+    if (stop > length)
+        stop = length;
+    if (unlikely(stop <= start))
+        return __Pyx_NewRef(__pyx_empty_unicode);
+    length = stop - start;
+    cstring += start;
+    if (decode_func) {
+        return decode_func(cstring, length, errors);
+    } else {
+        return PyUnicode_Decode(cstring, length, encoding, errors);
+    }
+}
+
+/* PyUnicode_Unicode */
+static CYTHON_INLINE PyObject* __Pyx_PyUnicode_Unicode(PyObject *obj) {
+    if (unlikely(obj == Py_None))
+        obj = __pyx_kp_u_None;
+    return __Pyx_NewRef(obj);
+}
+
 /* JoinPyUnicode */
 static PyObject* __Pyx_PyUnicode_Join(PyObject* value_tuple, Py_ssize_t value_count, Py_ssize_t result_ulength,
                                       Py_UCS4 max_char) {
@@ -12097,6 +13041,40 @@ __Pyx_PyList_FromArray(PyObject *const *src, Py_ssize_t n)
     if (unlikely(res == NULL)) return NULL;
     __Pyx_copy_object_array(src, ((PyListObject*)res)->ob_item, n);
     return res;
+}
+#endif
+
+/* SliceTupleAndList */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE void __Pyx_crop_slice(Py_ssize_t* _start, Py_ssize_t* _stop, Py_ssize_t* _length) {
+    Py_ssize_t start = *_start, stop = *_stop, length = *_length;
+    if (start < 0) {
+        start += length;
+        if (start < 0)
+            start = 0;
+    }
+    if (stop < 0)
+        stop += length;
+    else if (stop > length)
+        stop = length;
+    *_length = stop - start;
+    *_start = start;
+    *_stop = stop;
+}
+static CYTHON_INLINE PyObject* __Pyx_PyList_GetSlice(
+            PyObject* src, Py_ssize_t start, Py_ssize_t stop) {
+    Py_ssize_t length = PyList_GET_SIZE(src);
+    __Pyx_crop_slice(&start, &stop, &length);
+    if (length <= 0) {
+        return PyList_New(0);
+    }
+    return __Pyx_PyList_FromArray(((PyListObject*)src)->ob_item + start, length);
+}
+static CYTHON_INLINE PyObject* __Pyx_PyTuple_GetSlice(
+            PyObject* src, Py_ssize_t start, Py_ssize_t stop) {
+    Py_ssize_t length = PyTuple_GET_SIZE(src);
+    __Pyx_crop_slice(&start, &stop, &length);
+    return __Pyx_PyTuple_FromArray(((PyTupleObject*)src)->ob_item + start, length);
 }
 #endif
 
@@ -12509,6 +13487,101 @@ static int __Pyx__ArgTypeTest(PyObject *obj, PyTypeObject *type, const char *nam
     __Pyx_DECREF_TypeName(type_name);
     __Pyx_DECREF_TypeName(obj_type_name);
     return 0;
+}
+
+/* GetItemInt */
+static PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j) {
+    PyObject *r;
+    if (unlikely(!j)) return NULL;
+    r = PyObject_GetItem(o, j);
+    Py_DECREF(j);
+    return r;
+}
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_List_Fast(PyObject *o, Py_ssize_t i,
+                                                              CYTHON_NCP_UNUSED int wraparound,
+                                                              CYTHON_NCP_UNUSED int boundscheck) {
+#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+    Py_ssize_t wrapped_i = i;
+    if (wraparound & unlikely(i < 0)) {
+        wrapped_i += PyList_GET_SIZE(o);
+    }
+    if ((!boundscheck) || likely(__Pyx_is_valid_index(wrapped_i, PyList_GET_SIZE(o)))) {
+        PyObject *r = PyList_GET_ITEM(o, wrapped_i);
+        Py_INCREF(r);
+        return r;
+    }
+    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
+#else
+    return PySequence_GetItem(o, i);
+#endif
+}
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Tuple_Fast(PyObject *o, Py_ssize_t i,
+                                                              CYTHON_NCP_UNUSED int wraparound,
+                                                              CYTHON_NCP_UNUSED int boundscheck) {
+#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+    Py_ssize_t wrapped_i = i;
+    if (wraparound & unlikely(i < 0)) {
+        wrapped_i += PyTuple_GET_SIZE(o);
+    }
+    if ((!boundscheck) || likely(__Pyx_is_valid_index(wrapped_i, PyTuple_GET_SIZE(o)))) {
+        PyObject *r = PyTuple_GET_ITEM(o, wrapped_i);
+        Py_INCREF(r);
+        return r;
+    }
+    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
+#else
+    return PySequence_GetItem(o, i);
+#endif
+}
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i, int is_list,
+                                                     CYTHON_NCP_UNUSED int wraparound,
+                                                     CYTHON_NCP_UNUSED int boundscheck) {
+#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS && CYTHON_USE_TYPE_SLOTS
+    if (is_list || PyList_CheckExact(o)) {
+        Py_ssize_t n = ((!wraparound) | likely(i >= 0)) ? i : i + PyList_GET_SIZE(o);
+        if ((!boundscheck) || (likely(__Pyx_is_valid_index(n, PyList_GET_SIZE(o))))) {
+            PyObject *r = PyList_GET_ITEM(o, n);
+            Py_INCREF(r);
+            return r;
+        }
+    }
+    else if (PyTuple_CheckExact(o)) {
+        Py_ssize_t n = ((!wraparound) | likely(i >= 0)) ? i : i + PyTuple_GET_SIZE(o);
+        if ((!boundscheck) || likely(__Pyx_is_valid_index(n, PyTuple_GET_SIZE(o)))) {
+            PyObject *r = PyTuple_GET_ITEM(o, n);
+            Py_INCREF(r);
+            return r;
+        }
+    } else {
+        PyMappingMethods *mm = Py_TYPE(o)->tp_as_mapping;
+        PySequenceMethods *sm = Py_TYPE(o)->tp_as_sequence;
+        if (mm && mm->mp_subscript) {
+            PyObject *r, *key = PyInt_FromSsize_t(i);
+            if (unlikely(!key)) return NULL;
+            r = mm->mp_subscript(o, key);
+            Py_DECREF(key);
+            return r;
+        }
+        if (likely(sm && sm->sq_item)) {
+            if (wraparound && unlikely(i < 0) && likely(sm->sq_length)) {
+                Py_ssize_t l = sm->sq_length(o);
+                if (likely(l >= 0)) {
+                    i += l;
+                } else {
+                    if (!PyErr_ExceptionMatches(PyExc_OverflowError))
+                        return NULL;
+                    PyErr_Clear();
+                }
+            }
+            return sm->sq_item(o, i);
+        }
+    }
+#else
+    if (is_list || !PyMapping_Check(o)) {
+        return PySequence_GetItem(o, i);
+    }
+#endif
+    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
 }
 
 /* KeywordStringCheck */
@@ -15348,7 +16421,7 @@ __Pyx_PyType_GetName(PyTypeObject* tp)
     if (unlikely(name == NULL) || unlikely(!PyUnicode_Check(name))) {
         PyErr_Clear();
         Py_XDECREF(name);
-        name = __Pyx_NewRef(__pyx_n_s__19);
+        name = __Pyx_NewRef(__pyx_n_s__21);
     }
     return name;
 }

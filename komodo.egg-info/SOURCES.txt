@@ -1,5 +1,8 @@
 README.md
+pyproject.toml
 setup.py
+include/dirent_wrapper.h
+include/myheader.h
 komodo.egg-info/PKG-INFO
 komodo.egg-info/SOURCES.txt
 komodo.egg-info/dependency_links.txt
@@ -10,5 +13,6 @@ src/__init__.py
 src/cli.py
 src/config.py
 src/core.c
+src/dirent_wrapper.c
 src/gitignore.c
 src/multi_dirs_chunker.c
