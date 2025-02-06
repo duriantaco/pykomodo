@@ -32,7 +32,7 @@ def test_large_file_chunking():
             priority_rules=None
         )
 
-        with ParallelChunker(config) as pc:
+        with ParallelChunker.from_config(config) as pc:
             pc.process_directory(test_dir)
 
         chunk_files = sorted(f for f in os.listdir(tmpdir) if f.startswith("chunk-"))

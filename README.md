@@ -1,119 +1,143 @@
-# Overview
+# Komodo Parallel Chunker
+A multi-threaded utility for scanning directories, ignoring or un-ignoring files by pattern, skipping binary files, assigning priority scores, and splitting text content into chunks.
 
-This repository contains a parallel file processing and chunking tool implemented in Cython. It scans one or more directories, applies ignore rules, skips binary files, calculates a priority score, and writes out file contents in chunks of a configurable size.
+It supports both command-line usage (via the included cli.py) and integration into Python scripts (via the ParallelChunker class). You can choose to chunk by bytes or by tokens (whitespace-delimited), stream all output to stdout, or write them into separate chunk files (or one single aggregator file).
 
-# Key Features
+# Motivation: 
 
-1. Parallel scanning with a configurable number of threads
-2. Ignore patterns + “unignore” overrides
-3. Binary file skipping based on extension or null-byte detection
-4. Priority scoring for matched rules
+* Purpose: This project aims to recursively scan one or more directories, filter out undesired files (e.g., binary files, certain patterns), then chunk the textual contents into smaller segments. It's designed for workflows where you need to process large sets of text-based files efficiently—especially for tasks like feeding context to Large Language Models (LLMs), indexing content for search, or extracting information from large codebases.
 
-## Two output modes:
-* Multi-chunk: Writes each chunk to a separate chunk-0.txt, chunk-1.txt, …
-* Repo aggregator aggregator: Writes all chunked output into a single file or to stdout if streaming.
+* Why: Handling large repositories with thousands of text files can be time-consuming and prone to memory issues when done sequentially. Our chunker uses a thread pool to read these files in parallel, ignoring files that match certain patterns (e.g., .git/, node_modules/), skipping binary files, and chunking only what you care about (e.g., .py, .cpp, docs, or other textual files). Then it can output them as multiple small chunks or one big aggregated file, sorted by priority (higher priority patterns first).
 
-# Requirements
-* Python 3.7+
-* Cython (for building .pyx files)
-* A C compiler toolchain (e.g., gcc or clang)
-* (Optional) argparse for the CLI usage (built into Python standard library)
+# Features
+* Parallel file reading through a pool of threads.
+* Ignore and Unignore patterns to skip or force-include certain files.
+* Binary file detection (by extension or by scanning for null bytes).
+* Custom priority rules (e.g., place .py at priority 10, .cpp at priority 20, etc.).
+* Token-based or byte-based chunking.
+* Multiple output modes:
+    * Write each chunk to a separate file: chunk-1.txt, chunk-2.txt, etc.
+    * Stream everything to stdout (for piping).
+    * Write to a single aggregator file (when --whole_chunk-mode is set).
+* Configurable via CLI or direct Python usage.
 
-# Installation & Build
+# Installation
 
-Clone or download this repository.
-
-Install dependencies (Cython, etc.):
-
-```bash
-pip install cython
-```
-
-Build the Cython extension in place:
 
 ```bash
-python setup.py build_ext --inplace
+pip install komodo
 ```
 
-This compiles the .pyx sources into a native extension module (e.g., multi_dirs_chunker.cpython-39-darwin.so on macOS).
+# CLI Usage
 
-Check that compilation succeeded. You should see a .so or .pyd file in the src/ folder.
-
-# Running via CLI
-A typical entry point is cli.py, which uses argparse to expose a flexible command-line interface. Basic usage:
+A simple CLI script, cli.py, is included. If installed properly (either locally or from PyPI with an entry_points definition), you can run:
 
 ```bash
-python cli.py [OPTIONS] [DIRS...]
+komodo --help
 ```
 
-## Common Options
-* `DIRS`
-The directories to scan. Defaults to the current directory (.) if none provided.
+```bash
+python cli.py --help
+```
 
-* `--ignore PATTERN ...`
-One or more patterns to ignore (in addition to built-in ones). Example: --ignore *.log --ignore .git/**.
+```bash
+usage: cli.py [-h] [--ignore ...] [--unignore ...] [--binary-extensions ...]
+              [--priority-rule pattern,score] [--max-size INT]
+              [--token-mode] [--output-dir DIR] [--stream]
+              [--num-threads INT] [--whole_chunk-mode]
+              [dirs ...]
 
-* `--unignore PATTERN ...`
-Patterns to override the ignore rules. E.g., if --ignore includes *.log, but you want important.log, you can --unignore important.log.
+Chunk and optionally produce a single-file aggregator output for text-based files.
 
-* `--binary-extensions EXT ...`
-File extensions that should be treated as binary and skipped. Defaults to exe, dll, so, etc.
+positional arguments:
+  dirs                  One or more directories to scan. Defaults to current directory if none.
 
-* `--priority-rule PATTERN,SCORE`
-Add a rule to give matched files some priority. Example: --priority-rule '.*\\.py,20'. You can repeat this option.
+optional arguments:
+  -h, --help            show this help message and exit
+  --ignore ...          Ignore patterns (e.g., *.log, .git/**)
+  --unignore ...        Unignore patterns to override ignores
+  --binary-extensions ...
+                        File extensions treated as binary (skipped)
+  --priority-rule       'pattern,score' format (can be repeated)
+  --max-size INT        Max chunk size in bytes or tokens
+  --token-mode          If set, interpret max-size as tokens
+  --output-dir DIR      Output directory for chunked files
+  --stream              If set, write all output to stdout
+  --num-threads INT     Number of worker threads for parallel reading
+  --whole_chunk-mode    Use single aggregator file instead of multiple
 
-* `--max-size SIZE`
-Maximum chunk size in bytes (if not using token mode) or tokens (if --token-mode is used). Defaults to 10 MB (10 * 1024 * 1024).
+```
 
-* `--token-mode`
-Interprets --max-size as a token count rather than bytes.
+# Real-World Demo
 
-* `--output-dir DIR`
-If not using --stream or aggregator mode, chunk files will be placed here. Defaults to the current directory if omitted.
+Suppose you have a local clone of the Scikit-Learn repository. Let's chunk it by bytes (10 KB each chunk) and place it into a single aggregator file, ignoring *.png and skipping docs/_build:
 
-* `--stream`
-Output everything to stdout instead of creating files.
+```bash
+python cli.py ~/repos/scikit-learn \
+    --ignore "*.png" --ignore "_build" \
+    --binary-extensions exe dll so \
+    --priority-rule "*.py,10" --priority-rule "*.rst,5" \
+    --max-size 10240 \
+    --output-dir ./chunks_output \
+    --whole_chunk-mode \
+    --num-threads 8
+``` 
 
-* `--num-threads N`
-Number of parallel worker threads.
-
-* `--whole_chunk_mode-output`
-If set, produces a single-file aggregator named whole_chunk_mode-output.txt (unless --stream is used, in which case it merges all content to stdout). Otherwise, the default is multiple chunk-N.txt files.
-
-# Direct usage in python
-
-You can also import the compiled extension and use the ParallelChunker class directly in Python:
 
 ```python
-from multi_dirs_chunker import ParallelChunker
+from src.core.multi_dirs_chunker import ParallelChunker
 
 chunker = ParallelChunker(
-    user_ignore=["*.log", ".git/**"],
-    priority_rules=[(".*\\.py", 20)],
-    max_size=1024 * 1024,  # 1 MB
-    token_mode=False,
-    output_dir="my_output",
-    stream=False,
+    user_ignore=[".git", "*.pyc"],
+    user_unignore=[], 
+    binary_extensions=["exe", "dll", "so"],
+    priority_rules=[("*.py", 10), ("*.md", 5)],
+    max_size=2000,
+    token_mode=True,     # True => interpret max_size as tokens
+    output_dir="my_chunks",
+    stream=False,        # False => write to files
     num_threads=4,
-    repomix_mode=False
+    whole_chunk_mode=False
 )
 
-chunker.process_directories(["./my_project"])
+chunker.process_directories([
+    "/path/to/my_python_app",
+    "/path/to/another_dir"
+])
+
 chunker.close()
 ```
+# Configuration and Parameters
+Below is a summary of the main parameters you can pass either via CLI or to ParallelChunker:
 
-Set =True if you want a single aggregated file in my_output/repomix-output.txt.
+* user_ignore / --ignore
+A list of patterns (fnmatch-style) to ignore. Example: [".git", "*.pyc", "node_modules"].
 
-# FAQ
+* user_unignore / --unignore
+A list of patterns to override the ignore list. Example: if you generally ignore *.png but want to re-include banner.png, put ["banner.png"] in unignore.
 
-* Why have a single-file aggregator?
+* binary_extensions / --binary-extensions
+Extensions to treat as binary. Example: ["exe", "dll", "so"].
 
-Some scenarios (like advanced code review or certain LLM-based tools) prefer a single big text file. The --repomix-mode option makes it easy.
+* priority_rules / --priority-rule
+A list of (pattern, score) pairs. Higher score => higher priority => processed/written first.
+CLI: --priority-rule '*.py,10' --priority-rule '*.md,5'
 
-* How can I skip even more files?
+* max_size / --max-size
+If token_mode=False, treat as max bytes per chunk. If token_mode=True, treat as max tokens per chunk.
 
-Use --ignore multiple times or add to BINARY_FILE_EXTENSIONS and built-in ignore patterns in multi_dirs_chunker.pyx.
+* token_mode / --token-mode
+If True, chunk by whitespace-delimited tokens. If False, chunk by raw bytes.
 
-* How do I choose between token vs. byte chunking?
+* output_dir / --output-dir
+Directory where chunk files (or the aggregator file) are written. Defaults to current directory if omitted.
 
-If you’re sending data to a large language model with a known max token limit, --token-mode is better. Otherwise, normal byte-based chunking is simpler.
+* stream / --stream
+If True, write to stdout instead of creating chunk files. Useful for piping to other commands.
+
+* num_threads / --num-threads
+How many worker threads to spawn for parallel reading.
+
+* *hole_chunk_mode / --whole_chunk-mode
+If True, produce a single aggregator file named whole_chunk_mode-output.txt (or stdout if --stream).
+If False, produce multiple chunk-N.txt files.

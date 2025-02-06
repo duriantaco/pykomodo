@@ -1,6 +1,11 @@
 # cython: language_level=3, boundscheck=False, cdivision=True, wraparound=False
-# multi_dirs_chunker.pyx
 
+##########################################
+# 0) Imports & cimports
+##########################################
+
+from cpython.pystate cimport PyGILState_STATE, PyGILState_Ensure, PyGILState_Release
+from cpython.bytes cimport PyBytes_FromStringAndSize
 from libc.stdlib cimport malloc, free, realloc, qsort
 from libc.string cimport strcpy, strlen, strdup, strrchr, strcasecmp, memchr, memcpy
 from libc.stdio cimport FILE, fopen, fclose, fread, fwrite, fflush, stdout
@@ -61,9 +66,9 @@ cdef extern from "sys/stat.h":
 cdef extern from "stdio.h":
     int snprintf(char* s, size_t n, const char* format, ...)
 
-##################################################
-# 1) Our C structs and config
-##################################################
+##########################################
+# 1) Struct definitions and config
+##########################################
 
 cdef int INITIAL_QUEUE_SIZE = 1024
 
@@ -86,7 +91,7 @@ cdef struct CConfig:
     char** binary_exts
     size_t num_binary_exts
 
-    bint whole_chunk_mode   
+    bint whole_chunk_mode
 
 cdef struct FileEntry:
     char* path
@@ -119,20 +124,20 @@ cdef struct ThreadPool:
 
     size_t active_count
 
-##################################################
+##########################################
 # 2) Built-in ignore patterns
-##################################################
-cdef tuple BUILT_IN_IGNORES = (b".git", b".idea", b"__pycache__", b"*.pyc", b"*.pyo", b"node_modules", b"target")
+##########################################
+
+cdef tuple BUILT_IN_IGNORES = (
+    b".git", b".idea", b"__pycache__", b"*.pyc", b"*.pyo", b"node_modules", b"target"
+)
 cdef int NUM_BUILTIN_IGNORES = 7
 
-##################################################
-# 3) Helpers
-##################################################
+##########################################
+# 3) Helper functions
+##########################################
 
 cdef char* make_c_string(str s) except NULL:
-    """
-    Allocate a C string from a Python string. Caller must free().
-    """
     if s is None:
         return <char*>NULL
     cdef bytes b = s.encode('utf-8')
@@ -145,16 +150,13 @@ cdef char* make_c_string(str s) except NULL:
 cdef void merge_ignore_patterns(CConfig* config,
                                 list user_ignore,
                                 list user_unignore):
-    """
-    Combine built-in ignore patterns with user-specified. Store "unignore" patterns separately.
-    """
     cdef:
         int total_ign, idx, total_un, i
         char** new_ptr
         bytes pat_b, upat_b
         tuple builtin_ignores = BUILT_IN_IGNORES
 
-    # Copy built-in ignores
+    # copy built-in
     config.num_ignore = len(builtin_ignores)
     config.ignore_patterns = <char**>malloc(config.num_ignore * sizeof(char*))
     if not config.ignore_patterns:
@@ -162,8 +164,7 @@ cdef void merge_ignore_patterns(CConfig* config,
 
     for i in range(config.num_ignore):
         config.ignore_patterns[i] = strdup(builtin_ignores[i])
-    
-    # Add user ignores
+
     total_ign = config.num_ignore + len(user_ignore)
     new_ptr = <char**>realloc(config.ignore_patterns, total_ign * sizeof(char*))
     if not new_ptr:
@@ -177,7 +178,6 @@ cdef void merge_ignore_patterns(CConfig* config,
         idx += 1
     config.num_ignore = total_ign
 
-    # Add unignore patterns
     total_un = len(user_unignore)
     if total_un > 0:
         config.unignore_patterns = <char**>malloc(total_un * sizeof(char*))
@@ -192,34 +192,28 @@ cdef void merge_ignore_patterns(CConfig* config,
         config.num_unignore = 0
 
 cdef bint pattern_matches(const char* path, const char* pat):
-    """
-    Check fnmatch on (path, pattern).
-    """
     cdef int FNM_NOESCAPE = 0
     cdef int FNM_PATHNAME = 1
     if not path or not pat:
         return False
-    if fnmatch(pat, path, FNM_NOESCAPE | FNM_PATHNAME ) == 0:
+    if fnmatch(pat, path, FNM_NOESCAPE | FNM_PATHNAME) == 0:
         return True
     return False
 
 cdef bint should_ignore_file(const char* path, CConfig* config):
-    """
-    Return True if 'path' is matched by an ignore pattern,
-    unless it's first matched by an unignore pattern.
-    """
     cdef size_t i
     cdef const char* base_name = strrchr(path, b'/')
     if base_name:
-        base_name += 1  # skip past '/'
+        base_name += 1
     else:
         base_name = path
 
-    # Check unignore patterns first
+    # unignore first
     for i in range(config.num_unignore):
         if pattern_matches(base_name, config.unignore_patterns[i]):
             return False
 
+    # ignore patterns
     for i in range(config.num_ignore):
         if pattern_matches(base_name, config.ignore_patterns[i]):
             return True
@@ -227,9 +221,6 @@ cdef bint should_ignore_file(const char* path, CConfig* config):
     return False
 
 cdef bint is_binary_file(const char* path, CConfig* config):
-    """
-    Check file extension or scan for null bytes in the first 8192 bytes.
-    """
     cdef:
         const char* ext
         int i, j
@@ -237,10 +228,9 @@ cdef bint is_binary_file(const char* path, CConfig* config):
         size_t size_read
         char buf[8192]
 
-    # Check extension first
     ext = strrchr(path, b'.')
     if ext:
-        ext += 1  # skip past '.'
+        ext += 1
         for i in range(config.num_binary_exts):
             if strcasecmp(ext, config.binary_exts[i]) == 0:
                 return True
@@ -258,9 +248,6 @@ cdef bint is_binary_file(const char* path, CConfig* config):
     return False
 
 cdef int calculate_priority(const char* path, CConfig* config):
-    """
-    Check each priority rule; return highest score that matches 'path'.
-    """
     cdef int highest = 0
     cdef int i
     for i in range(config.num_priority_rules):
@@ -270,9 +257,6 @@ cdef int calculate_priority(const char* path, CConfig* config):
     return highest
 
 cdef char* read_file_contents(const char* path, size_t* size_out) except NULL:
-    """
-    Read the entire file into a malloc'd buffer (caller frees).
-    """
     cdef FILE* fp = fopen(path, "rb")
     if not fp:
         return NULL
@@ -308,37 +292,50 @@ cdef char* read_file_contents(const char* path, size_t* size_out) except NULL:
         size_out[0] = used
     return buffer
 
-cdef size_t count_tokens(const char* text):
-    """
-    Count "whitespace-separated tokens" if token_mode is active.
-    """
-    if not text:
-        return 0
+cdef list python_split_tokens(char* c_content):
+    if not c_content:
+        return []
+    cdef size_t length = strlen(c_content)
+    cdef bytes raw_b = c_content[:length]
+    cdef str text = raw_b.decode('utf-8', 'replace')
+    return text.split()
 
-    cdef size_t count = 0
-    cdef bint in_space = True
-    cdef char c
-    cdef size_t i = 0
-    cdef size_t length = strlen(text)
+##########################################
+# Bridging function for safe stdout writes
+##########################################
+# Avoids segfaults with Pytest's capfd by checking .buffer
 
-    for i in range(length):
-        c = text[i]
-        if c in [b' ', b'\t', b'\n', b'\r', b'\f', b'\v']:
-            in_space = True
+cdef void write_to_python_stdout(const char* data, size_t size) except *:
+    cdef PyGILState_STATE gstate
+    cdef object py_bytes
+    cdef object py_stdout
+
+    gstate = PyGILState_Ensure()
+    try:
+        import sys
+        py_stdout = sys.stdout
+
+        py_bytes = PyBytes_FromStringAndSize(data, size)
+        if not py_bytes:
+            raise MemoryError("Failed to create Python bytes")
+
+        if hasattr(py_stdout, "buffer"):
+            # Normal scenario: sys.stdout is real, has .buffer
+            py_stdout.buffer.write(py_bytes)
+            py_stdout.buffer.flush()
         else:
-            if in_space:
-                count += 1
-            in_space = False
-    return count
+            # Pytest or other replaced stdout -> no .buffer
+            py_stdout.write(py_bytes.decode("utf-8", "replace"))
+            py_stdout.flush()
 
-##################################################
-# 4) FileQueue & Basic Thread Functions
-##################################################
+    finally:
+        PyGILState_Release(gstate)
+
+##########################################
+# 4) FileQueue & Thread Functions
+##########################################
 
 cdef FileQueue* create_file_queue():
-    """
-    Simple dynamic array (FileEntry**) with a mutex.
-    """
     cdef FileQueue* queue = <FileQueue*>malloc(sizeof(FileQueue))
     if not queue:
         return NULL
@@ -360,41 +357,34 @@ cdef void destroy_file_queue(FileQueue* queue):
     free(queue)
 
 cdef void add_to_queue(FileQueue* queue, FileEntry* entry):
-    """
-    Push a FileEntry onto the queue, resizing if necessary.
-    """
     cdef size_t new_capacity
     cdef FileEntry** new_entries
-    
+
     if not entry or not entry.path:
         if entry:
             free(entry)
         return
-    
+
     pthread_mutex_lock(&queue.mutex)
-    
     if queue.count == queue.capacity:
         new_capacity = queue.capacity * 2
-        new_entries = <FileEntry**>realloc(queue.entries, new_capacity * sizeof(FileEntry*))
-        
+        new_entries = <FileEntry**>realloc(queue.entries,
+                                           new_capacity * sizeof(FileEntry*))
         if not new_entries:
-            # If we cannot realloc, we have to free the entry
             free(entry.path)
             free(entry)
             pthread_mutex_unlock(&queue.mutex)
             return
-        
         queue.entries = new_entries
         queue.capacity = new_capacity
-    
+
     queue.entries[queue.count] = entry
     queue.count += 1
-    
     pthread_mutex_unlock(&queue.mutex)
 
-##################################################
+##########################################
 # 5) Directory recursion
-##################################################
+##########################################
 
 cdef void process_directory(ThreadPool* pool, const char* dir_path):
     cdef DIRHandle d
@@ -421,6 +411,7 @@ cdef void process_directory(ThreadPool* pool, const char* dir_path):
                 break
 
             nameptr = my_dirent_name(e)
+            # skip anything that starts with '.' (hidden)
             if nameptr[0] == b'.':
                 continue
 
@@ -434,69 +425,52 @@ cdef void process_directory(ThreadPool* pool, const char* dir_path):
                     if S_ISDIR(st_info.st_mode):
                         process_directory(pool, full_path)
                     elif S_ISREG(st_info.st_mode):
-
-                        # Check ignore
+                        # skip if matched ignore, or binary
                         if should_ignore_file(full_path, pool.config):
                             continue
-
-                        # Check if binary
                         if is_binary_file(full_path, pool.config):
                             continue
 
-                        # Prepare a FileEntry to queue
                         fe = <FileEntry*>malloc(sizeof(FileEntry))
                         if not fe:
                             continue
-                            
                         fe.path = strdup(full_path)
                         if not fe.path:
                             free(fe)
                             continue
-                            
                         fe.content = NULL
                         fe.size = st_info.st_size
                         fe.priority = calculate_priority(full_path, pool.config)
 
                         add_to_queue(pool.queue, fe)
-
                         pthread_mutex_lock(&pool.mutex)
                         pthread_cond_signal(&pool.condition)
                         pthread_mutex_unlock(&pool.mutex)
-
     finally:
         my_closedir(d)
         free(full_path)
 
-
-##################################################
+##########################################
 # 6) Worker thread
-##################################################
+##########################################
 
 cdef void* worker_thread(void* arg) noexcept:
-    """
-    Each worker: waits for a file in the queue, reads content,
-    updates 'processed_files', etc.
-    """
     cdef ThreadPool* pool = <ThreadPool*>arg
-    cdef FileEntry* entry = NULL
+    cdef FileEntry* entry = <FileEntry*>NULL
     cdef size_t file_size = 0
     cdef char* contents = NULL
     cdef FileEntry** new_pf = NULL
     cdef size_t new_capacity
 
     while True:
-        # Acquire the main lock
         pthread_mutex_lock(&pool.mutex)
-        # Wait for new files or for 'should_stop'
         while pool.queue.count == 0 and not pool.should_stop:
             pthread_cond_wait(&pool.condition, &pool.mutex)
-        # If we are stopping and no more files left, break out
         if pool.should_stop and pool.queue.count == 0:
             pthread_mutex_unlock(&pool.mutex)
             break
 
-        # Pop from the queue
-        entry = NULL
+        entry = <FileEntry*>NULL
         if pool.queue.count > 0:
             pool.queue.count -= 1
             entry = pool.queue.entries[pool.queue.count]
@@ -509,18 +483,16 @@ cdef void* worker_thread(void* arg) noexcept:
             if contents:
                 entry.content = contents
                 entry.size = file_size
-                # Recompute priority after reading? (We do so again, optional.)
                 entry.priority = calculate_priority(entry.path, pool.config)
 
-            # Insert into processed_files
             pthread_mutex_lock(&pool.processed_mutex)
             if pool.processed_count == pool.processed_capacity:
-                new_capacity = pool.processed_capacity * 2  
-                new_pf = <FileEntry**>realloc(pool.processed_files, new_capacity * sizeof(FileEntry*))
-                
+                new_capacity = pool.processed_capacity * 2
+                new_pf = <FileEntry**>realloc(pool.processed_files,
+                                              new_capacity * sizeof(FileEntry*))
                 if not new_pf:
-                    # If we can't expand, we have to clean up and bail
                     pthread_mutex_unlock(&pool.processed_mutex)
+                    # free entry
                     if entry.path:
                         free(entry.path)
                     if entry.content:
@@ -546,14 +518,13 @@ cdef void* worker_thread(void* arg) noexcept:
 
     return NULL
 
-##################################################
+##########################################
 # 7) ThreadPool
-##################################################
+##########################################
 
-cdef ThreadPool* create_thread_pool(size_t num_threads, const char* base_path, CConfig* config):
-    """
-    Initialize the ThreadPool + workers.
-    """
+cdef ThreadPool* create_thread_pool(size_t num_threads,
+                                    const char* base_path,
+                                    CConfig* config):
     cdef ThreadPool* pool = <ThreadPool*>malloc(sizeof(ThreadPool))
     if not pool:
         return NULL
@@ -578,9 +549,10 @@ cdef ThreadPool* create_thread_pool(size_t num_threads, const char* base_path, C
 
     pool.processed_capacity = INITIAL_QUEUE_SIZE
     pool.processed_count = 0
-    pool.processed_files = <FileEntry**>malloc(pool.processed_capacity * sizeof(FileEntry*))
+    pool.processed_files = <FileEntry**>malloc(
+        pool.processed_capacity * sizeof(FileEntry*)
+    )
     if not pool.processed_files:
-        # cleanup
         destroy_file_queue(pool.queue)
         free(pool.threads)
         free(pool)
@@ -599,7 +571,6 @@ cdef void destroy_thread_pool(ThreadPool* pool):
     if not pool:
         return
 
-    # Signal all workers to stop
     pthread_mutex_lock(&pool.mutex)
     pool.should_stop = 1
     pthread_cond_broadcast(&pool.condition)
@@ -615,7 +586,7 @@ cdef void destroy_thread_pool(ThreadPool* pool):
         destroy_file_queue(pool.queue)
     if pool.base_path:
         free(pool.base_path)
-    
+
     if pool.processed_files:
         for i in range(pool.processed_count):
             if pool.processed_files[i]:
@@ -624,17 +595,15 @@ cdef void destroy_thread_pool(ThreadPool* pool):
                 if pool.processed_files[i].content:
                     free(pool.processed_files[i].content)
                 free(pool.processed_files[i])
+
         free(pool.processed_files)
-    
+
     pthread_mutex_destroy(&pool.mutex)
     pthread_cond_destroy(&pool.condition)
     pthread_mutex_destroy(&pool.processed_mutex)
     free(pool)
 
 cdef void thread_pool_wait_until_done(ThreadPool* pool):
-    """
-    Block until the queue is empty and all workers are idle.
-    """
     pthread_mutex_lock(&pool.mutex)
     while True:
         if pool.queue.count == 0 and pool.active_count == 0:
@@ -643,31 +612,23 @@ cdef void thread_pool_wait_until_done(ThreadPool* pool):
         pthread_cond_wait(&pool.condition, &pool.mutex)
 
 cdef int compare_file_entries(const void* a, const void* b) noexcept nogil:
-    """
-    qsort callback for descending priority, then alphabetical by path.
-    """
     cdef FileEntry* fa = (<FileEntry**>a)[0]
     cdef FileEntry* fb = (<FileEntry**>b)[0]
     cdef int diff = fb.priority - fa.priority
-
     if diff != 0:
         return diff
     else:
         return strcmp(fa.path, fb.path)
 
-##################################################
+##########################################
 # 8) Writing logic
-##################################################
+##########################################
 
 cdef void write_chunk(const char* content, size_t size, int chunk_num, CConfig* config):
-    """
-    Write a chunk of data either to stdout or to chunk-N.txt in output_dir.
-    """
     cdef char filename[1024]
 
     if config.stream:
-        fwrite(content, 1, size, stdout)
-        fflush(stdout)
+        write_to_python_stdout(content, size)
         return
 
     if config.output_dir:
@@ -682,79 +643,59 @@ cdef void write_chunk(const char* content, size_t size, int chunk_num, CConfig* 
     fclose(f)
 
 cdef void write_chunk_single_file(const char* content, size_t size, FILE* outfile):
-    """
-    Single-file aggregator approach, if desired (whole_chunk_mode).
-    """
     if not outfile:
         return
     fwrite(content, 1, size, outfile)
-    # optionally fflush(outfile)
 
-##################################################
-# 9) process_chunks Overhaul
-##################################################
-
-cdef list python_split_tokens(char* c_content):
-    """
-    Convert c_content => Python str => str.split() => list of tokens (strings).
-    """
-    if not c_content:
-        return []
-    cdef Py_ssize_t length = <Py_ssize_t>strlen(c_content)
-    cdef bytes raw_b = c_content[:length]
-    cdef str text = raw_b.decode('utf-8', 'replace')
-    return text.split()
+##########################################
+# 9) process_chunks
+##########################################
 
 cdef void process_chunks(ThreadPool* pool):
-    """
-    If token_mode=True, chunk by "max_size tokens" using python_split_tokens.
-    If token_mode=False, chunk by "max_size bytes."
-    """
     if not pool or not pool.processed_files or pool.processed_count == 0:
         return
 
-    # Sort by priority
-    qsort(pool.processed_files, pool.processed_count, sizeof(FileEntry*), compare_file_entries)
+    # Sort in descending priority, fallback path name
+    qsort(pool.processed_files,
+          pool.processed_count,
+          sizeof(FileEntry*),
+          compare_file_entries)
 
-    #### cdef all variables up front ####
     cdef size_t chunk_size = pool.config.max_size
-    cdef char* current_chunk = <char*>malloc(chunk_size + 128) 
+    cdef char* current_chunk = <char*>malloc(chunk_size + 128)
     cdef size_t chunk_used = 0
     cdef int chunk_number = 0
     cdef FILE* aggregator_file = NULL
     cdef char aggregator_name[1024]
 
-    # Bytes for path & header, etc.
     cdef bytes path_bytes
     cdef str py_path
     cdef bytes header_b
     cdef bytes sep_b = b"\n"
     cdef size_t sep_len = len(sep_b)
     cdef size_t i
-    cdef FileEntry* entry = NULL
+    cdef FileEntry* entry = <FileEntry*>NULL
 
     cdef list tokens
-    cdef Py_ssize_t total_tokens = 0
-    cdef Py_ssize_t idx = 0
-    cdef Py_ssize_t tokens_left = 0
-    cdef Py_ssize_t taking_tokens = 0
+    cdef size_t total_tokens = 0
+    cdef size_t idx = 0
+    cdef size_t tokens_left = 0
+    cdef size_t taking_tokens = 0
     cdef str empty_str
     cdef bytes empty_b
     cdef size_t empty_len
     cdef str chunk_str
     cdef bytes chunk_bytes
     cdef size_t cb_len
-    cdef list sub_list
+    cdef list sub_list = None
 
-
-    # For byte mode
-    cdef size_t file_len
-    cdef size_t header_len_
-    cdef size_t total_needed
-    cdef size_t content_pos
-    cdef size_t remaining
-    cdef size_t can_take
-    cdef size_t taking_bytes
+    cdef size_t file_len = 0
+    cdef size_t header_len_ = 0
+    cdef size_t total_needed = 0
+    cdef size_t content_pos = 0
+    cdef size_t remaining = 0
+    cdef size_t can_take = 0
+    cdef size_t taking_bytes = 0
 
     if not current_chunk:
         return
@@ -775,25 +716,21 @@ cdef void process_chunks(ThreadPool* pool):
                 free(current_chunk)
                 return
 
-    # main loop
     for i in range(pool.processed_count):
         entry = pool.processed_files[i]
         if not entry or not entry.content:
             continue
 
-        # Build "File: path\n"
         path_bytes = entry.path[:strlen(entry.path)]
         py_path = path_bytes.decode('utf-8', 'replace')
         header_b = f"File: {py_path}\n".encode('utf-8')
 
         if pool.config.token_mode:
-            ######## TOKEN MODE ########
             tokens = python_split_tokens(entry.content)
             total_tokens = len(tokens)
             idx = 0
 
             if total_tokens == 0:
-                # Just "File: path\n\n"
                 empty_str = f"File: {py_path}\n\n"
                 empty_b = empty_str.encode('utf-8')
                 empty_len = len(empty_b)
@@ -804,10 +741,12 @@ cdef void process_chunks(ThreadPool* pool):
                     chunk_number += 1
                 continue
 
+            # Break into token chunks
             while idx < total_tokens:
                 tokens_left = total_tokens - idx
                 taking_tokens = tokens_left if tokens_left < chunk_size else chunk_size
-                sub_list = tokens[idx : idx + taking_tokens] 
+                sub_list = tokens[idx : idx + taking_tokens]
+                idx += taking_tokens
 
                 chunk_str = f"File: {py_path}\n{' '.join(sub_list)}\n"
                 chunk_bytes = chunk_str.encode('utf-8')
@@ -820,7 +759,7 @@ cdef void process_chunks(ThreadPool* pool):
                     chunk_number += 1
 
         else:
-            ######## BYTE MODE ########
+            # byte mode
             file_len = strlen(entry.content)
             header_len_ = len(header_b)
             total_needed = header_len_ + file_len + sep_len
@@ -834,8 +773,8 @@ cdef void process_chunks(ThreadPool* pool):
                 chunk_used = 0
 
             if total_needed > chunk_size:
-                # flush leftover
                 if chunk_used > 0:
+                    # flush existing partial chunk
                     if pool.config.whole_chunk_mode:
                         write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
                     else:
@@ -853,7 +792,8 @@ cdef void process_chunks(ThreadPool* pool):
                     chunk_used += header_len_
 
                     memcpy(current_chunk + chunk_used,
-                           entry.content + content_pos, taking_bytes)
+                           entry.content + content_pos,
+                           taking_bytes)
                     chunk_used += taking_bytes
 
                     memcpy(current_chunk + chunk_used, <char*>sep_b, sep_len)
@@ -868,9 +808,8 @@ cdef void process_chunks(ThreadPool* pool):
                     content_pos += taking_bytes
                     remaining -= taking_bytes
                     chunk_used = 0
-
             else:
-                # fits in chunk
+                # fits in current chunk
                 memcpy(current_chunk + chunk_used, <char*>header_b, header_len_)
                 chunk_used += header_len_
 
@@ -880,7 +819,7 @@ cdef void process_chunks(ThreadPool* pool):
                 memcpy(current_chunk + chunk_used, <char*>sep_b, sep_len)
                 chunk_used += sep_len
 
-    # finalize for byte mode
+    # Flush any leftover chunk in byte mode
     if not pool.config.token_mode and chunk_used > 0:
         if pool.config.whole_chunk_mode:
             write_chunk_single_file(current_chunk, chunk_used, aggregator_file)
@@ -892,18 +831,37 @@ cdef void process_chunks(ThreadPool* pool):
     if pool.config.whole_chunk_mode and aggregator_file and aggregator_file != stdout:
         fclose(aggregator_file)
 
-##################################################
+##########################################
 # 10) ParallelChunker Class
-##################################################
+##########################################
 
 cdef class ParallelChunker:
-    """
-    Python-facing class that wraps the entire C-based pipeline.
-    """
     cdef:
         ThreadPool* pool
         CConfig c_config
         bint is_pool_active
+    
+    @classmethod
+    def from_config(cls, cfg):
+        user_ignore = cfg.ignore_patterns if cfg.ignore_patterns else []
+        user_unignore = []  # or from cfg if it has it
+        binary_exts = cfg.binary_extensions if cfg.binary_extensions else ["exe","dll","so"]
+        priority_list = []
+        if cfg.priority_rules:
+            priority_list = [(p.pattern, p.score) for p in cfg.priority_rules]
+
+        return cls(
+            user_ignore=user_ignore,
+            user_unignore=user_unignore,
+            binary_extensions=binary_exts,
+            priority_rules=priority_list,
+            max_size=cfg.max_size,
+            token_mode=cfg.token_mode,
+            output_dir=str(cfg.output_dir) if cfg.output_dir else None,
+            stream=cfg.stream,
+            num_threads=4,  # or grab from cfg if you add that
+            whole_chunk_mode=False  # or from cfg
+        )
 
     def __cinit__(self,
                   list user_ignore = [],
@@ -917,30 +875,29 @@ cdef class ParallelChunker:
                   size_t num_threads=4,
                   bint whole_chunk_mode=False
                   ):
-        cdef int i
 
-        # Populate CConfig
+        self.is_pool_active = True
+
         self.c_config.max_size = max_size
         self.c_config.token_mode = token_mode
         self.c_config.stream = stream
+        self.c_config.whole_chunk_mode = whole_chunk_mode
 
         if output_dir is not None:
             self.c_config.output_dir = make_c_string(output_dir)
         else:
             self.c_config.output_dir = NULL
 
-        self.c_config.whole_chunk_mode = whole_chunk_mode
-
-        # Merge ignore patterns
         merge_ignore_patterns(&self.c_config, user_ignore, user_unignore)
 
         # Binary extensions
         self.c_config.num_binary_exts = len(binary_extensions)
         if self.c_config.num_binary_exts > 0:
-            self.c_config.binary_exts = <char**>malloc(self.c_config.num_binary_exts * sizeof(char*))
+            self.c_config.binary_exts = <char**>malloc(
+                self.c_config.num_binary_exts * sizeof(char*)
+            )
             if not self.c_config.binary_exts:
                 raise MemoryError("Failed to allocate binary_exts")
-            
             for i in range(self.c_config.num_binary_exts):
                 self.c_config.binary_exts[i] = make_c_string(binary_extensions[i])
         else:
@@ -954,27 +911,23 @@ cdef class ParallelChunker:
             )
             if not self.c_config.priority_rules:
                 raise MemoryError("Failed to allocate priority_rules")
-            
             for i in range(self.c_config.num_priority_rules):
                 self.c_config.priority_rules[i].pattern = make_c_string(priority_rules[i][0])
                 self.c_config.priority_rules[i].score = priority_rules[i][1]
         else:
             self.c_config.priority_rules = NULL
 
-        # Create the pool of worker threads
+        # Create thread pool
         self.pool = create_thread_pool(num_threads, b".", &self.c_config)
         if not self.pool:
             raise MemoryError("Failed to create thread pool")
 
-        self.is_pool_active = True
+    def process_directory(self, directory):
+        self.process_directories([directory])
 
     def process_directories(self, list dirs):
-        """
-        Public method: queue up one or more directories, wait for completion, then chunk.
-        """
         if not self.is_pool_active:
-            raise RuntimeError("Pool is already destroyed.")
-        
+            raise RuntimeError("Pool is destroyed.")
         cdef bytes b_dir
         for d in dirs:
             b_dir = d.encode('utf-8')
@@ -985,39 +938,59 @@ cdef class ParallelChunker:
 
     def close(self):
         """
-        Shut down the pool if it's still active.
+        Safely destroy the thread pool and free everything EXACTLY ONCE.
         """
         if self.is_pool_active:
             destroy_thread_pool(self.pool)
+            self.pool = <ThreadPool*>NULL
+
             self.is_pool_active = False
 
-    def __dealloc__(self):
+            if self.c_config.output_dir:
+                free(self.c_config.output_dir)
+                self.c_config.output_dir = NULL
+
+            if self.c_config.ignore_patterns:
+                for i in range(self.c_config.num_ignore):
+                    if self.c_config.ignore_patterns[i]:
+                        free(self.c_config.ignore_patterns[i])
+                free(self.c_config.ignore_patterns)
+                self.c_config.ignore_patterns = NULL
+                self.c_config.num_ignore = 0
+
+            if self.c_config.unignore_patterns:
+                for i in range(self.c_config.num_unignore):
+                    if self.c_config.unignore_patterns[i]:
+                        free(self.c_config.unignore_patterns[i])
+                free(self.c_config.unignore_patterns)
+                self.c_config.unignore_patterns = NULL
+                self.c_config.num_unignore = 0
+
+            if self.c_config.binary_exts:
+                for i in range(self.c_config.num_binary_exts):
+                    if self.c_config.binary_exts[i]:
+                        free(self.c_config.binary_exts[i])
+                free(self.c_config.binary_exts)
+                self.c_config.binary_exts = NULL
+                self.c_config.num_binary_exts = 0
+
+            if self.c_config.priority_rules:
+                for i in range(self.c_config.num_priority_rules):
+                    if self.c_config.priority_rules[i].pattern:
+                        free(self.c_config.priority_rules[i].pattern)
+                free(self.c_config.priority_rules)
+                self.c_config.priority_rules = NULL
+                self.c_config.num_priority_rules = 0
+    
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
+        return False
 
-        # Free the strings allocated in c_config
-        if self.c_config.output_dir:
-            free(self.c_config.output_dir)
-
-        if self.c_config.ignore_patterns:
-            for i in range(self.c_config.num_ignore):
-                if self.c_config.ignore_patterns[i]:
-                    free(self.c_config.ignore_patterns[i])
-            free(self.c_config.ignore_patterns)
-
-        if self.c_config.unignore_patterns:
-            for i in range(self.c_config.num_unignore):
-                if self.c_config.unignore_patterns[i]:
-                    free(self.c_config.unignore_patterns[i])
-            free(self.c_config.unignore_patterns)
-
-        if self.c_config.binary_exts:
-            for i in range(self.c_config.num_binary_exts):
-                if self.c_config.binary_exts[i]:
-                    free(self.c_config.binary_exts[i])
-            free(self.c_config.binary_exts)
-
-        if self.c_config.priority_rules:
-            for i in range(self.c_config.num_priority_rules):
-                if self.c_config.priority_rules[i].pattern:
-                    free(self.c_config.priority_rules[i].pattern)
-            free(self.c_config.priority_rules)
+    def __dealloc__(self):
+        """
+        Only call close() to free everything. DO NOT free anything again here.
+        """
+        self.close()

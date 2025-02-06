@@ -32,7 +32,7 @@ def test_parallel_chunker_binary():
         )
 
         print("\nProcessing files...")
-        with ParallelChunker(config) as pc:
+        with ParallelChunker.from_config(config) as pc:
             pc.process_directory(test_dir)
 
         print(f"\nChecking output directory: {tmpdir}")

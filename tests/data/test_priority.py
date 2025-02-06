@@ -34,7 +34,7 @@ def test_parallel_chunker_priority():
             ]
         )
 
-        with ParallelChunker(config) as pc:
+        with ParallelChunker.from_config(config) as pc:
             print("\nProcessing directory...")
             pc.process_directory(test_dir)
             

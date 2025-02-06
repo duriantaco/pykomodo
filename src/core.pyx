@@ -146,10 +146,6 @@ cdef int cdef_calculate_priority(const char* path, CConfig* config):
 # 5) cdef logic for checking binary file
 ############################################################
 cdef bint cdef_is_binary_file(const char* path, char** exts, size_t ext_count):
-    """
-    1) If file extension is in exts => return True
-    2) Else read first 512 bytes => if there's a null => return True
-    """
     cdef const char* dot = strrchr(path, b'.')
     cdef FILE* fp
     cdef char buffer[512]
