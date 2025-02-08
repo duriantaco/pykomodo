@@ -1,11 +1,14 @@
 [build-system]
-requires = ["setuptools>=64", "wheel", "Cython"]
+requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "komodo"
 version = "0.0.0"
 dependencies = ["pathspec"]
+
+[project.scripts]
+komodo = "src.command_line:main"
 
 [tool.setuptools]
 packages = ["src"]

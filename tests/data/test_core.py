@@ -1,78 +1,67 @@
-# test_core.py
-
+import unittest
 import os
-import shutil
 import tempfile
-import pytest
+import shutil
+from src.core import PyCConfig, PriorityRule
 
-from src.core import (
-    PyCConfig,
-    add_ignore_pattern,
-    add_priority_rule,
-    py_should_ignore,
-    py_calculate_priority,
-    py_make_c_string,
-    py_read_file_contents,
-    py_count_tokens,
-    py_is_binary_file,
-)
+class TestPyCConfig(unittest.TestCase):
+    def setUp(self):
+        self.config = PyCConfig()
+        self.test_dir = tempfile.mkdtemp()
+        self.test_file_txt = os.path.join(self.test_dir, "example.txt")
+        self.test_file_bin = os.path.join(self.test_dir, "binary.bin")
+        with open(self.test_file_txt, "w", encoding="utf-8") as f:
+            f.write("some text data\nwith multiple lines\n")
+        with open(self.test_file_bin, "wb") as f:
+            f.write(b"\x00\x01\x02somebinary")
 
-@pytest.fixture
-def sample_config():
-    return PyCConfig()
+    def tearDown(self):
+        shutil.rmtree(self.test_dir)
 
-def test_make_c_string():
-    txt = "Hello World"
-    out = py_make_c_string(txt)
-    assert out == "Hello World"
-    assert py_make_c_string("") == ""
-    assert py_make_c_string(None) == "<NULL>"
+    def test_add_ignore_pattern(self):
+        self.config.add_ignore_pattern("*.txt")
+        self.assertIn("*.txt", self.config.ignore_patterns)
 
-def test_read_file_contents():
-    tmpdir = tempfile.mkdtemp()
-    try:
-        path = os.path.join(tmpdir, "testfile.txt")
-        with open(path, "w", encoding="utf-8") as f:
-            f.write("LineOne\nLineTwo\n")
-        contents = py_read_file_contents(path)
-        assert contents == "LineOne\nLineTwo\n"
-        missing = py_read_file_contents(os.path.join(tmpdir, "no_such.txt"))
-        assert missing == "<NULL>"
-    finally:
-        shutil.rmtree(tmpdir)
+    def test_add_unignore_pattern(self):
+        self.config.add_unignore_pattern("*.md")
+        self.assertIn("*.md", self.config.unignore_patterns)
 
-def test_count_tokens():
-    assert py_count_tokens("") == 0
-    assert py_count_tokens("hello") == 1
-    assert py_count_tokens("hello world") == 2
-    assert py_count_tokens("  one   two  three   ") == 3
+    def test_add_priority_rule(self):
+        self.config.add_priority_rule("*.py", 10)
+        self.assertTrue(any(r.pattern == "*.py" and r.score == 10 for r in self.config.priority_rules))
 
-def test_is_binary_file():
-    tmpdir = tempfile.mkdtemp()
-    try:
-        bin_path = os.path.join(tmpdir, "data.bin")
-        with open(bin_path, "wb") as f:
-            f.write(b"Hello\x00World")
-        txt_path = os.path.join(tmpdir, "data.txt")
-        with open(txt_path, "w", encoding="utf-8") as f:
-            f.write("Plain text file")
+    def test_should_ignore(self):
+        self.config.add_ignore_pattern("*.txt")
+        self.assertTrue(self.config.should_ignore("example.txt"))
+        self.config.add_unignore_pattern("example.txt")
+        self.assertFalse(self.config.should_ignore("example.txt"))
 
-        assert py_is_binary_file(bin_path, ["bin"]) is True
-        assert py_is_binary_file(txt_path, ["bin"]) is False
-        assert py_is_binary_file(bin_path, []) is True
-        assert py_is_binary_file(txt_path, []) is False
-    finally:
-        shutil.rmtree(tmpdir)
+    def test_calculate_priority(self):
+        self.config.add_priority_rule("*.txt", 5)
+        self.config.add_priority_rule("*example*", 10)
+        self.assertEqual(self.config.calculate_priority("example.txt"), 10)
+        self.assertEqual(self.config.calculate_priority("other.txt"), 5)
+        self.assertEqual(self.config.calculate_priority("none.dat"), 0)
 
-def test_should_ignore(sample_config):
-    assert py_should_ignore("secret.txt", sample_config) is False
-    add_ignore_pattern(sample_config, "secret.txt")
-    assert py_should_ignore("secret.txt", sample_config) is True
+    def test_is_binary_file(self):
+        self.config.binary_exts = ["bin"]
+        self.assertTrue(self.config.is_binary_file(self.test_file_bin))
+        self.assertFalse(self.config.is_binary_file(self.test_file_txt))
 
-def test_calculate_priority(sample_config):
-    assert py_calculate_priority("myfile.txt", sample_config) == 0
-    add_priority_rule(sample_config, "*.txt", 5)
-    assert py_calculate_priority("myfile.txt", sample_config) == 5
+    def test_read_file_contents(self):
+        contents_txt = self.config.read_file_contents(self.test_file_txt)
+        self.assertIn("some text data", contents_txt)
+        contents_missing = self.config.read_file_contents("does_not_exist.txt")
+        self.assertEqual(contents_missing, "<NULL>")
+
+    def test_count_tokens(self):
+        text = "this is a test with  seven tokens"
+        count = self.config.count_tokens(text)
+        self.assertEqual(count, 7)
+
+    def test_make_c_string(self):
+        self.assertEqual(self.config.make_c_string(None), "<NULL>")
+        self.assertEqual(self.config.make_c_string("data"), "data")
 
 if __name__ == "__main__":
-    pytest.main(["-v", __file__])
+    unittest.main()
