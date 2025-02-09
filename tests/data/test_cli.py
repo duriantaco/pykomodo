@@ -19,14 +19,13 @@ class TestCLIScript(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.test_dir)
 
-    def test_basic_cli(self):
+    def test_equal_chunks_cli(self):
         from src.command_line import main 
         
         test_args = [
             sys.argv[0],  
             self.test_dir,
-            '--ignore', '*.md',
-            '--priority-rule', '*.txt,10',
+            '--equal-chunks', '5',
             '--output-dir', self.output_dir
         ]
         
@@ -38,7 +37,78 @@ class TestCLIScript(unittest.TestCase):
                     self.fail(f"CLI failed with exit code: {e.code}")
 
         chunk_files = [f for f in os.listdir(self.output_dir) if f.startswith('chunk-')]
-        self.assertTrue(len(chunk_files) > 0, f"No chunk files found in {self.output_dir}")
+        self.assertEqual(len(chunk_files), 5, "Should create exactly 5 chunks")
+
+    def test_max_chunk_size_cli(self):
+        from src.command_line import main 
+        
+        test_args = [
+            sys.argv[0],  
+            self.test_dir,
+            '--max-chunk-size', '100',
+            '--output-dir', self.output_dir
+        ]
+        
+        with patch('sys.argv', test_args):
+            try:
+                main()
+            except SystemExit as e:
+                if e.code != 0:  
+                    self.fail(f"CLI failed with exit code: {e.code}")
+
+        chunk_files = [f for f in os.listdir(self.output_dir) if f.startswith('chunk-')]
+        self.assertTrue(len(chunk_files) > 0, "Should create at least one chunk")
+
+    def test_priority_rules_cli(self):
+        from src.command_line import main 
+        
+        test_args = [
+            sys.argv[0],  
+            self.test_dir,
+            '--max-chunk-size', '100',
+            '--priority', '*.txt,10',
+            '--priority', '*.md,5',
+            '--output-dir', self.output_dir
+        ]
+        
+        with patch('sys.argv', test_args):
+            try:
+                main()
+            except SystemExit as e:
+                if e.code != 0:  
+                    self.fail(f"CLI failed with exit code: {e.code}")
+
+    def test_missing_required_args(self):
+        from src.command_line import main 
+        
+        test_args = [
+            sys.argv[0],  
+            self.test_dir,
+            '--output-dir', self.output_dir
+        ]
+        
+        with patch('sys.argv', test_args):
+            with self.assertRaises(SystemExit) as cm:
+                main()
+            self.assertNotEqual(cm.exception.code, 0, 
+                "Should exit with error when missing required chunking argument")
+
+    def test_mutually_exclusive_args(self):
+        from src.command_line import main 
+        
+        test_args = [
+            sys.argv[0],  
+            self.test_dir,
+            '--equal-chunks', '5',
+            '--max-chunk-size', '100',
+            '--output-dir', self.output_dir
+        ]
+        
+        with patch('sys.argv', test_args):
+            with self.assertRaises(SystemExit) as cm:
+                main()
+            self.assertNotEqual(cm.exception.code, 0, 
+                "Should exit with error when both chunking arguments are provided")
 
 if __name__ == "__main__":
     unittest.main()

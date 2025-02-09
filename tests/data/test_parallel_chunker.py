@@ -28,23 +28,23 @@ class TestParallelChunker(unittest.TestCase):
         shutil.rmtree(self.test_dir)
 
     def test_should_ignore_file(self):
-        c = ParallelChunker()
+        c = ParallelChunker(max_chunk_size=1000) 
         self.assertTrue(c.should_ignore_file(self.git_file))
         self.assertFalse(c.should_ignore_file(self.test_file_1))
 
     def test_is_binary_file(self):
-        c = ParallelChunker()
+        c = ParallelChunker(max_chunk_size=1000)  
         self.assertTrue(c.is_binary_file(self.test_file_bin))
         self.assertFalse(c.is_binary_file(self.test_file_1))
 
     def test_process_directory(self):
-        c = ParallelChunker()
+        c = ParallelChunker(max_chunk_size=1000)
         c.process_directory(self.test_dir)
         self.assertTrue(any("file1.txt" in x[0] for x in c.loaded_files))
 
     def test_priority_rules(self):
         r = [("*.txt", 10), ("file2*", 20)]
-        c = ParallelChunker(priority_rules=r)
+        c = ParallelChunker(priority_rules=r, max_chunk_size=1000) 
         c.process_directory(self.test_dir)
         ps = [p for _, _, p in c.loaded_files]
         self.assertIn(10, ps)
@@ -52,42 +52,42 @@ class TestParallelChunker(unittest.TestCase):
 
     def test_priority_rules_no_match(self):
         r = [("*.md", 50), ("something*", 100)]
-        c = ParallelChunker(priority_rules=r)
+        c = ParallelChunker(priority_rules=r, max_chunk_size=1000) 
         c.process_directory(self.test_dir)
         ps = [p for _, _, p in c.loaded_files]
         self.assertTrue(all(x == 0 for x in ps))
 
-    def test_whole_chunk_mode(self):
+    def test_equal_chunks(self):  
         d = os.path.join(self.test_dir, "out")
         os.mkdir(d)
-        c = ParallelChunker(output_dir=d, whole_chunk_mode=True)
+        c = ParallelChunker(equal_chunks=2, output_dir=d)  
         c.process_directory(self.test_dir)
-        self.assertTrue(os.path.exists(os.path.join(d, "whole_chunk_mode-output.txt")))
+        chunks = [f for f in os.listdir(d) if f.startswith("chunk-")]
+        self.assertEqual(len(chunks), 2)
 
-    def test_token_mode(self):
-        d = os.path.join(self.test_dir, "tokout")
+    def test_max_chunk_size(self):  
+        d = os.path.join(self.test_dir, "maxout")
         os.mkdir(d)
-        c = ParallelChunker(token_mode=True, max_tokens_per_chunk=5, output_dir=d)
+        c = ParallelChunker(max_chunk_size=5, output_dir=d) 
         c.process_directory(self.test_dir)
         f = [x for x in os.listdir(d) if x.startswith("chunk-")]
         self.assertTrue(len(f) > 1)
 
-    def test_token_mode_empty_file(self):
+    def test_max_chunk_size_empty_file(self): 
         empty_file = os.path.join(self.test_dir, "empty.txt")
         open(empty_file, "w").close()
-        d = os.path.join(self.test_dir, "tokout_empty")
+        d = os.path.join(self.test_dir, "maxout_empty")
         os.mkdir(d)
-        c = ParallelChunker(token_mode=True, max_tokens_per_chunk=5, output_dir=d)
+        c = ParallelChunker(max_chunk_size=5, output_dir=d) 
         c.process_directory(self.test_dir)
         f = [x for x in os.listdir(d) if x.startswith("chunk-")]
         self.assertTrue(len(f) >= 1)
 
-    def test_num_token_chunks(self):
-        d = os.path.join(self.test_dir, "token_chunks")
+    def test_equal_chunks_exact(self): 
+        d = os.path.join(self.test_dir, "equal_chunks")
         os.mkdir(d)
         c = ParallelChunker(
-            token_mode=True,
-            num_token_chunks=2,
+            equal_chunks=2,
             output_dir=d
         )
         c.process_directory(self.test_dir)
@@ -97,7 +97,7 @@ class TestParallelChunker(unittest.TestCase):
     def test_user_ignore_patterns(self):
         d = os.path.join(self.test_dir, "ignore_test")
         os.mkdir(d)
-        c = ParallelChunker(output_dir=d, user_ignore=["*file2.txt"])
+        c = ParallelChunker(output_dir=d, user_ignore=["*file2.txt"], max_chunk_size=1000)  
         c.process_directory(self.test_dir)
         loaded = [os.path.basename(x[0]) for x in c.loaded_files]
         self.assertNotIn("file2.txt", loaded)
@@ -106,7 +106,8 @@ class TestParallelChunker(unittest.TestCase):
     def test_user_unignore_patterns(self):
         d = os.path.join(self.test_dir, "unignore_test")
         os.mkdir(d)
-        c = ParallelChunker(output_dir=d, user_ignore=["*.txt"], user_unignore=["file2.txt"])
+        c = ParallelChunker(output_dir=d, user_ignore=["*.txt"], 
+                           user_unignore=["file2.txt"], max_chunk_size=1000)  
         c.process_directory(self.test_dir)
         loaded = [os.path.basename(x[0]) for x in c.loaded_files]
         self.assertIn("file2.txt", loaded)
@@ -115,7 +116,7 @@ class TestParallelChunker(unittest.TestCase):
     def test_no_files_collected(self):
         d = os.path.join(self.test_dir, "empty_dir")
         os.mkdir(d)
-        c = ParallelChunker()
+        c = ParallelChunker(max_chunk_size=1000)  
         c.process_directory(d)
         self.assertEqual(len(c.loaded_files), 0)
 
@@ -125,7 +126,7 @@ class TestParallelChunker(unittest.TestCase):
             f.write("word " * 5000)
         d = os.path.join(self.test_dir, "large_split_out")
         os.mkdir(d)
-        c = ParallelChunker(output_dir=d, max_size=100)
+        c = ParallelChunker(output_dir=d, max_chunk_size=100)  
         c.process_directory(self.test_dir)
         chunk_files = [x for x in os.listdir(d) if x.startswith("chunk-")]
         self.assertTrue(len(chunk_files) > 1)
