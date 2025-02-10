@@ -1,0 +1,16 @@
+NOTICE
+README.md
+pyproject.toml
+pykomodo.egg-info/PKG-INFO
+pykomodo.egg-info/SOURCES.txt
+pykomodo.egg-info/dependency_links.txt
+pykomodo.egg-info/entry_points.txt
+pykomodo.egg-info/not-zip-safe
+pykomodo.egg-info/requires.txt
+pykomodo.egg-info/top_level.txt
+src/__init__.py
+src/command_line.py
+src/config.py
+src/core.py
+src/enhanced_chunker.py
+src/multi_dirs_chunker.py

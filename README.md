@@ -1,15 +1,30 @@
-# Komodo Parallel Chunker
+pykomodo
 
-A high-performance, multi-threaded utility for processing large text-based codebases. It scans directories, filters files by patterns, and splits content into manageable chunks - perfect for feeding into Large Language Models (LLMs), building search indices, or analyzing large codebases.
+A Python-based parallel file chunking system designed for processing large codebases into LLM-friendly chunks. The tool provides intelligent file filtering, multi-threaded processing, and advanced chunking capabilities optimized for machine learning contexts.
 
-## Key Features
+## Core Features
 
-- **Parallel Processing**: Fast file reading with configurable thread pools
-- **Smart Filtering**: Built-in patterns for common excludes (.git, node_modules, etc.)
-- **Two Chunking Modes**: Split by equal parts or fixed chunk sizes
-- **Priority-based Processing**: Prioritize specific file types or patterns
-- **Binary File Detection**: Automatic skipping of binary files
-- **Advanced LLM Processing**: Automatic metadata extraction (functions, classes, imports)
+* Parallel Processing: Multi-threaded file reading with configurable thread pools
+
+* Smart File Filtering:
+
+    * Built-in patterns for common excludes (.git, node_modules, pycache, etc.)
+    * Customizable ignore/unignore patterns
+    * Intelligent binary file detection
+
+
+* Flexible Chunking:
+
+    * Equal-parts chunking: Split content into N equal chunks
+    * Size-based chunking: Split by maximum chunk size
+
+
+* LLM Optimizations:
+
+    * Metadata extraction (functions, classes, imports, docstrings)
+    * Content relevance scoring
+    * Redundancy removal across chunks
+    * Configurable context window sizes
 
 ## Installation
 
@@ -21,15 +36,13 @@ pip install komodo
 
 ### Command Line Usage
 
-Basic usage to chunk all text files in the current directory:
+#### Basic usage 
 
 ```bash
+# Split into 5 equal chunks
 komodo . --equal-chunks 5
-```
 
-Process multiple directories with fixed chunk size:
-
-```bash
+# Process multiple directories
 komodo path1/ path2/ --max-chunk-size 1000
 ```
 
@@ -44,7 +57,7 @@ Komodo supports two chunking modes:
 komodo . --equal-chunks 5 --output-dir chunks
 ```
 
-##### Fixed Chunk Size:
+##### Fixed Number of Tokens:
 
 ```bash
 # Split into chunks of 1000 tokens each
@@ -53,11 +66,13 @@ komodo . --max-chunk-size 1000 --output-dir chunks
 
 ##### Priority Rules
 
+Priority Rules help determine which files should be processed first or given more importance. Files with higher priority scores are processed first
+
 ```bash
-# With equal chunks
+# With equal chunks, 10 which is .py is higher than 5, so 10 will get processed first
 komodo . \
   --equal-chunks 5 \
-  --priority "*.py,10" \
+  --priority "*.py,10" \ 
   --priority "*.md,5" \
   --output-dir chunks
 
@@ -186,21 +201,21 @@ chunker.process_directory("my_project")
 
 ## Configuration Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `equal_chunks` | Number of equal-sized chunks | None |
-| `max_chunk_size` | Maximum tokens per chunk | None |
-| `output_dir` | Directory for output files | "chunks" |
-| `num_threads` | Number of parallel processing threads | 4 |
-| `user_ignore` | Patterns to ignore | [] |
-| `user_unignore` | Patterns to explicitly include | [] |
-| `binary_extensions` | File extensions to treat as binary | ["exe", "dll", "so"] |
-| `priority_rules` | List of (pattern, score) tuples for prioritization | [] |
-| `extract_metadata` | Extract code elements like functions and classes | true |
-| `add_summaries` | Add content summaries to chunks | true |
-| `remove_redundancy` | Remove duplicate content across chunks | true |
-| `context_window` | Maximum context window size (for LLMs) | 4096 |
-| `min_relevance_score` | Minimum relevance threshold for chunks | 0.3 |
+| Option | Description | Default | Type |
+|--------|-------------|---------|------|
+| `equal_chunks` | Number of equal-sized chunks | None | int |
+| `max_chunk_size` | Maximum tokens per chunk | None | int | 
+| `output_dir` | Directory for output files | "chunks" | str |
+| `num_threads` | Number of parallel processing threads | 4 | int | 
+| `user_ignore` | Patterns to ignore | [] | List[str] |
+| `user_unignore` | Patterns to explicitly include | [] | List[str] |
+| `binary_extensions` | Extensions to treat as binary | ["exe", "dll", "so"] | List[str] |
+| `priority_rules` | File patterns and their priorities| [] | List[Tuple[str, int]] |
+| `extract_metadata` | Extract code elements like functions and classes | true | bool |
+| `add_summaries` | Add content summaries to chunks | true | bool |
+| `remove_redundancy` | Remove duplicate content across chunks | true | bool |
+| `context_window` | Maximum context window size (for LLMs) | 4096 | int | 
+| `min_relevance_score` | Minimum relevance threshold for chunks | 0.3 | float |
 
 ## Built-in Ignore Patterns
 
