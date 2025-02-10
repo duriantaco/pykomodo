@@ -22,27 +22,24 @@ class PriorityRule:
 class ParallelChunker:
     def __init__(
         self,
+        equal_chunks=None,          
+        max_chunk_size=None,       
+        output_dir="chunks",
         user_ignore=None,
         user_unignore=None,
         binary_extensions=None,
         priority_rules=None,
-        max_size=10 * 1024 * 1024,
-        token_mode=False,
-        output_dir=None,
-        stream=False,
-        num_threads=4,
-        whole_chunk_mode=False,
-        max_tokens_per_chunk=None,
-        num_token_chunks=None
+        num_threads=4
     ):
-        self.max_size = max_size
-        self.token_mode = token_mode
+        if equal_chunks is not None and max_chunk_size is not None:
+            raise ValueError("Cannot specify both equal_chunks and max_chunk_size")
+        if equal_chunks is None and max_chunk_size is None:
+            raise ValueError("Must specify either equal_chunks or max_chunk_size")
+
+        self.equal_chunks = equal_chunks
+        self.max_chunk_size = max_chunk_size
         self.output_dir = output_dir
-        self.stream = stream
         self.num_threads = num_threads
-        self.whole_chunk_mode = whole_chunk_mode
-        self.max_tokens_per_chunk = max_tokens_per_chunk
-        self.num_token_chunks = num_token_chunks
 
         if user_ignore is None:
             user_ignore = []
@@ -159,222 +156,134 @@ class ParallelChunker:
             text = ""
         return text.split()
 
-    def _write_to_stdout(self, data_bytes):
-        if hasattr(sys.stdout, "buffer"):
-            sys.stdout.buffer.write(data_bytes)
-            sys.stdout.buffer.flush()
-        else:
-            sys.stdout.write(data_bytes.decode("utf-8", "replace"))
-            sys.stdout.flush()
-
     def _write_chunk(self, content_bytes, chunk_num):
-        if self.stream:
-            self._write_to_stdout(content_bytes)
-        else:
-            if self.output_dir:
-                chunk_path = os.path.join(self.output_dir, f"chunk-{chunk_num}.txt")
-            else:
-                chunk_path = f"chunk-{chunk_num}.txt"
-            try:
-                with open(chunk_path, "wb") as f:
-                    f.write(content_bytes)
-            except:
-                pass
-
-    def _write_chunk_single_file(self, aggregator_file, content_bytes):
-        if aggregator_file is None:
-            self._write_to_stdout(content_bytes)
-        else:
-            aggregator_file.write(content_bytes)
+        chunk_path = os.path.join(self.output_dir, f"chunk-{chunk_num}.txt")
+        try:
+            with open(chunk_path, "wb") as f:
+                f.write(content_bytes)
+        except:
+            pass
 
     def _process_chunks(self):
         if not self.loaded_files:
             return
 
-        chunk_size = self.max_size
-        chunk_number = 0
-        aggregator_file = None
-        if self.whole_chunk_mode:
-            if self.stream:
-                aggregator_file = None
-            else:
-                out_name = (
-                    os.path.join(self.output_dir, "whole_chunk_mode-output.txt")
-                    if self.output_dir else "whole_chunk_mode-output.txt"
-                )
-                try:
-                    aggregator_file = open(out_name, "wb")
-                except:
-                    aggregator_file = None
-
-        if self.token_mode:
-            if self.num_token_chunks and self.num_token_chunks > 0:
-                self._chunk_by_num_token_chunks(aggregator_file)
-            elif self.max_tokens_per_chunk and self.max_tokens_per_chunk > 0:
-                self._chunk_by_max_tokens(aggregator_file)
-            else:
-                self._default_token_chunking(aggregator_file)
+        if self.equal_chunks:
+            self._chunk_by_equal_parts()
         else:
-            self._byte_chunking(aggregator_file)
+            self._chunk_by_size()
 
-        if aggregator_file and not self.stream:
-            aggregator_file.close()
-
-    def _chunk_by_num_token_chunks(self, aggregator_file):
-        chunk_number = 0
-        all_files = []
+    def _chunk_by_equal_parts(self):
+        total_content = []
         total_size = 0
         
         for (path, content_bytes, priority) in self.loaded_files:
             try:
                 content = content_bytes.decode("utf-8", errors="replace")
-                total_size += len(content)
-                all_files.append((path, content))
+                size = len(content)
+                total_content.append((path, content, size))
+                total_size += size
             except:
                 continue
         
-        if not all_files:
+        if not total_content:
             return
             
-        size_per_chunk = total_size // self.num_token_chunks
+        n_chunks = self.equal_chunks
+        target_chunk_size = max(1, total_size // n_chunks)
         
         current_chunk = []
         current_size = 0
-        chunk_count = 0
+        chunk_idx = 0
         
-        for path, content in all_files:
-            if current_size + len(content) > size_per_chunk and chunk_count < self.num_token_chunks - 1:
-                if current_chunk:
-                    chunk_content = (
-                        f"{'='*80}\n"
-                        f"CHUNK {chunk_count + 1} OF {self.num_token_chunks}\n"
-                        f"{'='*80}\n\n"
-                        + "\n".join(current_chunk)
-                        + "\n"
-                    )
-                    
-                    if self.whole_chunk_mode:
-                        self._write_chunk_single_file(aggregator_file, chunk_content.encode('utf-8'))
-                    else:
-                        self._write_chunk(chunk_content.encode('utf-8'), chunk_count)
-                    
-                    chunk_count += 1
-                    current_chunk = []
-                    current_size = 0
+        for i in range(n_chunks):
+            chunk_content = []
             
-            current_chunk.extend([
-                f"\n{'='*40}",
-                f"File: {path}",
-                f"{'='*40}\n",
-                content
-            ])
-            current_size += len(content)
-        
-        if current_chunk:
-            chunk_content = (
+            while total_content and current_size < target_chunk_size:
+                path, content, size = total_content[0]
+                chunk_content.extend([
+                    f"\n{'='*40}",
+                    f"File: {path}",
+                    f"{'='*40}\n",
+                    content
+                ])
+                current_size += size
+                total_content.pop(0)
+            
+            chunk_text = (
                 f"{'='*80}\n"
-                f"CHUNK {chunk_count + 1} OF {self.num_token_chunks}\n"
+                f"CHUNK {i + 1} OF {n_chunks}\n"
                 f"{'='*80}\n\n"
-                + "\n".join(current_chunk)
+                + "\n".join(chunk_content) if chunk_content else ""
                 + "\n"
             )
+            self._write_chunk(chunk_text.encode('utf-8'), i)
             
-            if self.whole_chunk_mode:
-                self._write_chunk_single_file(aggregator_file, chunk_content.encode('utf-8'))
-            else:
-                self._write_chunk(chunk_content.encode('utf-8'), chunk_count)
+            current_size = 0
 
-    def _chunk_by_max_tokens(self, aggregator_file):
+    def _chunk_by_size(self):
         chunk_number = 0
         for (path, content_bytes, priority) in self.loaded_files:
-            prefix = f"File: {path}\n".encode("utf-8")
-            tokens = self._split_tokens(content_bytes)
-            if not tokens:
-                empty_chunk = prefix + b"\n"
-                if self.whole_chunk_mode:
-                    self._write_chunk_single_file(aggregator_file, empty_chunk)
-                else:
-                    self._write_chunk(empty_chunk, chunk_number)
+            try:
+                content = content_bytes.decode("utf-8", errors="replace")
+                lines = content.splitlines()
+                
+                if not lines:
+                    empty_chunk = (
+                        f"{'='*80}\n"
+                        f"CHUNK {chunk_number + 1}\n"
+                        f"{'='*80}\n\n"
+                        f"{'='*40}\n"
+                        f"File: {path}\n"
+                        f"{'='*40}\n"
+                        f"[Empty File]\n"
+                    )
+                    self._write_chunk(empty_chunk.encode('utf-8'), chunk_number)
                     chunk_number += 1
-                continue
+                    continue
 
-            idx = 0
-            total_tokens = len(tokens)
-            while idx < total_tokens:
-                sub_list = tokens[idx : idx + self.max_tokens_per_chunk]
-                idx += len(sub_list)
-                data_str = f"File: {path}\n{' '.join(sub_list)}\n"
-                data_bytes = data_str.encode("utf-8")
-                if self.whole_chunk_mode:
-                    self._write_chunk_single_file(aggregator_file, data_bytes)
-                else:
-                    self._write_chunk(data_bytes, chunk_number)
-                    chunk_number += 1
-
-    def _default_token_chunking(self, aggregator_file):
-        chunk_number = 0
-        for (path, content_bytes, priority) in self.loaded_files:
-            prefix = f"File: {path}\n".encode("utf-8")
-            tokens = self._split_tokens(content_bytes)
-            if not tokens:
-                empty_chunk = prefix + b"\n"
-                if self.whole_chunk_mode:
-                    self._write_chunk_single_file(aggregator_file, empty_chunk)
-                else:
-                    self._write_chunk(empty_chunk, chunk_number)
-                    chunk_number += 1
-                continue
-
-            idx = 0
-            total_tokens = len(tokens)
-            # fallback to self.max_size as "tokens" if none provided
-            chunk_size_tokens = self.max_size
-            while idx < total_tokens:
-                sub_list = tokens[idx : idx + chunk_size_tokens]
-                idx += len(sub_list)
-                data_str = f"File: {path}\n{' '.join(sub_list)}\n"
-                data_bytes = data_str.encode("utf-8")
-                if self.whole_chunk_mode:
-                    self._write_chunk_single_file(aggregator_file, data_bytes)
-                else:
-                    self._write_chunk(data_bytes, chunk_number)
-                    chunk_number += 1
-
-    def _byte_chunking(self, aggregator_file):
-        chunk_size = self.max_size
-        chunk_number = 0
-        sep = b"\n"
-        for (path, content_bytes, priority) in self.loaded_files:
-            prefix = f"File: {path}\n".encode("utf-8")
-            needed = len(prefix) + len(content_bytes) + len(sep)
-            if self.whole_chunk_mode:
-                if needed <= chunk_size:
-                    self._write_chunk_single_file(aggregator_file, prefix + content_bytes + sep)
-                else:
-                    pos = 0
-                    remaining = len(content_bytes)
-                    while remaining > 0:
-                        can_take = chunk_size - len(prefix) - len(sep)
-                        taking = min(remaining, can_take)
-                        chunk_data = prefix + content_bytes[pos : pos + taking] + sep
-                        self._write_chunk_single_file(aggregator_file, chunk_data)
-                        pos += taking
-                        remaining -= taking
-            else:
-                if needed <= chunk_size:
-                    self._write_chunk(prefix + content_bytes + sep, chunk_number)
-                    chunk_number += 1
-                else:
-                    pos = 0
-                    remaining = len(content_bytes)
-                    while remaining > 0:
-                        can_take = chunk_size - len(prefix) - len(sep)
-                        taking = min(remaining, can_take)
-                        chunk_data = prefix + content_bytes[pos : pos + taking] + sep
-                        self._write_chunk(chunk_data, chunk_number)
+                current_chunk_lines = []
+                current_size = 0
+                
+                for line in lines:
+                    line_size = len(line.split())  # Count tokens in line
+                    
+                    # If adding this line would exceed chunk size, write current chunk
+                    if current_size + line_size > self.max_chunk_size and current_chunk_lines:
+                        chunk_content = (
+                            f"{'='*80}\n"
+                            f"CHUNK {chunk_number + 1}\n"
+                            f"{'='*80}\n\n"
+                            f"{'='*40}\n"
+                            f"File: {path}\n"
+                            f"{'='*40}\n\n"
+                            f"{'\n'.join(current_chunk_lines)}\n"
+                        )
+                        self._write_chunk(chunk_content.encode('utf-8'), chunk_number)
                         chunk_number += 1
-                        pos += taking
-                        remaining -= taking
+                        current_chunk_lines = []
+                        current_size = 0
+                    
+                    current_chunk_lines.append(line)
+                    current_size += line_size
+                
+                # Write remaining lines if any
+                if current_chunk_lines:
+                    chunk_content = (
+                        f"{'='*80}\n"
+                        f"CHUNK {chunk_number + 1}\n"
+                        f"{'='*80}\n\n"
+                        f"{'='*40}\n"
+                        f"File: {path}\n"
+                        f"{'='*40}\n\n"
+                        f"{'\n'.join(current_chunk_lines)}\n"
+                    )
+                    self._write_chunk(chunk_content.encode('utf-8'), chunk_number)
+                    chunk_number += 1
+
+            except Exception as e:
+                print(f"Error processing {path}: {e}", file=sys.stderr)
+                continue
 
     def close(self):
         pass

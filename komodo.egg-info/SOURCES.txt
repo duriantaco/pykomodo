@@ -1,3 +1,4 @@
+NOTICE
 README.md
 pyproject.toml
 komodo.egg-info/PKG-INFO
@@ -11,4 +12,5 @@ src/__init__.py
 src/command_line.py
 src/config.py
 src/core.py
+src/enhanced_chunker.py
 src/multi_dirs_chunker.py
