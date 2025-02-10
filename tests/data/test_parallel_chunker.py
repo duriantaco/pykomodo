@@ -130,6 +130,36 @@ class TestParallelChunker(unittest.TestCase):
         c.process_directory(self.test_dir)
         chunk_files = [x for x in os.listdir(d) if x.startswith("chunk-")]
         self.assertTrue(len(chunk_files) > 1)
+    
+    def test_concurrent_file_loading(self):
+        """Test if parallel file loading works correctly with many files"""
+        for i in range(100):
+            with open(os.path.join(self.test_dir, f"file_{i}.txt"), "w") as f:
+                f.write(f"Content {i}")
+                
+        c = ParallelChunker(max_chunk_size=1000, num_threads=4)
+        c.process_directory(self.test_dir)
+        
+        self.assertGreater(len(c.loaded_files), 90) 
+
+    def test_invalid_encoding_handling(self):
+        """Test handling of files with invalid encodings"""
+        invalid_file = os.path.join(self.test_dir, "invalid.txt")
+        with open(invalid_file, "wb") as f:
+            f.write(b"\xff\xfe\x00\x00Invalid UTF")
+            
+        c = ParallelChunker(max_chunk_size=1000)
+        c.process_directory(self.test_dir)
+
+    def test_chunk_file_names(self):
+        """Test chunk file naming and numbering"""
+        d = os.path.join(self.test_dir, "chunk_names")
+        os.mkdir(d)
+        c = ParallelChunker(equal_chunks=3, output_dir=d)
+        c.process_directory(self.test_dir)
+        
+        files = sorted(os.listdir(d))
+        self.assertEqual(files, ["chunk-0.txt", "chunk-1.txt", "chunk-2.txt"])
 
 if __name__ == "__main__":
     unittest.main()

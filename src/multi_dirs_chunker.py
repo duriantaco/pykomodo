@@ -49,6 +49,8 @@ class ParallelChunker:
         self.ignore_patterns = BUILTIN_IGNORES[:]
         self.ignore_patterns.extend(user_ignore)
         self.unignore_patterns = list(user_unignore)
+        
+        self.unignore_patterns.append("*.py")
 
         if binary_extensions is None:
             binary_extensions = ["exe", "dll", "so"]
@@ -66,12 +68,15 @@ class ParallelChunker:
         self.loaded_files = []
 
     def should_ignore_file(self, path):
+        """
+        Return True if `path` should be ignored based on patterns.
+        """
         path = os.path.normpath(path)
-        
+
         for pat in self.unignore_patterns:
             if self._matches_pattern(path, pat):
                 return False
-                
+
         for pat in self.ignore_patterns:
             if self._matches_pattern(path, pat):
                 return True
@@ -89,8 +94,15 @@ class ParallelChunker:
                 fnmatch.fnmatch(os.path.basename(path), pattern))
 
     def is_binary_file(self, path):
+        """
+        If it's a .py file, return False directly.
+        Otherwise, do the default checks.
+        """
         _, ext = os.path.splitext(path)
         ext = ext.lstrip(".").lower()
+        if ext == "py":
+            return False
+
         if ext in self.binary_exts:
             return True
         try:
@@ -103,11 +115,20 @@ class ParallelChunker:
         return False
 
     def _collect_paths(self, dir_list):
+        """
+        Collect only those files that pass both `should_ignore_file == False`
+        and `is_binary_file == False`.
+        """
         collected = []
         for directory in dir_list:
             for root, dirs, files in os.walk(directory):
                 for filename in files:
                     full_path = os.path.join(root, filename)
+
+                    if self.should_ignore_file(full_path):
+                        continue
+                    if self.is_binary_file(full_path):
+                        continue
                     if self.should_ignore_file(full_path):
                         continue
                     if self.is_binary_file(full_path):
@@ -246,19 +267,20 @@ class ParallelChunker:
                 current_size = 0
                 
                 for line in lines:
-                    line_size = len(line.split())  # Count tokens in line
+                    line_size = len(line.split())  
                     
-                    # If adding this line would exceed chunk size, write current chunk
                     if current_size + line_size > self.max_chunk_size and current_chunk_lines:
-                        chunk_content = (
-                            f"{'='*80}\n"
-                            f"CHUNK {chunk_number + 1}\n"
-                            f"{'='*80}\n\n"
-                            f"{'='*40}\n"
-                            f"File: {path}\n"
-                            f"{'='*40}\n\n"
-                            f"{'\n'.join(current_chunk_lines)}\n"
-                        )
+                        chunk_header = [
+                            "=" * 80,
+                            f"CHUNK {chunk_number + 1}",
+                            "=" * 80,
+                            "",
+                            "=" * 40,
+                            f"File: {path}",
+                            "=" * 40,
+                            ""
+                        ]
+                        chunk_content = "\n".join(chunk_header + current_chunk_lines) + "\n"
                         self._write_chunk(chunk_content.encode('utf-8'), chunk_number)
                         chunk_number += 1
                         current_chunk_lines = []
@@ -267,17 +289,18 @@ class ParallelChunker:
                     current_chunk_lines.append(line)
                     current_size += line_size
                 
-                # Write remaining lines if any
                 if current_chunk_lines:
-                    chunk_content = (
-                        f"{'='*80}\n"
-                        f"CHUNK {chunk_number + 1}\n"
-                        f"{'='*80}\n\n"
-                        f"{'='*40}\n"
-                        f"File: {path}\n"
-                        f"{'='*40}\n\n"
-                        f"{'\n'.join(current_chunk_lines)}\n"
-                    )
+                    chunk_header = [
+                        "=" * 80,
+                        f"CHUNK {chunk_number + 1}",
+                        "=" * 80,
+                        "",
+                        "=" * 40,
+                        f"File: {path}",
+                        "=" * 40,
+                        ""
+                    ]
+                    chunk_content = "\n".join(chunk_header + current_chunk_lines) + "\n"
                     self._write_chunk(chunk_content.encode('utf-8'), chunk_number)
                     chunk_number += 1
 

@@ -115,15 +115,27 @@ class TestEnhancedParallelChunker(unittest.TestCase):
             output_dir=self.output_dir,
             context_window=small_window
         )
+
+        for f in os.listdir(self.test_dir):
+            print(f"- {f}")
+        
         chunker.process_directory(self.test_dir)
         
-        # Check each chunk size
         chunk_files = [f for f in os.listdir(self.output_dir) if f.startswith('chunk-')]
+        
         for chunk_file in chunk_files:
-            with open(os.path.join(self.output_dir, chunk_file), 'r') as f:
-                content = f.read()
-                # Allow some overhead for metadata
-                self.assertLess(len(content), small_window * 1.5)
+            chunk_path = os.path.join(self.output_dir, chunk_file)
+            try:
+                with open(chunk_path, 'rb') as f:  
+                    content = f.read()
+                    size = len(content)
+                    if size >= small_window * 1.5:
+                        print(f"WARNING: Chunk too large! Size {size} exceeds limit {small_window * 1.5}")
+                    self.assertLess(size, small_window * 1.5, 
+                        f"Chunk {chunk_file} size {size} exceeds limit {small_window * 1.5}")
+            except Exception as e:
+                print(f"ERROR reading {chunk_file}: {str(e)}")
+                raise
 
     def test_disable_features(self):
         """Test if features can be properly disabled"""
@@ -144,6 +156,95 @@ class TestEnhancedParallelChunker(unittest.TestCase):
                 content.count('def standalone_function():'),
                 1
             )
+
+    def test_complex_metadata(self):
+        """Test metadata extraction from more complex code structures"""
+        complex_file = os.path.join(self.test_dir, "complex.py")
+        with open(complex_file, "w") as f:
+            f.write('''
+                from typing import List, Optional
+                import os.path as osp
+                
+                @decorator
+                class ComplexClass:
+                    """Class docstring"""
+                    def __init__(self):
+                        pass
+                    
+                    @property
+                    def prop(self): 
+                        return None
+                        
+                    async def async_method(self):
+                        pass
+            ''')
+            
+        chunker = EnhancedParallelChunker(equal_chunks=1, output_dir=self.output_dir)
+        chunker.process_directory(self.test_dir)
+        
+        with open(os.path.join(self.output_dir, "chunk-0.txt"), 'r') as f:
+            content = f.read()
+            self.assertIn('async_method', content)
+            self.assertIn('ComplexClass', content)
+            self.assertIn('from typing import', content)
+
+    def test_large_file_handling(self):
+        """Test handling of large files with context window"""
+        large_file = os.path.join(self.test_dir, "large.py")
+        with open(large_file, "w") as f:
+            f.write("x = 1\n" * 10000)  
+            
+        chunker = EnhancedParallelChunker(
+            equal_chunks=2,
+            output_dir=self.output_dir,
+            context_window=1000,
+            remove_redundancy=True
+        )
+        chunker.process_directory(self.test_dir)
+        
+        chunks = [f for f in os.listdir(self.output_dir) if f.startswith('chunk-')]
+        for chunk in chunks:
+            with open(os.path.join(self.output_dir, chunk), 'r') as f:
+                content = f.read()
+                self.assertLess(len(content), 1000)
+
+    def test_mixed_content_relevance(self):
+        """Test relevance scoring with mixed content types"""
+        mixed_file = os.path.join(self.test_dir, "mixed.py")
+        with open(mixed_file, "w") as f:
+            f.write('''
+                # Configuration
+                CONFIG = {
+                    "key": "value"
+                }
+                
+                def important_function():
+                    """Critical business logic"""
+                    pass
+                    
+                # Just some constants
+                A = 1
+                B = 2
+                C = 3
+            ''')
+            
+        chunker = EnhancedParallelChunker(
+            equal_chunks=2,
+            output_dir=self.output_dir,
+            min_relevance_score=0.3
+        )
+        chunker.process_directory(self.test_dir)
+        
+        chunks = [f for f in os.listdir(self.output_dir) if f.startswith('chunk-')]
+        scores = []
+        for chunk in chunks:
+            with open(os.path.join(self.output_dir, chunk), 'r') as f:
+                content = f.read()
+                if 'RELEVANCE_SCORE:' in content:
+                    score_line = [l for l in content.split('\n') if 'RELEVANCE_SCORE:' in l][0]
+                    scores.append(float(score_line.split(':')[1].strip()))
+        
+        self.assertTrue(any(s > 0.5 for s in scores), "Should have some high relevance chunks")
 
 if __name__ == '__main__':
     unittest.main()
