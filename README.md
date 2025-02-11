@@ -31,7 +31,7 @@ A Python-based parallel file chunking system designed for processing large codeb
 ## Installation
 
 ```bash
-pip install komodo
+pip install komodo==0.0.1
 ```
 
 ## Quick Start

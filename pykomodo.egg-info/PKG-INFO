@@ -1,5 +1,5 @@
 Metadata-Version: 2.2
 Name: pykomodo
-Version: 0.0.0
+Version: 0.0.1
 License-File: NOTICE
 Requires-Dist: pathspec
