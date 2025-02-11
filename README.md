@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/KOMODO.png" alt="KOMODO Logo">
+  <img src="assets/KOMODO.png" alt="KOMODO Logo" width="200">
 </p>
 
 A Python-based parallel file chunking system designed for processing large codebases into LLM-friendly chunks. The tool provides intelligent file filtering, multi-threaded processing, and advanced chunking capabilities optimized for machine learning contexts.
