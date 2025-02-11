@@ -29,6 +29,7 @@ class TestParallelChunker(unittest.TestCase):
 
     def test_should_ignore_file(self):
         c = ParallelChunker(max_chunk_size=1000) 
+        c.current_walk_root = self.test_dir
         self.assertTrue(c.should_ignore_file(self.git_file))
         self.assertFalse(c.should_ignore_file(self.test_file_1))
 

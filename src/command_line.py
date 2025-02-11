@@ -4,10 +4,15 @@ import os
 from src.multi_dirs_chunker import ParallelChunker
 from src.enhanced_chunker import EnhancedParallelChunker
 
+KOMODO_VERSION = "0.0.1" 
+
 def main():
     parser = argparse.ArgumentParser(
         description="Process and chunk codebase content with optional LLM optimizations."
     )
+
+    parser.add_argument("--version", action="version", version=f"komodo {KOMODO_VERSION}")
+
     parser.add_argument("dirs", nargs="*", default=["."],
                         help="Directories to process (default: current directory)")
     
@@ -20,12 +25,13 @@ def main():
     parser.add_argument("--output-dir", default="chunks",
                         help="Output directory for chunks (default: chunks)")
     
-    parser.add_argument("--ignore", nargs="*", default=[],
-                        help="Patterns to ignore")
-    parser.add_argument("--unignore", nargs="*", default=[],
-                        help="Patterns to explicitly include")
+    parser.add_argument("--ignore", action="append", default=[],
+                        help="Repeatable. Each usage adds one ignore pattern. Example: --ignore '**/node_modules/**' --ignore 'venv'")
+    parser.add_argument("--unignore", action="append", default=[],
+                        help="Repeatable. Each usage adds one unignore pattern. Example: --unignore '*.md'")
+
     parser.add_argument("--priority", action="append", default=[],
-                        help="Priority rules in format 'pattern,score'")
+                        help="Priority rules in format 'pattern,score' (repeatable). Example: --priority '*.py,10' --priority 'file2.txt,20'")
     
     parser.add_argument("--num-threads", type=int, default=4,
                         help="Number of processing threads (default: 4)")

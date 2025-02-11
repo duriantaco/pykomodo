@@ -66,6 +66,48 @@ komodo . --equal-chunks 5 --output-dir chunks
 komodo . --max-chunk-size 1000 --output-dir chunks
 ```
 
+#### Ignoring & Unignoring Files
+
+* Add ignore patterns with --ignore.
+* Unignore specific patterns with --unignore.
+* Komodo also has built-in ignores like .git, __pycache__, node_modules, etc.
+
+```bash
+# Skip everything in "results/" (relative) and "docs/" (relative)
+komodo . --equal-chunks 5 \
+  --ignore "results/**" \
+  --ignore "docs/**"
+
+# Skip an absolute path
+komodo . --equal-chunks 5 \
+  --ignore "/Users/oha/komodo/results/**"
+
+# Skip all .rst files, but unignore README.rst
+komodo . --equal-chunks 5 \
+  --ignore "*.rst" \
+  --unignore "README.rst"
+
+# Safest mode
+komodo . --equal-chunks 5 \
+  --ignore "**/results/**" \
+  --ignore "**/docs/**"
+```
+
+**Note**: If in doubt, just use the `**` before and after. Example: 
+
+```bash
+komodo . --equal-chunks 5 --ignore "**/results/**" --ignore "**/docs/**"
+```
+
+#### Fixed Number of Chunks with ignore mode
+
+* `--ignore "/Users/oha/treeline/results/**"` tells the chunker to skip any files in that absolute directory path.
+* `--ignore "docs/*"` tells it to skip any files under a relative folder named docs/.
+
+```bash
+komodo . --equal-chunks 5 --ignore "/Users/oha/treeline/results/**" --ignore "docs/*" 
+```
+
 ##### Priority Rules
 
 Priority Rules help determine which files should be processed first or given more importance. Files with higher priority scores are processed first
@@ -209,7 +251,7 @@ chunker.process_directory("my_project")
 | `max_chunk_size` | Maximum tokens per chunk | None | int | 
 | `output_dir` | Directory for output files | "chunks" | str |
 | `num_threads` | Number of parallel processing threads | 4 | int | 
-| `user_ignore` | Patterns to ignore | [] | List[str] |
+| `ignore` | Patterns to ignore | [] | List[str] |
 | `user_unignore` | Patterns to explicitly include | [] | List[str] |
 | `binary_extensions` | Extensions to treat as binary | ["exe", "dll", "so"] | List[str] |
 | `priority_rules` | File patterns and their priorities| [] | List[Tuple[str, int]] |
@@ -231,6 +273,22 @@ The chunker automatically ignores common non-text and build-related files:
 - `**/node_modules/**`
 - `target`
 - `venv`
+
+## Common Gotchas
+
+1. Leading Slash for Absolute Paths
+
+If you omit the leading `/` in a pattern like `/Users/oha/...`, Komodo treats it as relative and won’t match your actual absolute path.
+
+2. `/**` vs. `/*`
+
+* `folder/**` matches all files and subfolders under folder.
+* `folder/*` only matches the immediate contents of folder, not deeper subdirectories.
+Overwriting Multiple `--ignore` Flags
+
+3. Folder Name vs. Actual Path
+
+* If your path is really `src/komodo/content/results`, but you only wrote `results/**`, you may need a double-star approach `(**/results/**)` to cover deeper paths.
 
 # Acknowledgments
 This project was inspired by [repomix](https://github.com/yamadashy/repomix), a repository content chunking tool.
