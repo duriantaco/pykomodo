@@ -1,8 +1,8 @@
 import sys
 import argparse
 import os
-from src.multi_dirs_chunker import ParallelChunker
-from src.enhanced_chunker import EnhancedParallelChunker
+from pykomodo.multi_dirs_chunker import ParallelChunker
+from pykomodo.enhanced_chunker import EnhancedParallelChunker
 
 KOMODO_VERSION = "0.0.1" 
 

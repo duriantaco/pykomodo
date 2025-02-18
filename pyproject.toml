@@ -4,12 +4,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pykomodo"
-version = "0.0.1"
+version = "0.0.3"
+description = "A chunking library"
 dependencies = ["pathspec"]
+authors = [{ name = "oha" }]
 
 [project.scripts]
-komodo = "src.command_line:main"
+komodo = "pykomodo.command_line:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["pykomodo*"]
 
 [tool.setuptools]
-packages = ["src"]
 zip-safe = false

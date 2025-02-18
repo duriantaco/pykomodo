@@ -1,4 +1,439 @@
-from src.multi_dirs_chunker import ParallelChunker
+================================================================================
+CHUNK 2 OF 5
+================================================================================
+
+
+========================================
+File: ./pykomodo.egg-info/PKG-INFO
+========================================
+
+Metadata-Version: 2.2
+Name: pykomodo
+Version: 0.0.1
+License-File: NOTICE
+Requires-Dist: pathspec
+
+
+========================================
+File: ./pykomodo.egg-info/SOURCES.txt
+========================================
+
+NOTICE
+README.md
+pyproject.toml
+pykomodo.egg-info/PKG-INFO
+pykomodo.egg-info/SOURCES.txt
+pykomodo.egg-info/dependency_links.txt
+pykomodo.egg-info/entry_points.txt
+pykomodo.egg-info/not-zip-safe
+pykomodo.egg-info/requires.txt
+pykomodo.egg-info/top_level.txt
+src/__init__.py
+src/command_line.py
+src/config.py
+src/core.py
+src/enhanced_chunker.py
+src/multi_dirs_chunker.py
+
+========================================
+File: ./pykomodo.egg-info/dependency_links.txt
+========================================
+
+
+
+
+========================================
+File: ./pykomodo.egg-info/entry_points.txt
+========================================
+
+[console_scripts]
+komodo = src.command_line:main
+
+
+========================================
+File: ./pykomodo.egg-info/not-zip-safe
+========================================
+
+
+
+
+========================================
+File: ./pykomodo.egg-info/requires.txt
+========================================
+
+pathspec
+
+
+========================================
+File: ./pykomodo.egg-info/top_level.txt
+========================================
+
+src
+
+
+========================================
+File: ./pyproject.toml
+========================================
+
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pykomodo"
+version = "0.0.2"
+description = "A chunking library"
+dependencies = ["pathspec"]
+authors = [{ name = "oha" }]
+
+[project.scripts]
+komodo = "pykomodo.command_line:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["pykomodo*"]
+
+[tool.setuptools]
+zip-safe = false
+
+========================================
+File: ./src/pykomodo.egg-info/PKG-INFO
+========================================
+
+Metadata-Version: 2.2
+Name: pykomodo
+Version: 0.0.2
+Summary: A chunking library
+Author: oha
+License-File: NOTICE
+Requires-Dist: pathspec
+
+
+========================================
+File: ./src/pykomodo.egg-info/SOURCES.txt
+========================================
+
+NOTICE
+README.md
+pyproject.toml
+src/pykomodo/__init__.py
+src/pykomodo/command_line.py
+src/pykomodo/config.py
+src/pykomodo/core.py
+src/pykomodo/enhanced_chunker.py
+src/pykomodo/multi_dirs_chunker.py
+src/pykomodo.egg-info/PKG-INFO
+src/pykomodo.egg-info/SOURCES.txt
+src/pykomodo.egg-info/dependency_links.txt
+src/pykomodo.egg-info/entry_points.txt
+src/pykomodo.egg-info/not-zip-safe
+src/pykomodo.egg-info/requires.txt
+src/pykomodo.egg-info/top_level.txt
+
+========================================
+File: ./src/pykomodo.egg-info/dependency_links.txt
+========================================
+
+
+
+
+========================================
+File: ./src/pykomodo.egg-info/entry_points.txt
+========================================
+
+[console_scripts]
+komodo = pykomodo.command_line:main
+
+
+========================================
+File: ./src/pykomodo.egg-info/not-zip-safe
+========================================
+
+
+
+
+========================================
+File: ./src/pykomodo.egg-info/requires.txt
+========================================
+
+pathspec
+
+
+========================================
+File: ./src/pykomodo.egg-info/top_level.txt
+========================================
+
+pykomodo
+
+
+========================================
+File: ./src/pykomodo/__init__.py
+========================================
+
+
+
+========================================
+File: ./src/pykomodo/command_line.py
+========================================
+
+import sys
+import argparse
+import os
+from pykomodo.multi_dirs_chunker import ParallelChunker
+from pykomodo.enhanced_chunker import EnhancedParallelChunker
+
+KOMODO_VERSION = "0.0.1" 
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Process and chunk codebase content with optional LLM optimizations."
+    )
+
+    parser.add_argument("--version", action="version", version=f"komodo {KOMODO_VERSION}")
+
+    parser.add_argument("dirs", nargs="*", default=["."],
+                        help="Directories to process (default: current directory)")
+    
+    chunk_group = parser.add_mutually_exclusive_group(required=True)
+    chunk_group.add_argument("--equal-chunks", type=int, 
+                            help="Split into N equal chunks")
+    chunk_group.add_argument("--max-chunk-size", type=int, 
+                            help="Maximum tokens per chunk")
+    
+    parser.add_argument("--output-dir", default="chunks",
+                        help="Output directory for chunks (default: chunks)")
+    
+    parser.add_argument("--ignore", action="append", default=[],
+                        help="Repeatable. Each usage adds one ignore pattern. Example: --ignore '**/node_modules/**' --ignore 'venv'")
+    parser.add_argument("--unignore", action="append", default=[],
+                        help="Repeatable. Each usage adds one unignore pattern. Example: --unignore '*.md'")
+
+    parser.add_argument("--priority", action="append", default=[],
+                        help="Priority rules in format 'pattern,score' (repeatable). Example: --priority '*.py,10' --priority 'file2.txt,20'")
+    
+    parser.add_argument("--num-threads", type=int, default=4,
+                        help="Number of processing threads (default: 4)")
+
+    parser.add_argument("--enhanced", action="store_true",
+                        help="Enable LLM optimizations")
+    parser.add_argument("--context-window", type=int, default=4096,
+                        help="Target LLM context window size (default: 4096)")
+    parser.add_argument("--min-relevance", type=float, default=0.3,
+                        help="Minimum relevance score 0.0-1.0 (default: 0.3)")
+    parser.add_argument("--no-metadata", action="store_true",
+                        help="Disable metadata extraction")
+    parser.add_argument("--keep-redundant", action="store_true",
+                        help="Keep redundant content")
+    parser.add_argument("--no-summaries", action="store_true",
+                        help="Disable summary generation")
+
+    args = parser.parse_args()
+
+    if args.output_dir:
+        os.makedirs(args.output_dir, exist_ok=True)
+
+    priority_rules = []
+    for rule in args.priority:
+        if not rule:
+            continue
+        try:
+            pattern, score = rule.split(",", 1)
+            priority_rules.append((pattern.strip(), int(score.strip())))
+        except ValueError:
+            print(f"[Error] Priority rule must be 'pattern,score': {rule}", 
+                  file=sys.stderr)
+            sys.exit(1)
+
+    chunker_class = EnhancedParallelChunker if args.enhanced else ParallelChunker
+    
+    chunker_args = {
+        "equal_chunks": args.equal_chunks,
+        "max_chunk_size": args.max_chunk_size,
+        "output_dir": args.output_dir,
+        "user_ignore": args.ignore,
+        "user_unignore": args.unignore,
+        "priority_rules": priority_rules,
+        "num_threads": args.num_threads,
+    }
+    
+    if args.enhanced:
+        chunker_args.update({
+            "extract_metadata": not args.no_metadata,
+            "add_summaries": not args.no_summaries,
+            "remove_redundancy": not args.keep_redundant,
+            "context_window": args.context_window,
+            "min_relevance_score": args.min_relevance
+        })
+    
+    try:
+        chunker = chunker_class(**chunker_args)
+        chunker.process_directories(args.dirs)
+    except Exception as e:
+        print(f"[Error] Processing failed: {e}", file=sys.stderr)
+        sys.exit(1)
+    finally:
+        chunker.close()
+
+if __name__ == "__main__":
+    main()
+
+
+========================================
+File: ./src/pykomodo/config.py
+========================================
+
+# src/config.py
+
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Optional
+
+@dataclass
+class PriorityRule:
+    pattern: str
+    score: int
+
+@dataclass
+class KomodoConfig:
+    max_size: int = 10 * 1024 * 1024
+    token_mode: bool = False
+    output_dir: Optional[Path] = None
+    stream: bool = False
+    ignore_patterns: list[str] = None
+    priority_rules: list[PriorityRule] = None
+    binary_extensions: list[str] = None
+
+
+========================================
+File: ./src/pykomodo/core.py
+========================================
+
+import os
+import fnmatch
+
+class PriorityRule:
+    """
+    Simple Python container for (pattern, score).
+    """
+    def __init__(self, pattern, score):
+        self.pattern = pattern
+        self.score = score
+
+class PyCConfig:
+    """
+    A pure Python equivalent of the 'PyCConfig' that in Cython
+    wrapped the 'CConfig' struct. This class maintains the same
+    conceptual fields but in Pythonic form (lists, strings, booleans).
+    """
+
+    def __init__(self):
+        self.max_size = 0
+        self.token_mode = False
+        self.output_dir = None
+        self.stream = False
+        self.ignore_patterns = []     
+        self.unignore_patterns = []   
+        self.priority_rules = []      
+        self.binary_exts = []        
+
+    def add_ignore_pattern(self, pattern: str):
+        """
+        Just appends to a Python list.
+        """
+        self.ignore_patterns.append(pattern)
+
+    def add_unignore_pattern(self, pattern: str):
+        self.unignore_patterns.append(pattern)
+
+    def add_priority_rule(self, pattern: str, score: int):
+        self.priority_rules.append(PriorityRule(pattern, score))
+
+    def should_ignore(self, path: str) -> bool:
+        """
+        Return True if path matches one of the ignore_patterns,
+        unless it matches unignore_patterns first.
+        """
+        for pat in self.unignore_patterns:
+            if fnmatch.fnmatch(path, pat):
+                return False
+
+        for pat in self.ignore_patterns:
+            if fnmatch.fnmatch(path, pat):
+                return True
+
+        return False
+
+    def calculate_priority(self, path: str) -> int:
+        """
+        Returns the highest score among any matching priority rule.
+        """
+        highest = 0
+        for rule in self.priority_rules:
+            if fnmatch.fnmatch(path, rule.pattern):
+                if rule.score > highest:
+                    highest = rule.score
+        return highest
+
+    def is_binary_file(self, path: str) -> bool:
+        """
+        1) If extension is in self.binary_exts -> True
+        2) Else read up to 512 bytes, if it has a null byte -> True
+        3) If can't open -> True
+        """
+        _, ext = os.path.splitext(path)
+        ext = ext.lstrip(".").lower()
+        if ext in (b.lower() for b in self.binary_exts):
+            return True
+
+        try:
+            with open(path, "rb") as f:
+                chunk = f.read(512)
+        except OSError:
+            return True
+
+        if b"\0" in chunk:
+            return True
+
+        return False
+
+    def read_file_contents(self, path: str) -> str:
+        """
+        Reads the entire file as text, returns it.
+        If can't open, return "<NULL>" or handle differently.
+        """
+        try:
+            with open(path, "rb") as f:
+                data = f.read()
+            return data.decode("utf-8", errors="replace")
+        except OSError:
+            return "<NULL>"
+
+    def count_tokens(self, text: str) -> int:
+        """
+        Replicates py_count_tokens:
+        Simple whitespace-based token counting in pure Python.
+        """
+        return len(text.split())
+
+    def make_c_string(self, text: str) -> str:
+        if text is None:
+            return "<NULL>"
+        return text
+
+    def __repr__(self):
+        return (f"PyCConfig(max_size={self.max_size}, token_mode={self.token_mode}, "
+                f"output_dir={self.output_dir!r}, stream={self.stream}, "
+                f"ignore_patterns={self.ignore_patterns}, "
+                f"unignore_patterns={self.unignore_patterns}, "
+                f"priority_rules={[ (r.pattern, r.score) for r in self.priority_rules ]}, "
+                f"binary_exts={self.binary_exts})")
+
+
+========================================
+File: ./src/pykomodo/enhanced_chunker.py
+========================================
+
+from pykomodo.multi_dirs_chunker import ParallelChunker
 import os
 
 class EnhancedParallelChunker(ParallelChunker):
@@ -318,3 +753,4 @@ class EnhancedParallelChunker(ParallelChunker):
                 f.write(content_bytes)
         except Exception as e:
             print(f"Error writing minimal chunk-{chunk_num}: {e}")
+
