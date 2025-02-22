@@ -19,9 +19,9 @@ A Python-based parallel file chunking system designed for processing large codeb
 
     * Equal-parts chunking: Split content into N equal chunks
     * Size-based chunking: Split by maximum chunk size
-    * **NEW**: **Semantic (AST-based) chunking** for Python files
+    * ** ***NEW*** **: **Semantic (AST-based) chunking** for Python files
   
-* **NEW** Dry-run mode: If you only want to see which files **would** be chunked
+* ** ***NEW*** ** Dry-run mode: If you only want to see which files **would** be chunked
 
 
 * LLM Optimizations:
@@ -69,7 +69,7 @@ komodo . --equal-chunks 5 --output-dir chunks
 komodo . --max-chunk-size 1000 --output-dir chunks
 ```
 
-##### **NEW**: Semantic (AST-based) Chunking (For Python)
+##### ** ***NEW*** **: Semantic (AST-based) Chunking (For Python)
 
 ```bash
 # Use semantic chunking for Python files
@@ -185,7 +185,7 @@ komodo . \
   --context-window 8192
 ```
 
-### **New** Dry Run
+### ** ***New*** ** Dry Run
 
 If you only want to see which files **would** be chunked (and in what priority order), without actually writing any output chunks, you can specify `--dry-run`. This is especially helpful if you’re testing new ignore/unignore patterns or priority rules.
 
