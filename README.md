@@ -19,6 +19,9 @@ A Python-based parallel file chunking system designed for processing large codeb
 
     * Equal-parts chunking: Split content into N equal chunks
     * Size-based chunking: Split by maximum chunk size
+    * **NEW**: **Semantic (AST-based) chunking** for Python files
+  
+* **NEW** Dry-run mode: If you only want to see which files **would** be chunked
 
 
 * LLM Optimizations:
@@ -66,6 +69,31 @@ komodo . --equal-chunks 5 --output-dir chunks
 komodo . --max-chunk-size 1000 --output-dir chunks
 ```
 
+##### **NEW**: Semantic (AST-based) Chunking (For Python)
+
+```bash
+# Use semantic chunking for Python files
+# The .py files are split by top-level function/class boundaries;
+# all non-.py files are chunked by your usual line- or size-based approach.
+komodo . --max-chunk-size 200 --semantic-chunks
+```
+
+* What does `--max-chunk-size 200` mean here?
+
+It means that when chunking lines from the file, Komodo aims for chunks no more than 200 **lines (not tokens)**. However, because we’re in “semantic” mode, each top-level Python definition (function or class) is considered atomic. If a single function or class is itself bigger than 200 lines, it will be placed into one oversized chunk on its own. **Komodo won’t split that function in half.** 
+
+* In practice
+
+  * For normal-sized functions/classes (<200 lines), Komodo accumulates them until adding another function would exceed 200 lines, then starts a new chunk.
+
+  * For an extremely large function or class (e.g. 300 lines), Komodo ignores the usual 200-line limit for that one block and puts it all in a single chunk.
+
+  * Non-Python files keep following line-based splitting at 200 lines per chunk.
+
+This approach strikes a balance: you get roughly 200 lines per chunk unless a single function is bigger, in which case it remains “atomic” and goes into an oversize chunk. That way you never get a function split across two chunks.
+
+**Note**: If you face any issues and the function is still being split into 2, just increase the number, although good practise dictates that you **should not** be writing a 5000 line function. i.e. `komodo . --max-chunk-size 5000 --semantic-chunks`
+
 #### Ignoring & Unignoring Files
 
 * Add ignore patterns with --ignore.
@@ -86,18 +114,20 @@ komodo . --equal-chunks 5 \
 komodo . --equal-chunks 5 \
   --ignore "*.rst" \
   --unignore "README.rst"
+```
 
-# Safest mode
+##### Safest (Recursive) Ignoring
+
+If you want to ensure that Komodo skips all files inside a particular directory (including all subfolders), you can use the ** wildcard before and after the folder name:
+
+```bash
+# safest mode: skip everything in "results/" and "docs/" recursively
 komodo . --equal-chunks 5 \
   --ignore "**/results/**" \
   --ignore "**/docs/**"
 ```
 
-**Note**: If in doubt, just use the `**` before and after. Example: 
-
-```bash
-komodo . --equal-chunks 5 --ignore "**/results/**" --ignore "**/docs/**"
-```
+**Pro Tip: If in doubt, just use **/folder/** to recursively ignore that folder and everything beneath it. This is the most reliable way to avoid processing unwanted files in subdirectories.**
 
 #### Fixed Number of Chunks with ignore mode
 
@@ -154,6 +184,24 @@ komodo . \
   --no-metadata \
   --context-window 8192
 ```
+
+### **New** Dry Run
+
+If you only want to see which files **would** be chunked (and in what priority order), without actually writing any output chunks, you can specify `--dry-run`. This is especially helpful if you’re testing new ignore/unignore patterns or priority rules.
+
+Example:
+
+```bash
+## vanilla approach 
+komodo . --equal-chunks 5 --dry-run
+
+## with priorities for .py files. these get processed faster. but note this is just a dry run
+komodo . --equal-chunks 5 --dry-run \
+    --priority "*.py,10" \
+    --priority "*.md,5"
+```
+
+No chunks are created. Komodo simply prints the would-be processed files, sorted by priority. This is an easy way to confirm your ignore patterns and see exactly which files the chunker will pick up.
 
 ### Python API Usage
 

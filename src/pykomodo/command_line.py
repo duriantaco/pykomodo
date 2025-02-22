@@ -41,6 +41,10 @@ def main():
 
     parser.add_argument("--enhanced", action="store_true",
                         help="Enable LLM optimizations")
+    
+    parser.add_argument("--semantic-chunks", action="store_true",
+                        help="Use AST-based chunking for .py files (splits by top-level functions/classes)")
+
     parser.add_argument("--context-window", type=int, default=4096,
                         help="Target LLM context window size (default: 4096)")
     parser.add_argument("--min-relevance", type=float, default=0.3,

@@ -406,14 +406,6 @@ class ParallelChunker:
         return "\n".join(h + lines) + "\n"
 
     def _chunk_python_file_ast(self, path, text, chunk_index):
-        """
-        1) Parse AST
-        2) Find top-level function/class boundaries
-        3) Break into code blocks
-        4) Group them so we don't exceed self.max_chunk_size lines (or tokens)
-        5) Write each chunk with _write_chunk
-        6) Return the next chunk_index to use
-        """
         import ast
         try:
             tree = ast.parse(text, filename=path)
@@ -428,7 +420,7 @@ class ParallelChunker:
         for node in tree.body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 node_type = "Function"
-                label = f"{node_type}: {node.name}"  
+                label = f"{node_type}: {node.name}"
             elif isinstance(node, ast.ClassDef):
                 label = f"Class: {node.name}"
             else:
@@ -451,19 +443,43 @@ class ParallelChunker:
 
         code_blocks = []
         for (start, end, label) in expanded_blocks:
-            snippet = lines[start-1:end]
+            snippet = lines[start - 1 : end]
             block_text = f"{label} (lines {start}-{end})\n" + "\n".join(snippet)
             code_blocks.append(block_text)
 
         current_lines = []
         current_count = 0
+
         for block in code_blocks:
-            block_size = len(block.splitlines())  # line-based approach
-            if self.max_chunk_size and (current_count + block_size) > self.max_chunk_size and current_lines:
+            block_size = len(block.splitlines())
+
+            if not self.max_chunk_size:
+                current_lines.append(block)
+                current_count += block_size
+                continue
+
+            if block_size > self.max_chunk_size:
+                # flush whatever wuz in current_lines
+                if current_lines:
+                    chunk_data = "\n\n".join(current_lines)
+                    final_text = f"{'='*80}\nFILE: {path}\n{'='*80}\n\n{chunk_data}"
+                    self._write_chunk(final_text.encode("utf-8"), chunk_index)
+                    chunk_index += 1
+                    current_lines = []
+                    current_count = 0
+
+                big_block_data = f"{'='*80}\nFILE: {path}\n{'='*80}\n\n{block}"
+                self._write_chunk(big_block_data.encode("utf-8"), chunk_index)
+                chunk_index += 1
+                # done, skip to the next block
+                continue
+
+            if current_count + block_size > self.max_chunk_size and current_lines:
                 chunk_data = "\n\n".join(current_lines)
                 final_text = f"{'='*80}\nFILE: {path}\n{'='*80}\n\n{chunk_data}"
                 self._write_chunk(final_text.encode("utf-8"), chunk_index)
                 chunk_index += 1
+
                 current_lines = []
                 current_count = 0
 
@@ -477,6 +493,7 @@ class ParallelChunker:
             chunk_index += 1
 
         return chunk_index
+
 
     def close(self):
         pass
