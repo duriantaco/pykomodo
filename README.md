@@ -187,7 +187,7 @@ komodo . \
 
 ### ** ***New*** ** Dry Run
 
-If you only want to see which files **would** be chunked (and in what priority order), without actually writing any output chunks, you can specify `--dry-run`. This is especially helpful if you’re testing new ignore/unignore patterns or priority rules.
+If you only want to see which files **would** be chunked (and in what priority order), without actually writing any output chunks, you can specify `--dry-run`. This is especially helpful if you’re testing new ignore/unignore patterns or priority rules. Note again, there will be **NO CHUNKING** being done. This is just to let you see what files will be chunked.
 
 Example:
 
