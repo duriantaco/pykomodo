@@ -2,7 +2,7 @@ import unittest
 import os
 import tempfile
 import shutil
-from src.core import PyCConfig, PriorityRule
+from pykomodo.core import PyCConfig, PriorityRule
 
 class TestPyCConfig(unittest.TestCase):
     def setUp(self):

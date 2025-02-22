@@ -1,281 +1,6 @@
 ================================================================================
-CHUNK 2 OF 5
+CHUNK 2 OF 6
 ================================================================================
-
-
-========================================
-File: ./pykomodo.egg-info/PKG-INFO
-========================================
-
-Metadata-Version: 2.2
-Name: pykomodo
-Version: 0.0.1
-License-File: NOTICE
-Requires-Dist: pathspec
-
-
-========================================
-File: ./pykomodo.egg-info/SOURCES.txt
-========================================
-
-NOTICE
-README.md
-pyproject.toml
-pykomodo.egg-info/PKG-INFO
-pykomodo.egg-info/SOURCES.txt
-pykomodo.egg-info/dependency_links.txt
-pykomodo.egg-info/entry_points.txt
-pykomodo.egg-info/not-zip-safe
-pykomodo.egg-info/requires.txt
-pykomodo.egg-info/top_level.txt
-src/__init__.py
-src/command_line.py
-src/config.py
-src/core.py
-src/enhanced_chunker.py
-src/multi_dirs_chunker.py
-
-========================================
-File: ./pykomodo.egg-info/dependency_links.txt
-========================================
-
-
-
-
-========================================
-File: ./pykomodo.egg-info/entry_points.txt
-========================================
-
-[console_scripts]
-komodo = src.command_line:main
-
-
-========================================
-File: ./pykomodo.egg-info/not-zip-safe
-========================================
-
-
-
-
-========================================
-File: ./pykomodo.egg-info/requires.txt
-========================================
-
-pathspec
-
-
-========================================
-File: ./pykomodo.egg-info/top_level.txt
-========================================
-
-src
-
-
-========================================
-File: ./pyproject.toml
-========================================
-
-[build-system]
-requires = ["setuptools>=64", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "pykomodo"
-version = "0.0.2"
-description = "A chunking library"
-dependencies = ["pathspec"]
-authors = [{ name = "oha" }]
-
-[project.scripts]
-komodo = "pykomodo.command_line:main"
-
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["pykomodo*"]
-
-[tool.setuptools]
-zip-safe = false
-
-========================================
-File: ./src/pykomodo.egg-info/PKG-INFO
-========================================
-
-Metadata-Version: 2.2
-Name: pykomodo
-Version: 0.0.2
-Summary: A chunking library
-Author: oha
-License-File: NOTICE
-Requires-Dist: pathspec
-
-
-========================================
-File: ./src/pykomodo.egg-info/SOURCES.txt
-========================================
-
-NOTICE
-README.md
-pyproject.toml
-src/pykomodo/__init__.py
-src/pykomodo/command_line.py
-src/pykomodo/config.py
-src/pykomodo/core.py
-src/pykomodo/enhanced_chunker.py
-src/pykomodo/multi_dirs_chunker.py
-src/pykomodo.egg-info/PKG-INFO
-src/pykomodo.egg-info/SOURCES.txt
-src/pykomodo.egg-info/dependency_links.txt
-src/pykomodo.egg-info/entry_points.txt
-src/pykomodo.egg-info/not-zip-safe
-src/pykomodo.egg-info/requires.txt
-src/pykomodo.egg-info/top_level.txt
-
-========================================
-File: ./src/pykomodo.egg-info/dependency_links.txt
-========================================
-
-
-
-
-========================================
-File: ./src/pykomodo.egg-info/entry_points.txt
-========================================
-
-[console_scripts]
-komodo = pykomodo.command_line:main
-
-
-========================================
-File: ./src/pykomodo.egg-info/not-zip-safe
-========================================
-
-
-
-
-========================================
-File: ./src/pykomodo.egg-info/requires.txt
-========================================
-
-pathspec
-
-
-========================================
-File: ./src/pykomodo.egg-info/top_level.txt
-========================================
-
-pykomodo
-
-
-========================================
-File: ./src/pykomodo/__init__.py
-========================================
-
-
-
-========================================
-File: ./src/pykomodo/command_line.py
-========================================
-
-import sys
-import argparse
-import os
-from pykomodo.multi_dirs_chunker import ParallelChunker
-from pykomodo.enhanced_chunker import EnhancedParallelChunker
-
-KOMODO_VERSION = "0.0.1" 
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Process and chunk codebase content with optional LLM optimizations."
-    )
-
-    parser.add_argument("--version", action="version", version=f"komodo {KOMODO_VERSION}")
-
-    parser.add_argument("dirs", nargs="*", default=["."],
-                        help="Directories to process (default: current directory)")
-    
-    chunk_group = parser.add_mutually_exclusive_group(required=True)
-    chunk_group.add_argument("--equal-chunks", type=int, 
-                            help="Split into N equal chunks")
-    chunk_group.add_argument("--max-chunk-size", type=int, 
-                            help="Maximum tokens per chunk")
-    
-    parser.add_argument("--output-dir", default="chunks",
-                        help="Output directory for chunks (default: chunks)")
-    
-    parser.add_argument("--ignore", action="append", default=[],
-                        help="Repeatable. Each usage adds one ignore pattern. Example: --ignore '**/node_modules/**' --ignore 'venv'")
-    parser.add_argument("--unignore", action="append", default=[],
-                        help="Repeatable. Each usage adds one unignore pattern. Example: --unignore '*.md'")
-
-    parser.add_argument("--priority", action="append", default=[],
-                        help="Priority rules in format 'pattern,score' (repeatable). Example: --priority '*.py,10' --priority 'file2.txt,20'")
-    
-    parser.add_argument("--num-threads", type=int, default=4,
-                        help="Number of processing threads (default: 4)")
-
-    parser.add_argument("--enhanced", action="store_true",
-                        help="Enable LLM optimizations")
-    parser.add_argument("--context-window", type=int, default=4096,
-                        help="Target LLM context window size (default: 4096)")
-    parser.add_argument("--min-relevance", type=float, default=0.3,
-                        help="Minimum relevance score 0.0-1.0 (default: 0.3)")
-    parser.add_argument("--no-metadata", action="store_true",
-                        help="Disable metadata extraction")
-    parser.add_argument("--keep-redundant", action="store_true",
-                        help="Keep redundant content")
-    parser.add_argument("--no-summaries", action="store_true",
-                        help="Disable summary generation")
-
-    args = parser.parse_args()
-
-    if args.output_dir:
-        os.makedirs(args.output_dir, exist_ok=True)
-
-    priority_rules = []
-    for rule in args.priority:
-        if not rule:
-            continue
-        try:
-            pattern, score = rule.split(",", 1)
-            priority_rules.append((pattern.strip(), int(score.strip())))
-        except ValueError:
-            print(f"[Error] Priority rule must be 'pattern,score': {rule}", 
-                  file=sys.stderr)
-            sys.exit(1)
-
-    chunker_class = EnhancedParallelChunker if args.enhanced else ParallelChunker
-    
-    chunker_args = {
-        "equal_chunks": args.equal_chunks,
-        "max_chunk_size": args.max_chunk_size,
-        "output_dir": args.output_dir,
-        "user_ignore": args.ignore,
-        "user_unignore": args.unignore,
-        "priority_rules": priority_rules,
-        "num_threads": args.num_threads,
-    }
-    
-    if args.enhanced:
-        chunker_args.update({
-            "extract_metadata": not args.no_metadata,
-            "add_summaries": not args.no_summaries,
-            "remove_redundancy": not args.keep_redundant,
-            "context_window": args.context_window,
-            "min_relevance_score": args.min_relevance
-        })
-    
-    try:
-        chunker = chunker_class(**chunker_args)
-        chunker.process_directories(args.dirs)
-    except Exception as e:
-        print(f"[Error] Processing failed: {e}", file=sys.stderr)
-        sys.exit(1)
-    finally:
-        chunker.close()
-
-if __name__ == "__main__":
-    main()
 
 
 ========================================
@@ -753,4 +478,495 @@ class EnhancedParallelChunker(ParallelChunker):
                 f.write(content_bytes)
         except Exception as e:
             print(f"Error writing minimal chunk-{chunk_num}: {e}")
+
+
+========================================
+File: ./src/pykomodo/multi_dirs_chunker.py
+========================================
+
+import os
+import fnmatch
+import re
+import concurrent.futures
+import ast  
+
+BUILTIN_IGNORES = [
+    "**/.git/**",
+    "**/.idea/**",
+    "**/.vscode/**",
+    "**/__pycache__/**",
+    "**/*.pyc",
+    "**/.pytest_cache/**",
+    "**/.DS_Store",
+    "**/node_modules/**",
+    "__pycache__",
+    "*.pyc",
+    "*.pyo",
+    "**/node_modules/**",
+    "target",
+    "venv",
+    "*.png",
+    "*.jpg",
+    "*.jpeg",
+    "*.gif",
+    "*.webp",
+    "*.bmp",
+]
+
+class PriorityRule:
+    def __init__(self, pattern, score):
+        self.pattern = pattern
+        self.score = score
+
+class ParallelChunker:
+    def __init__(
+        self,
+        equal_chunks=None,
+        max_chunk_size=None,
+        output_dir="chunks",
+        user_ignore=None,
+        user_unignore=None,
+        binary_extensions=None,
+        priority_rules=None,
+        num_threads=4,
+        dry_run=False,
+        semantic_chunking=False
+    ):
+        if equal_chunks is not None and max_chunk_size is not None:
+            raise ValueError("Cannot specify both equal_chunks and max_chunk_size")
+        if equal_chunks is None and max_chunk_size is None:
+            raise ValueError("Must specify either equal_chunks or max_chunk_size")
+
+        self.equal_chunks = equal_chunks
+        self.max_chunk_size = max_chunk_size
+        self.output_dir = output_dir
+        self.num_threads = num_threads
+        self.dry_run = dry_run 
+        self.semantic_chunking = semantic_chunking
+
+        if user_ignore is None:
+            user_ignore = []
+        if user_unignore is None:
+            user_unignore = []
+
+        self.ignore_patterns = BUILTIN_IGNORES[:]
+        self.ignore_patterns.extend(user_ignore)
+        self.unignore_patterns = list(user_unignore)
+        self.unignore_patterns.append("*.py")
+
+        if binary_extensions is None:
+            binary_extensions = ["exe", "dll", "so"]
+        self.binary_exts = set(ext.lower() for ext in binary_extensions)
+
+        self.priority_rules = []
+        if priority_rules:
+            for rule_data in priority_rules:
+                if isinstance(rule_data, PriorityRule):
+                    self.priority_rules.append(rule_data)
+                else:
+                    pat, score = rule_data
+                    self.priority_rules.append(PriorityRule(pat, score))
+
+        self.loaded_files = []
+        self.current_walk_root = None
+
+    def is_absolute_pattern(self, pattern):
+        if pattern.startswith("/"):
+            return True
+        if re.match(r"^[a-zA-Z]:\\", pattern):
+            return True
+        return False
+
+    def _match_segments(self, path_segs, pattern_segs, pi=0, pj=0):
+        if pj == len(pattern_segs):
+            return pi == len(path_segs)
+        if pi == len(path_segs):
+            return all(seg == '**' for seg in pattern_segs[pj:])
+        seg_pat = pattern_segs[pj]
+        if seg_pat == "**":
+            if self._match_segments(path_segs, pattern_segs, pi, pj + 1):
+                return True
+            return self._match_segments(path_segs, pattern_segs, pi + 1, pj)
+        if fnmatch.fnmatch(path_segs[pi], seg_pat):
+            return self._match_segments(path_segs, pattern_segs, pi + 1, pj + 1)
+        return False
+
+    def _double_star_fnmatch(self, path, pattern):
+        path = path.replace("\\", "/")
+        pattern = pattern.replace("\\", "/")
+        return self._match_segments(path.split("/"), pattern.split("/"))
+
+    def _matches_pattern(self, abs_path, rel_path, pattern):
+        target = abs_path if self.is_absolute_pattern(pattern) else rel_path
+
+        if "**" in pattern:
+            if self._double_star_fnmatch(target, pattern):
+                return True
+        else:
+            if fnmatch.fnmatch(target, pattern):
+                return True
+        if not self.is_absolute_pattern(pattern) and "/" not in pattern:
+            if fnmatch.fnmatch(os.path.basename(abs_path), pattern):
+                return True
+        return False
+
+    def should_ignore_file(self, path):
+        abs_path = os.path.abspath(path)
+        root = self.current_walk_root or os.path.dirname(abs_path)
+        rel_path = os.path.relpath(abs_path, start=root).replace("\\", "/")
+        if rel_path.startswith("./"):
+            rel_path = rel_path[2:]
+
+        for pat in self.unignore_patterns:
+            if self._matches_pattern(abs_path, rel_path, pat):
+                return False
+
+        for pat in self.ignore_patterns:
+            if self._matches_pattern(abs_path, rel_path, pat):
+                return True
+
+        return False
+
+    def is_binary_file(self, path):
+        _, ext = os.path.splitext(path)
+        ext = ext.lstrip(".").lower()
+        if ext == "py":
+            return False
+        if ext in self.binary_exts:
+            return True
+        try:
+            with open(path, "rb") as f:
+                chunk = f.read(8192)
+                if b"\0" in chunk:
+                    return True
+        except OSError:
+            return True
+        return False
+
+    def _collect_paths(self, dir_list):
+        collected = []
+        for directory in dir_list:
+            self.current_walk_root = os.path.abspath(directory)
+            for root, dirs, files in os.walk(directory):
+                for filename in files:
+                    full_path = os.path.join(root, filename)
+                    if os.path.commonprefix([
+                        os.path.abspath(self.output_dir),
+                        os.path.abspath(full_path)
+                    ]) == os.path.abspath(self.output_dir):
+                        continue
+                    if self.should_ignore_file(full_path):
+                        continue
+                    collected.append(full_path)
+
+        return collected
+
+    def _load_file_data(self, path):
+        try:
+            with open(path, "rb") as f:
+                content = f.read()
+            return path, content, self.calculate_priority(path)
+        except:
+            return path, None, 0
+
+    def calculate_priority(self, path):
+        highest = 0
+        basename = os.path.basename(path)
+        for rule in self.priority_rules:
+            if fnmatch.fnmatch(basename, rule.pattern):
+                highest = max(highest, rule.score)
+        return highest
+
+    def process_directories(self, dirs):
+        all_paths = self._collect_paths(dirs)
+        self.loaded_files.clear()
+        if self.dry_run:
+            print("[DRY-RUN] The following files would be processed (in priority order):")
+            tmp_loaded = []
+            for p in all_paths:
+                priority = self.calculate_priority(p)
+                tmp_loaded.append((p, priority))
+            tmp_loaded.sort(key=lambda x: -x[1])  
+            for path, pr in tmp_loaded:
+                print(f"  - {path} (priority={pr})")
+            return  
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.num_threads) as ex:
+            future_map = {ex.submit(self._load_file_data, p): p for p in all_paths}
+            for fut in concurrent.futures.as_completed(future_map):
+                path, content, priority = fut.result()
+                if content is not None and not self.is_binary_file(path):
+                    self.loaded_files.append((path, content, priority))
+        self.loaded_files.sort(key=lambda x: (-x[2], x[0]))
+        self._process_chunks()
+
+    def process_directory(self, directory):
+        self.process_directories([directory])
+
+    def _split_tokens(self, content_bytes):
+        try:
+            return content_bytes.decode("utf-8", errors="replace").split()
+        except:
+            return []
+
+    def _write_chunk(self, content_bytes, chunk_num):
+        os.makedirs(self.output_dir, exist_ok=True)
+        p = os.path.join(self.output_dir, f"chunk-{chunk_num}.txt")
+        try:
+            with open(p, "wb") as f:
+                f.write(content_bytes)
+        except:
+            pass
+
+    def _process_chunks(self):
+        if not self.loaded_files:
+            return
+        if self.semantic_chunking:
+            self._chunk_by_semantic()
+        elif self.equal_chunks:
+            self._chunk_by_equal_parts()
+        else:
+            self._chunk_by_size()
+
+    def _chunk_by_equal_parts(self):
+        total_content = []
+        total_size = 0
+        for (path, content_bytes, _) in self.loaded_files:
+            try:
+                c = content_bytes.decode("utf-8", errors="replace")
+                s = len(c)
+                total_content.append((path, c, s))
+                total_size += s
+            except:
+                continue
+        if not total_content:
+            return
+        n_chunks = self.equal_chunks
+        tgt = max(1, total_size // n_chunks)
+        cur_size = 0
+        for i in range(n_chunks):
+            chunk_content = []
+            while total_content and cur_size < tgt:
+                p, c, s = total_content[0]
+                chunk_content.extend([
+                    "\n" + "="*40,
+                    f"File: {p}",
+                    "="*40 + "\n",
+                    c
+                ])
+                cur_size += s
+                total_content.pop(0)
+            txt = (
+                "="*80 + "\n"
+                + f"CHUNK {i + 1} OF {n_chunks}\n"
+                + "="*80 + "\n\n"
+                + "\n".join(chunk_content)
+                + "\n"
+            )
+            self._write_chunk(txt.encode("utf-8"), i)
+            cur_size = 0
+
+    def _chunk_by_size(self):
+        idx = 0
+        for (path, content_bytes, _) in self.loaded_files:
+            try:
+                c = content_bytes.decode("utf-8", errors="replace")
+                lines = c.splitlines()
+                if not lines:
+                    t = (
+                        "="*80 + "\n"
+                        + f"CHUNK {idx + 1}\n"
+                        + "="*80 + "\n\n"
+                        + "="*40 + "\n"
+                        + f"File: {path}\n"
+                        + "="*40 + "\n"
+                        + "[Empty File]\n"
+                    )
+                    self._write_chunk(t.encode("utf-8"), idx)
+                    idx += 1
+                    continue
+                current_chunk_lines = []
+                current_size = 0
+                for line in lines:
+                    line_size = len(line.split())
+                    if current_size + line_size > self.max_chunk_size and current_chunk_lines:
+                        h = [
+                            "="*80,
+                            f"CHUNK {idx + 1}",
+                            "="*80,
+                            "",
+                            "="*40,
+                            f"File: {path}",
+                            "="*40,
+                            ""
+                        ]
+                        chunk_data = "\n".join(h + current_chunk_lines) + "\n"
+                        self._write_chunk(chunk_data.encode("utf-8"), idx)
+                        idx += 1
+                        current_chunk_lines = []
+                        current_size = 0
+                    current_chunk_lines.append(line)
+                    current_size += line_size
+                if current_chunk_lines:
+                    h = [
+                        "="*80,
+                        f"CHUNK {idx + 1}",
+                        "="*80,
+                        "",
+                        "="*40,
+                        f"File: {path}",
+                        "="*40,
+                        ""
+                    ]
+                    chunk_data = "\n".join(h + current_chunk_lines) + "\n"
+                    self._write_chunk(chunk_data.encode("utf-8"), idx)
+                    idx += 1
+            except:
+                continue
+
+    def _chunk_by_semantic(self):
+        """
+        For each loaded file:
+        - If .py => parse AST, chunk by top-level function/class
+        - Otherwise => fallback to one chunk or call your old logic.
+        """
+        chunk_index = 0
+        for (path, content_bytes, priority) in self.loaded_files:
+            try:
+                text = content_bytes.decode("utf-8", errors="replace")
+            except:
+                continue
+
+            if path.endswith(".py"):
+                chunk_index = self._chunk_python_file_ast(path, text, chunk_index)
+            else:
+                chunk_index = self._chunk_nonpython_file_by_size(path, text, chunk_index)
+
+    def _chunk_nonpython_file_by_size(self, path, text, chunk_index):
+        lines = text.splitlines()
+        if not lines:
+            t = (
+                "="*80 + "\n"
+                + f"CHUNK {chunk_index + 1}\n"
+                + "="*80 + "\n\n"
+                + "="*40 + "\n"
+                + f"File: {path}\n"
+                + "="*40 + "\n"
+                + "[Empty File]\n"
+            )
+            self._write_chunk(t.encode("utf-8"), chunk_index)
+            return chunk_index + 1
+
+        current_chunk_lines = []
+        current_size = 0
+        idx = chunk_index
+        for line in lines:
+            line_size = len(line.split())
+            if self.max_chunk_size and (current_size + line_size) > self.max_chunk_size and current_chunk_lines:
+                chunk_data = self._format_chunk_content(path, current_chunk_lines, idx)
+                self._write_chunk(chunk_data.encode("utf-8"), idx)
+                idx += 1
+                current_chunk_lines = []
+                current_size = 0
+            current_chunk_lines.append(line)
+            current_size += line_size
+
+        if current_chunk_lines:
+            chunk_data = self._format_chunk_content(path, current_chunk_lines, idx)
+            self._write_chunk(chunk_data.encode("utf-8"), idx)
+            idx += 1
+
+        return idx
+
+    def _format_chunk_content(self, path, lines, idx):
+        h = [
+            "="*80,
+            f"CHUNK {idx + 1}",
+            "="*80,
+            "",
+            "="*40,
+            f"File: {path}",
+            "="*40,
+            ""
+        ]
+        return "\n".join(h + lines) + "\n"
+
+    def _chunk_python_file_ast(self, path, text, chunk_index):
+        """
+        1) Parse AST
+        2) Find top-level function/class boundaries
+        3) Break into code blocks
+        4) Group them so we don't exceed self.max_chunk_size lines (or tokens)
+        5) Write each chunk with _write_chunk
+        6) Return the next chunk_index to use
+        """
+        import ast
+        try:
+            tree = ast.parse(text, filename=path)
+        except SyntaxError:
+            chunk_data = f"{'='*80}\nFILE: {path}\n{'='*80}\n\n{text}"
+            self._write_chunk(chunk_data.encode("utf-8"), chunk_index)
+            return chunk_index + 1
+
+        lines = text.splitlines()
+
+        node_boundaries = []
+        for node in tree.body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                start = node.lineno
+                end = getattr(node, 'end_lineno', start)
+                node_type = "Function" if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) else "Class"
+                label = f"{node_type}: {node.name}"
+                node_boundaries.append((start, end, label))
+
+        node_boundaries.sort(key=lambda x: x[0])
+
+        expanded_blocks = []
+        prev_end = 1
+        for (start, end, label) in node_boundaries:
+            if start > prev_end:
+                expanded_blocks.append((prev_end, start - 1, "GLOBAL CODE"))
+            expanded_blocks.append((start, end, label))
+            prev_end = end + 1
+        if prev_end <= len(lines):
+            expanded_blocks.append((prev_end, len(lines), "GLOBAL CODE"))
+
+        code_blocks = []
+        for (start, end, label) in expanded_blocks:
+            snippet = lines[start-1:end]
+            block_text = f"# {label} (lines {start}-{end})\n" + "\n".join(snippet)
+            code_blocks.append(block_text)
+
+        current_lines = []
+        current_count = 0
+        for block in code_blocks:
+            block_size = len(block.splitlines())  # line-based approach
+            if self.max_chunk_size and (current_count + block_size) > self.max_chunk_size and current_lines:
+                chunk_data = "\n\n".join(current_lines)
+                final_text = f"{'='*80}\nFILE: {path}\n{'='*80}\n\n{chunk_data}"
+                self._write_chunk(final_text.encode("utf-8"), chunk_index)
+                chunk_index += 1
+                current_lines = []
+                current_count = 0
+
+            current_lines.append(block)
+            current_count += block_size
+
+        if current_lines:
+            chunk_data = "\n\n".join(current_lines)
+            final_text = f"{'='*80}\nFILE: {path}\n{'='*80}\n\n{chunk_data}"
+            self._write_chunk(final_text.encode("utf-8"), chunk_index)
+            chunk_index += 1
+
+        return chunk_index
+
+    def close(self):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
 

@@ -2,10 +2,17 @@ import os
 import fnmatch
 import re
 import concurrent.futures
+import ast  
 
 BUILTIN_IGNORES = [
     "**/.git/**",
     "**/.idea/**",
+    "**/.vscode/**",
+    "**/__pycache__/**",
+    "**/*.pyc",
+    "**/.pytest_cache/**",
+    "**/.DS_Store",
+    "**/node_modules/**",
     "__pycache__",
     "*.pyc",
     "*.pyo",
@@ -35,7 +42,9 @@ class ParallelChunker:
         user_unignore=None,
         binary_extensions=None,
         priority_rules=None,
-        num_threads=4
+        num_threads=4,
+        dry_run=False,
+        semantic_chunking=False
     ):
         if equal_chunks is not None and max_chunk_size is not None:
             raise ValueError("Cannot specify both equal_chunks and max_chunk_size")
@@ -46,6 +55,8 @@ class ParallelChunker:
         self.max_chunk_size = max_chunk_size
         self.output_dir = output_dir
         self.num_threads = num_threads
+        self.dry_run = dry_run 
+        self.semantic_chunking = semantic_chunking
 
         if user_ignore is None:
             user_ignore = []
@@ -183,6 +194,17 @@ class ParallelChunker:
     def process_directories(self, dirs):
         all_paths = self._collect_paths(dirs)
         self.loaded_files.clear()
+        if self.dry_run:
+            print("[DRY-RUN] The following files would be processed (in priority order):")
+            tmp_loaded = []
+            for p in all_paths:
+                priority = self.calculate_priority(p)
+                tmp_loaded.append((p, priority))
+            tmp_loaded.sort(key=lambda x: -x[1])  
+            for path, pr in tmp_loaded:
+                print(f"  - {path} (priority={pr})")
+            return  
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.num_threads) as ex:
             future_map = {ex.submit(self._load_file_data, p): p for p in all_paths}
             for fut in concurrent.futures.as_completed(future_map):
@@ -213,7 +235,9 @@ class ParallelChunker:
     def _process_chunks(self):
         if not self.loaded_files:
             return
-        if self.equal_chunks:
+        if self.semantic_chunking:
+            self._chunk_by_semantic()
+        elif self.equal_chunks:
             self._chunk_by_equal_parts()
         else:
             self._chunk_by_size()
@@ -313,6 +337,146 @@ class ParallelChunker:
                     idx += 1
             except:
                 continue
+
+    def _chunk_by_semantic(self):
+        """
+        For each loaded file:
+        - If .py => parse AST, chunk by top-level function/class
+        - Otherwise => fallback to one chunk or call your old logic.
+        """
+        chunk_index = 0
+        for (path, content_bytes, priority) in self.loaded_files:
+            try:
+                text = content_bytes.decode("utf-8", errors="replace")
+            except:
+                continue
+
+            if path.endswith(".py"):
+                chunk_index = self._chunk_python_file_ast(path, text, chunk_index)
+            else:
+                chunk_index = self._chunk_nonpython_file_by_size(path, text, chunk_index)
+
+    def _chunk_nonpython_file_by_size(self, path, text, chunk_index):
+        lines = text.splitlines()
+        if not lines:
+            t = (
+                "="*80 + "\n"
+                + f"CHUNK {chunk_index + 1}\n"
+                + "="*80 + "\n\n"
+                + "="*40 + "\n"
+                + f"File: {path}\n"
+                + "="*40 + "\n"
+                + "[Empty File]\n"
+            )
+            self._write_chunk(t.encode("utf-8"), chunk_index)
+            return chunk_index + 1
+
+        current_chunk_lines = []
+        current_size = 0
+        idx = chunk_index
+        for line in lines:
+            line_size = len(line.split())
+            if self.max_chunk_size and (current_size + line_size) > self.max_chunk_size and current_chunk_lines:
+                chunk_data = self._format_chunk_content(path, current_chunk_lines, idx)
+                self._write_chunk(chunk_data.encode("utf-8"), idx)
+                idx += 1
+                current_chunk_lines = []
+                current_size = 0
+            current_chunk_lines.append(line)
+            current_size += line_size
+
+        if current_chunk_lines:
+            chunk_data = self._format_chunk_content(path, current_chunk_lines, idx)
+            self._write_chunk(chunk_data.encode("utf-8"), idx)
+            idx += 1
+
+        return idx
+
+    def _format_chunk_content(self, path, lines, idx):
+        h = [
+            "="*80,
+            f"CHUNK {idx + 1}",
+            "="*80,
+            "",
+            "="*40,
+            f"File: {path}",
+            "="*40,
+            ""
+        ]
+        return "\n".join(h + lines) + "\n"
+
+    def _chunk_python_file_ast(self, path, text, chunk_index):
+        """
+        1) Parse AST
+        2) Find top-level function/class boundaries
+        3) Break into code blocks
+        4) Group them so we don't exceed self.max_chunk_size lines (or tokens)
+        5) Write each chunk with _write_chunk
+        6) Return the next chunk_index to use
+        """
+        import ast
+        try:
+            tree = ast.parse(text, filename=path)
+        except SyntaxError:
+            chunk_data = f"{'='*80}\nFILE: {path}\n{'='*80}\n\n{text}"
+            self._write_chunk(chunk_data.encode("utf-8"), chunk_index)
+            return chunk_index + 1
+
+        lines = text.splitlines()
+
+        node_boundaries = []
+        for node in tree.body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                node_type = "Function"
+                label = f"{node_type}: {node.name}"  
+            elif isinstance(node, ast.ClassDef):
+                label = f"Class: {node.name}"
+            else:
+                continue
+            start = node.lineno
+            end = getattr(node, 'end_lineno', start)
+            node_boundaries.append((start, end, label))
+
+        node_boundaries.sort(key=lambda x: x[0])
+
+        expanded_blocks = []
+        prev_end = 1
+        for (start, end, label) in node_boundaries:
+            if start > prev_end:
+                expanded_blocks.append((prev_end, start - 1, "GLOBAL CODE"))
+            expanded_blocks.append((start, end, label))
+            prev_end = end + 1
+        if prev_end <= len(lines):
+            expanded_blocks.append((prev_end, len(lines), "GLOBAL CODE"))
+
+        code_blocks = []
+        for (start, end, label) in expanded_blocks:
+            snippet = lines[start-1:end]
+            block_text = f"{label} (lines {start}-{end})\n" + "\n".join(snippet)
+            code_blocks.append(block_text)
+
+        current_lines = []
+        current_count = 0
+        for block in code_blocks:
+            block_size = len(block.splitlines())  # line-based approach
+            if self.max_chunk_size and (current_count + block_size) > self.max_chunk_size and current_lines:
+                chunk_data = "\n\n".join(current_lines)
+                final_text = f"{'='*80}\nFILE: {path}\n{'='*80}\n\n{chunk_data}"
+                self._write_chunk(final_text.encode("utf-8"), chunk_index)
+                chunk_index += 1
+                current_lines = []
+                current_count = 0
+
+            current_lines.append(block)
+            current_count += block_size
+
+        if current_lines:
+            chunk_data = "\n\n".join(current_lines)
+            final_text = f"{'='*80}\nFILE: {path}\n{'='*80}\n\n{chunk_data}"
+            self._write_chunk(final_text.encode("utf-8"), chunk_index)
+            chunk_index += 1
+
+        return chunk_index
 
     def close(self):
         pass

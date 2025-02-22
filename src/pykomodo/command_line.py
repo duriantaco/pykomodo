@@ -29,6 +29,9 @@ def main():
                         help="Repeatable. Each usage adds one ignore pattern. Example: --ignore '**/node_modules/**' --ignore 'venv'")
     parser.add_argument("--unignore", action="append", default=[],
                         help="Repeatable. Each usage adds one unignore pattern. Example: --unignore '*.md'")
+    
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Show which files would be processed, but do not generate any chunks.")
 
     parser.add_argument("--priority", action="append", default=[],
                         help="Priority rules in format 'pattern,score' (repeatable). Example: --priority '*.py,10' --priority 'file2.txt,20'")
@@ -77,6 +80,8 @@ def main():
         "priority_rules": priority_rules,
         "num_threads": args.num_threads,
     }
+
+    chunker_args["dry_run"] = args.dry_run
     
     if args.enhanced:
         chunker_args.update({

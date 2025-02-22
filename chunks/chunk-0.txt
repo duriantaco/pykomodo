@@ -1,5 +1,5 @@
 ================================================================================
-CHUNK 1 OF 5
+CHUNK 1 OF 6
 ================================================================================
 
 
@@ -49,117 +49,16 @@ venv
 sample_dir
 
 ========================================
-File: ./.pytest_cache/.gitignore
-========================================
-
-# Created by pytest automatically.
-*
-
-
-========================================
-File: ./.pytest_cache/CACHEDIR.TAG
-========================================
-
-Signature: 8a477f597d28d172789f06886806bc55
-# This file is a cache directory tag created by pytest.
-# For information about cache directory tags, see:
-#	https://bford.info/cachedir/spec.html
-
-
-========================================
-File: ./.pytest_cache/README.md
-========================================
-
-# pytest cache directory #
-
-This directory contains data from the pytest's cache plugin,
-which provides the `--lf` and `--ff` options, as well as the `cache` fixture.
-
-**Do not** commit this to version control.
-
-See [the docs](https://docs.pytest.org/en/stable/how-to/cache.html) for more information.
-
-
-========================================
-File: ./.pytest_cache/v/cache/lastfailed
-========================================
-
-{
-  "tests/data/test_priority.py::test_parallel_chunker_priority": true,
-  "tests/data/test_binary.py::test_parallel_chunker_binary": true,
-  "tests/data/test_chunker.py::test_parallel_chunker_ignores": true,
-  "tests/data/test_large_chunking.py::test_large_file_chunking": true
-}
-
-========================================
-File: ./.pytest_cache/v/cache/nodeids
-========================================
-
-[
-  "tests/data/test_binary.py::test_parallel_chunker_binary",
-  "tests/data/test_chunker.py::test_parallel_chunker_ignores",
-  "tests/data/test_cli.py::test_cli_help_direct",
-  "tests/data/test_cli.py::test_cli_help_subprocess",
-  "tests/data/test_cli.py::test_cli_run_subprocess[arg_list0]",
-  "tests/data/test_cli.py::test_cli_run_subprocess[arg_list1]",
-  "tests/data/test_cli.py::test_cli_run_subprocess[arg_list2]",
-  "tests/data/test_cli.py::test_cli_with_mocked_args[*.md]",
-  "tests/data/test_cli.py::test_cli_with_mocked_args[fileA.txt]",
-  "tests/data/test_core.py::test_calculate_priority",
-  "tests/data/test_core.py::test_count_tokens",
-  "tests/data/test_core.py::test_is_binary_file",
-  "tests/data/test_core.py::test_make_c_string",
-  "tests/data/test_core.py::test_read_file_contents",
-  "tests/data/test_core.py::test_should_ignore",
-  "tests/data/test_extra_features.py::test_high_concurrency_stress",
-  "tests/data/test_extra_features.py::test_ignore_unignore",
-  "tests/data/test_extra_features.py::test_large_file_splitting",
-  "tests/data/test_extra_features.py::test_nested_directories",
-  "tests/data/test_extra_features.py::test_stream_mode_stdout",
-  "tests/data/test_extra_features.py::test_symlink_handling",
-  "tests/data/test_extra_features.py::test_token_mode",
-  "tests/data/test_extra_features.py::test_whole_chunk_mode",
-  "tests/data/test_gitignore.py::test_basic_patterns",
-  "tests/data/test_gitignore.py::test_empty_gitignore",
-  "tests/data/test_gitignore.py::test_no_gitignore",
-  "tests/data/test_gitignore.py::test_whitespace_and_comments",
-  "tests/data/test_large_chunking.py::test_large_file_chunking",
-  "tests/data/test_priority.py::test_parallel_chunker_priority",
-  "tests/data/test_priority_queue.py::TestPriorityQueue::test_basic_priority_ordering",
-  "tests/data/test_priority_queue.py::TestPriorityQueue::test_empty_and_edge_cases",
-  "tests/data/test_priority_queue.py::TestPriorityQueue::test_equal_priority_stable_sort",
-  "tests/data/test_priority_queue.py::TestPriorityQueue::test_multiple_priority_levels"
-]
-
-========================================
-File: ./.pytest_cache/v/cache/stepwise
-========================================
-
-[]
-
-========================================
-File: ./.vscode/settings.json
-========================================
-
-{
-    "files.associations": {
-        "*.pyx": "cython",
-        "*.pxd": "cython",
-        "thread_pool.h": "c"
-    },
-    "C_Cpp.errorSquiggles": "disabled" 
-}
-
-========================================
 File: ./CHANGELOG.md
 ========================================
 
 # Changelog
 
-## [0.0.2] - 2025-02-18
+## [0.0.3] - 2025-02-18
 ## Changed
 - Reorganized code into `src/pykomodo` so that `import pykomodo` works properly when installed
 - Updated pyproject.toml to use [tool.setuptools.packages.find] for correct packaging
+- Made path adjustments to the core files 
 
 ## [0.0.1] - 2025-02-11
 ### Changed
@@ -557,3 +456,283 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 Apache 2.0
+
+========================================
+File: ./pykomodo.egg-info/PKG-INFO
+========================================
+
+Metadata-Version: 2.2
+Name: pykomodo
+Version: 0.0.1
+License-File: NOTICE
+Requires-Dist: pathspec
+
+
+========================================
+File: ./pykomodo.egg-info/SOURCES.txt
+========================================
+
+NOTICE
+README.md
+pyproject.toml
+pykomodo.egg-info/PKG-INFO
+pykomodo.egg-info/SOURCES.txt
+pykomodo.egg-info/dependency_links.txt
+pykomodo.egg-info/entry_points.txt
+pykomodo.egg-info/not-zip-safe
+pykomodo.egg-info/requires.txt
+pykomodo.egg-info/top_level.txt
+src/__init__.py
+src/command_line.py
+src/config.py
+src/core.py
+src/enhanced_chunker.py
+src/multi_dirs_chunker.py
+
+========================================
+File: ./pykomodo.egg-info/dependency_links.txt
+========================================
+
+
+
+
+========================================
+File: ./pykomodo.egg-info/entry_points.txt
+========================================
+
+[console_scripts]
+komodo = src.command_line:main
+
+
+========================================
+File: ./pykomodo.egg-info/not-zip-safe
+========================================
+
+
+
+
+========================================
+File: ./pykomodo.egg-info/requires.txt
+========================================
+
+pathspec
+
+
+========================================
+File: ./pykomodo.egg-info/top_level.txt
+========================================
+
+src
+
+
+========================================
+File: ./pyproject.toml
+========================================
+
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pykomodo"
+version = "0.0.3"
+description = "A chunking library"
+dependencies = ["pathspec"]
+authors = [{ name = "oha" }]
+
+[project.scripts]
+komodo = "pykomodo.command_line:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["pykomodo*"]
+
+[tool.setuptools]
+zip-safe = false
+
+========================================
+File: ./src/pykomodo.egg-info/PKG-INFO
+========================================
+
+Metadata-Version: 2.2
+Name: pykomodo
+Version: 0.0.3
+Summary: A chunking library
+Author: oha
+License-File: NOTICE
+Requires-Dist: pathspec
+
+
+========================================
+File: ./src/pykomodo.egg-info/SOURCES.txt
+========================================
+
+NOTICE
+README.md
+pyproject.toml
+src/pykomodo/__init__.py
+src/pykomodo/command_line.py
+src/pykomodo/config.py
+src/pykomodo/core.py
+src/pykomodo/enhanced_chunker.py
+src/pykomodo/multi_dirs_chunker.py
+src/pykomodo.egg-info/PKG-INFO
+src/pykomodo.egg-info/SOURCES.txt
+src/pykomodo.egg-info/dependency_links.txt
+src/pykomodo.egg-info/entry_points.txt
+src/pykomodo.egg-info/not-zip-safe
+src/pykomodo.egg-info/requires.txt
+src/pykomodo.egg-info/top_level.txt
+
+========================================
+File: ./src/pykomodo.egg-info/dependency_links.txt
+========================================
+
+
+
+
+========================================
+File: ./src/pykomodo.egg-info/entry_points.txt
+========================================
+
+[console_scripts]
+komodo = pykomodo.command_line:main
+
+
+========================================
+File: ./src/pykomodo.egg-info/not-zip-safe
+========================================
+
+
+
+
+========================================
+File: ./src/pykomodo.egg-info/requires.txt
+========================================
+
+pathspec
+
+
+========================================
+File: ./src/pykomodo.egg-info/top_level.txt
+========================================
+
+pykomodo
+
+
+========================================
+File: ./src/pykomodo/__init__.py
+========================================
+
+
+
+========================================
+File: ./src/pykomodo/command_line.py
+========================================
+
+import sys
+import argparse
+import os
+from pykomodo.multi_dirs_chunker import ParallelChunker
+from pykomodo.enhanced_chunker import EnhancedParallelChunker
+
+KOMODO_VERSION = "0.0.1" 
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Process and chunk codebase content with optional LLM optimizations."
+    )
+
+    parser.add_argument("--version", action="version", version=f"komodo {KOMODO_VERSION}")
+
+    parser.add_argument("dirs", nargs="*", default=["."],
+                        help="Directories to process (default: current directory)")
+    
+    chunk_group = parser.add_mutually_exclusive_group(required=True)
+    chunk_group.add_argument("--equal-chunks", type=int, 
+                            help="Split into N equal chunks")
+    chunk_group.add_argument("--max-chunk-size", type=int, 
+                            help="Maximum tokens per chunk")
+    
+    parser.add_argument("--output-dir", default="chunks",
+                        help="Output directory for chunks (default: chunks)")
+    
+    parser.add_argument("--ignore", action="append", default=[],
+                        help="Repeatable. Each usage adds one ignore pattern. Example: --ignore '**/node_modules/**' --ignore 'venv'")
+    parser.add_argument("--unignore", action="append", default=[],
+                        help="Repeatable. Each usage adds one unignore pattern. Example: --unignore '*.md'")
+    
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Show which files would be processed, but do not generate any chunks.")
+
+    parser.add_argument("--priority", action="append", default=[],
+                        help="Priority rules in format 'pattern,score' (repeatable). Example: --priority '*.py,10' --priority 'file2.txt,20'")
+    
+    parser.add_argument("--num-threads", type=int, default=4,
+                        help="Number of processing threads (default: 4)")
+
+    parser.add_argument("--enhanced", action="store_true",
+                        help="Enable LLM optimizations")
+    parser.add_argument("--context-window", type=int, default=4096,
+                        help="Target LLM context window size (default: 4096)")
+    parser.add_argument("--min-relevance", type=float, default=0.3,
+                        help="Minimum relevance score 0.0-1.0 (default: 0.3)")
+    parser.add_argument("--no-metadata", action="store_true",
+                        help="Disable metadata extraction")
+    parser.add_argument("--keep-redundant", action="store_true",
+                        help="Keep redundant content")
+    parser.add_argument("--no-summaries", action="store_true",
+                        help="Disable summary generation")
+
+    args = parser.parse_args()
+
+    if args.output_dir:
+        os.makedirs(args.output_dir, exist_ok=True)
+
+    priority_rules = []
+    for rule in args.priority:
+        if not rule:
+            continue
+        try:
+            pattern, score = rule.split(",", 1)
+            priority_rules.append((pattern.strip(), int(score.strip())))
+        except ValueError:
+            print(f"[Error] Priority rule must be 'pattern,score': {rule}", 
+                  file=sys.stderr)
+            sys.exit(1)
+
+    chunker_class = EnhancedParallelChunker if args.enhanced else ParallelChunker
+    
+    chunker_args = {
+        "equal_chunks": args.equal_chunks,
+        "max_chunk_size": args.max_chunk_size,
+        "output_dir": args.output_dir,
+        "user_ignore": args.ignore,
+        "user_unignore": args.unignore,
+        "priority_rules": priority_rules,
+        "num_threads": args.num_threads,
+    }
+
+    chunker_args["dry_run"] = args.dry_run
+    
+    if args.enhanced:
+        chunker_args.update({
+            "extract_metadata": not args.no_metadata,
+            "add_summaries": not args.no_summaries,
+            "remove_redundancy": not args.keep_redundant,
+            "context_window": args.context_window,
+            "min_relevance_score": args.min_relevance
+        })
+    
+    try:
+        chunker = chunker_class(**chunker_args)
+        chunker.process_directories(args.dirs)
+    except Exception as e:
+        print(f"[Error] Processing failed: {e}", file=sys.stderr)
+        sys.exit(1)
+    finally:
+        chunker.close()
+
+if __name__ == "__main__":
+    main()
+

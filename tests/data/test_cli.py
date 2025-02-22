@@ -2,7 +2,7 @@ import unittest
 import os
 import tempfile
 import shutil
-from src.multi_dirs_chunker import ParallelChunker
+from pykomodo.multi_dirs_chunker import ParallelChunker
 from unittest.mock import patch
 import sys
 
@@ -20,7 +20,7 @@ class TestCLIScript(unittest.TestCase):
         shutil.rmtree(self.test_dir)
 
     def test_equal_chunks_cli(self):
-        from src.command_line import main 
+        from src.pykomodo.command_line import main 
         
         test_args = [
             sys.argv[0],  
@@ -40,7 +40,7 @@ class TestCLIScript(unittest.TestCase):
         self.assertEqual(len(chunk_files), 5, "Should create exactly 5 chunks")
 
     def test_max_chunk_size_cli(self):
-        from src.command_line import main 
+        from src.pykomodo.command_line import main 
         
         test_args = [
             sys.argv[0],  
@@ -60,7 +60,7 @@ class TestCLIScript(unittest.TestCase):
         self.assertTrue(len(chunk_files) > 0, "Should create at least one chunk")
 
     def test_priority_rules_cli(self):
-        from src.command_line import main 
+        from src.pykomodo.command_line import main 
         
         test_args = [
             sys.argv[0],  
@@ -79,7 +79,7 @@ class TestCLIScript(unittest.TestCase):
                     self.fail(f"CLI failed with exit code: {e.code}")
 
     def test_missing_required_args(self):
-        from src.command_line import main 
+        from src.pykomodo.command_line import main 
         
         test_args = [
             sys.argv[0],  
@@ -94,7 +94,7 @@ class TestCLIScript(unittest.TestCase):
                 "Should exit with error when missing required chunking argument")
 
     def test_mutually_exclusive_args(self):
-        from src.command_line import main 
+        from src.pykomodo.command_line import main 
         
         test_args = [
             sys.argv[0],  

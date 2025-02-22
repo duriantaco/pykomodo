@@ -2,7 +2,7 @@ import unittest
 import os
 import tempfile
 import shutil
-from src.enhanced_chunker import EnhancedParallelChunker
+from pykomodo.enhanced_chunker import EnhancedParallelChunker
 
 class TestEnhancedParallelChunker(unittest.TestCase):
     def setUp(self):
