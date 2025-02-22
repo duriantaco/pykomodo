@@ -8,7 +8,7 @@
   - Falls back to a single chunk if a file has invalid syntax
   - Non-Python files remain chunked by the existing size-based logic
 - Updated tests to cover semantic chunking scenarios, including syntax-error edge cases
-- Added dry-run to see what files were added/removed, no actual chunking is carried out
+- **Dry Run before chunking**: Added dry-run to see what files were added/removed, no actual chunking is carried out
 
 ## [0.0.3] - 2025-02-18
 ## Changed
