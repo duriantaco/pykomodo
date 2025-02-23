@@ -34,8 +34,10 @@ A Python-based parallel file chunking system designed for processing large codeb
 ## Installation
 
 ```bash
-pip install komodo==0.0.4
+pip install komodo==0.0.5
 ```
+
+Link to pypi: https://pypi.org/project/pykomodo/
 
 ## Quick Start
 
