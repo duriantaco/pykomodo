@@ -2,7 +2,7 @@ import os
 import fnmatch
 import re
 import concurrent.futures
-import ast  
+from typing import Optional, List, Tuple
 
 BUILTIN_IGNORES = [
     "**/.git/**",
@@ -35,17 +35,17 @@ class PriorityRule:
 class ParallelChunker:
     def __init__(
         self,
-        equal_chunks=None,
-        max_chunk_size=None,
-        output_dir="chunks",
-        user_ignore=None,
-        user_unignore=None,
-        binary_extensions=None,
-        priority_rules=None,
-        num_threads=4,
-        dry_run=False,
-        semantic_chunking=False
-    ):
+        equal_chunks: Optional[int] = None,
+        max_chunk_size: Optional[int] = None,
+        output_dir: str = "chunks",
+        user_ignore: Optional[List[str]] = None,
+        user_unignore: Optional[List[str]] = None,
+        binary_extensions: Optional[List[str]] = None,
+        priority_rules: Optional[List[Tuple[str,int]]] = None,
+        num_threads: int = 4,
+        dry_run: bool = False,
+        semantic_chunking: bool = False
+    ) -> None:
         if equal_chunks is not None and max_chunk_size is not None:
             raise ValueError("Cannot specify both equal_chunks and max_chunk_size")
         if equal_chunks is None and max_chunk_size is None:
@@ -191,7 +191,7 @@ class ParallelChunker:
                 highest = max(highest, rule.score)
         return highest
 
-    def process_directories(self, dirs):
+    def process_directories(self, dirs: List[str]) -> None:
         all_paths = self._collect_paths(dirs)
         self.loaded_files.clear()
         if self.dry_run:
@@ -242,7 +242,7 @@ class ParallelChunker:
         else:
             self._chunk_by_size()
 
-    def _chunk_by_equal_parts(self):
+    def _chunk_by_equal_parts(self) -> None:
         total_content = []
         total_size = 0
         for (path, content_bytes, _) in self.loaded_files:

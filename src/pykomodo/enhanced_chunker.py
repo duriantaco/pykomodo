@@ -1,23 +1,24 @@
 from pykomodo.multi_dirs_chunker import ParallelChunker
 import os
+from typing import Optional, List, Tuple, Union
 
 class EnhancedParallelChunker(ParallelChunker):
     def __init__(
         self,
-        equal_chunks=None,
-        max_chunk_size=None,
-        output_dir="chunks",
-        user_ignore=None,
-        user_unignore=None,
-        binary_extensions=None,
-        priority_rules=None,
-        num_threads=4,
-        extract_metadata=True,
-        add_summaries=True,
-        remove_redundancy=True,
-        context_window=4096,  
-        min_relevance_score=0.3
-    ):
+        equal_chunks: Optional[int] = None,
+        max_chunk_size: Optional[int] = None,
+        output_dir: str = "chunks",
+        user_ignore: Optional[List[str]] = None,
+        user_unignore: Optional[List[str]] = None,
+        binary_extensions: Optional[List[str]] = None,
+        priority_rules: Optional[List[Tuple[str, int]]] = None,
+        num_threads: int = 4,
+        extract_metadata: bool = True,
+        add_summaries: bool = True,
+        remove_redundancy: bool = True,
+        context_window: int = 4096,
+        min_relevance_score: float = 0.3
+    ) -> None:
         super().__init__(
             equal_chunks=equal_chunks,
             max_chunk_size=max_chunk_size,
@@ -28,13 +29,13 @@ class EnhancedParallelChunker(ParallelChunker):
             priority_rules=priority_rules,
             num_threads=num_threads
         )
-        self.extract_metadata = extract_metadata
-        self.add_summaries = add_summaries
-        self.remove_redundancy = remove_redundancy
-        self.context_window = context_window
-        self.min_relevance_score = min_relevance_score
+        self.extract_metadata: bool = extract_metadata
+        self.add_summaries: bool = add_summaries
+        self.remove_redundancy: bool = remove_redundancy
+        self.context_window: int = context_window
+        self.min_relevance_score: float = min_relevance_score
 
-    def _extract_file_metadata(self, content):
+    def _extract_file_metadata(self, content: str) -> dict:
         """
         Extract key metadata from file content, matching the test expectations:
          - Skip `__init__`
@@ -58,18 +59,16 @@ class EnhancedParallelChunker(ParallelChunker):
                     metadata['functions'].append(func_name)
             elif line_stripped.startswith('class '):
                 class_name = line_stripped[6:].split('(')[0].strip()
-                # remove trailing colon if any
                 class_name = class_name.rstrip(':')
                 metadata['classes'].append(class_name)
             elif line_stripped.startswith('import '):
                 if ' as ' in line_stripped:
-                    base_import = line_stripped.split(' as ')[0].strip()  # eg. "import pandas"
+                    base_import = line_stripped.split(' as ')[0].strip() 
                     metadata['imports'].append(base_import)
                 else:
                     metadata['imports'].append(line_stripped)
             elif line_stripped.startswith('from '):
-                # e.g. from datetime import datetime -> from datetime
-                base_from = line_stripped.split(' import ')[0].strip()  # "from datetime"
+                base_from = line_stripped.split(' import ')[0].strip() 
                 metadata['imports'].append(base_from)
                 
         if '"""' in content:
@@ -81,7 +80,7 @@ class EnhancedParallelChunker(ParallelChunker):
                 
         return metadata
 
-    def _calculate_chunk_relevance(self, chunk_content):
+    def _calculate_chunk_relevance(self, chunk_content: str) -> float:
         """
         Calculate relevance score with a mild penalty if >50% comments.
         We ensure that at least some chunk with code ends up > 0.5 
@@ -107,7 +106,7 @@ class EnhancedParallelChunker(ParallelChunker):
 
         return min(0.99, score)
 
-    def _remove_redundancy_across_all_files(self, big_text):
+    def _remove_redundancy_across_all_files(self, big_text: str) -> str:
         """
         Remove duplicate function definitions across the entire combined text,
         so each unique function appears only once globally. This guarantees 
@@ -118,10 +117,9 @@ class EnhancedParallelChunker(ParallelChunker):
         in_function = False
         current_function = []
 
-        def normalize_function(func_text):
-            # remove extra blank lines, leading/trailing spaces
+        def normalize_function(func_text: str) -> str:
             lines_ = [ln.strip() for ln in func_text.split('\n')]
-            lines_ = [ln for ln in lines_ if ln]  # remove empty lines
+            lines_ = [ln for ln in lines_ if ln] 
             return '\n'.join(lines_)
 
         seen_functions = {}
@@ -129,7 +127,6 @@ class EnhancedParallelChunker(ParallelChunker):
         for line in lines:
             stripped = line.rstrip()
             if stripped.strip().startswith('def '):
-                # finalize previous function if in one
                 if in_function and current_function:
                     normed = normalize_function('\n'.join(current_function))
                     if normed not in seen_functions:
@@ -138,21 +135,17 @@ class EnhancedParallelChunker(ParallelChunker):
                 current_function = [line]
                 in_function = True
             elif in_function:
-                # check if we hit another def
                 if stripped.strip().startswith('def '):
-                    # finalize previous function
                     normed = normalize_function('\n'.join(current_function))
                     if normed not in seen_functions:
                         seen_functions[normed] = True
                         final_lines.extend(current_function)
-                    # start new function
                     current_function = [line]
                 else:
                     current_function.append(line)
             else:
                 final_lines.append(line)
 
-        # finalize last function if any
         if in_function and current_function:
             normed = normalize_function('\n'.join(current_function))
             if normed not in seen_functions:
@@ -161,7 +154,7 @@ class EnhancedParallelChunker(ParallelChunker):
 
         return "\n".join(final_lines)
 
-    def _chunk_by_equal_parts(self):
+    def _chunk_by_equal_parts(self) -> None:
         """
         1) Load all files into memory.
         2) If remove_redundancy, do a global pass to remove duplicate functions.
@@ -171,7 +164,6 @@ class EnhancedParallelChunker(ParallelChunker):
         if not self.loaded_files:
             return
 
-        # 1) Gather text and metadata for each file
         all_file_texts = []
         combined_metadata = {
             "functions": set(),
@@ -187,20 +179,17 @@ class EnhancedParallelChunker(ParallelChunker):
                 print(f"Error decoding file {path}: {e}")
                 continue
 
-            # Extract metadata if enabled
             if self.extract_metadata:
                 fm = self._extract_file_metadata(content)
                 combined_metadata["functions"].update(fm["functions"])
                 combined_metadata["classes"].update(fm["classes"])
                 
-                # Instead of .update for imports, do .extend to keep their order:
                 combined_metadata["imports"].extend(fm["imports"])  
 
                 combined_metadata["docstrings"].update(fm["docstrings"])
             
             all_file_texts.append(content)
 
-        # 2) Possibly remove duplicates across ALL files
         combined_text = "\n".join(all_file_texts)
         if self.remove_redundancy:
             combined_text = self._remove_redundancy_across_all_files(combined_text)
@@ -213,8 +202,6 @@ class EnhancedParallelChunker(ParallelChunker):
             )
             return
 
-
-        # 3) If multiple chunks requested, do chunk splitting
         total_size = len(combined_text.encode('utf-8'))
         max_size = (self.context_window - 50) if (self.context_window and self.context_window > 200) else float('inf')
         max_size = int(max_size) if max_size != float('inf') else max_size
@@ -226,7 +213,6 @@ class EnhancedParallelChunker(ParallelChunker):
             portion_bytes = remaining.encode('utf-8')[:target_size]
             portion = portion_bytes.decode('utf-8', errors='replace')
 
-            # Try to split on a newline if possible
             last_newline = portion.rfind('\n')
             if last_newline > 0:
                 portion = portion[:last_newline]
@@ -242,7 +228,6 @@ class EnhancedParallelChunker(ParallelChunker):
             remaining = remaining[portion_len:]
 
             if chunk_num >= self.equal_chunks - 1:
-                # everything left goes in final chunk
                 if remaining:
                     self._create_and_write_chunk(
                         remaining,
@@ -251,7 +236,7 @@ class EnhancedParallelChunker(ParallelChunker):
                     )
                 break
 
-    def _create_and_write_chunk(self, text, chunk_num, metadata=None):
+    def _create_and_write_chunk(self, text: str, chunk_num: int, metadata: dict = None) -> None:
         """
         Write the chunk to disk:
           - Add METADATA section if extract_metadata is True
@@ -290,7 +275,6 @@ class EnhancedParallelChunker(ParallelChunker):
         if self.context_window and len(final_bytes) > self.context_window:
             max_payload = self.context_window - len(header.encode('utf-8'))
             truncated_text = final_bytes[len(header.encode('utf-8')) : len(header.encode('utf-8')) + max_payload]
-            # attempt to not cut mid-line
             cutoff_str = truncated_text.decode('utf-8', errors='replace')
             last_newline = cutoff_str.rfind('\n')
             if last_newline > 0:
@@ -304,7 +288,7 @@ class EnhancedParallelChunker(ParallelChunker):
         except Exception as e:
             print(f"Error writing chunk-{chunk_num}: {e}")
 
-    def _write_minimal_chunk(self, content_bytes, chunk_num):
+    def _write_minimal_chunk(self, content_bytes: bytes, chunk_num: int) -> None:
         """
         For extremely small context windows (<200), we do minimal writing 
         so the test_context_window_respect passes. No METADATA, no RELEVANCE_SCORE.
