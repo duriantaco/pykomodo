@@ -1,13 +1,14 @@
 import os
 import fnmatch
+from typing import List, Optional
 
 class PriorityRule:
     """
     Simple Python container for (pattern, score).
     """
     def __init__(self, pattern, score):
-        self.pattern = pattern
-        self.score = score
+        self.pattern: str = pattern
+        self.score: int = score
 
 class PyCConfig:
     """
@@ -17,25 +18,26 @@ class PyCConfig:
     """
 
     def __init__(self):
-        self.max_size = 0
-        self.token_mode = False
-        self.output_dir = None
-        self.stream = False
-        self.ignore_patterns = []     
-        self.unignore_patterns = []   
-        self.priority_rules = []      
-        self.binary_exts = []        
+        self.max_size: int = 0
+        self.token_mode: bool = False
+        self.output_dir: Optional[str] = None
+        self.stream: bool = False
+        
+        self.ignore_patterns: List[str] = []
+        self.unignore_patterns: List[str] = [] 
+        self.priority_rules: List[PriorityRule] = []
+        self.binary_exts: List[str] = []
 
-    def add_ignore_pattern(self, pattern: str):
+    def add_ignore_pattern(self, pattern: str) -> None:
         """
         Just appends to a Python list.
         """
         self.ignore_patterns.append(pattern)
 
-    def add_unignore_pattern(self, pattern: str):
+    def add_unignore_pattern(self, pattern: str) -> None:
         self.unignore_patterns.append(pattern)
 
-    def add_priority_rule(self, pattern: str, score: int):
+    def add_priority_rule(self, pattern: str, score: int) -> None:
         self.priority_rules.append(PriorityRule(pattern, score))
 
     def should_ignore(self, path: str) -> bool:
@@ -105,12 +107,12 @@ class PyCConfig:
         """
         return len(text.split())
 
-    def make_c_string(self, text: str) -> str:
+    def make_c_string(self, text: Optional[str]) -> str:
         if text is None:
             return "<NULL>"
         return text
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (f"PyCConfig(max_size={self.max_size}, token_mode={self.token_mode}, "
                 f"output_dir={self.output_dir!r}, stream={self.stream}, "
                 f"ignore_patterns={self.ignore_patterns}, "
