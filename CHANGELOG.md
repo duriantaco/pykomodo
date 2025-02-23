@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.0.5] - 2025-03-03
+## [0.0.6] - 2025-03-03
 ### Added
 - **Type hints** for key classes (`ParallelChunker`, `EnhancedParallelChunker`, `PyCConfig`), improving IDE auto-completion and static analysis
 - **Pydantic-based configuration** example (`pykomodo_config.py`), demonstrating how to validate and run the chunker with typed settings
