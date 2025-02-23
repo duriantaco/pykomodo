@@ -272,6 +272,53 @@ chunker = ParallelChunker(
 )
 ```
 
+### ** ***New*** ** Typed Classes & Pydantic-Based Configuration
+
+As of **v0.0.5**, Komodo’s main classes (`ParallelChunker`, `EnhancedParallelChunker`, etc.) now include **type hints**. Nothing changes at runtime, but if you’re using an IDE or a type checker like `mypy`, you’ll get improved error checking and auto-completion - or hopefully. 
+
+You can also use **Pydantic** to configure Komodo with strongly typed settings. For instance:
+
+```python
+from pydantic import BaseModel, Field
+from typing import List, Optional
+from pykomodo.multi_dirs_chunker import ParallelChunker
+from pykomodo.enhanced_chunker import EnhancedParallelChunker
+
+class KomodoConfig(BaseModel):
+    directories: List[str] = Field(default_factory=lambda: ["."], description="Directories to process.")
+    equal_chunks: Optional[int] = None
+    max_chunk_size: Optional[int] = None
+    output_dir: str = "chunks"
+    semantic_chunking: bool = False
+    enhanced: bool = False
+    context_window: int = 4096
+    min_relevance_score: float = 0.3
+    remove_redundancy: bool = True
+    extract_metadata: bool = True
+
+def run_chunker_with_config(config: KomodoConfig):
+    ChunkerClass = EnhancedParallelChunker if config.enhanced else ParallelChunker
+
+    chunker = ChunkerClass(
+        equal_chunks=config.equal_chunks,
+        max_chunk_size=config.max_chunk_size,
+        output_dir=config.output_dir,
+        semantic_chunking=config.semantic_chunking,
+        context_window=config.context_window if config.enhanced else None,
+        min_relevance_score=config.min_relevance_score if config.enhanced else None,
+        remove_redundancy=config.remove_redundancy if config.enhanced else None,
+        extract_metadata=config.extract_metadata if config.enhanced else None,
+    )
+
+    chunker.process_directories(config.directories)
+    chunker.close()
+
+if __name__ == "__main__":
+    # example use with typed + validated config
+    cfg = KomodoConfig(directories=["src/", "docs/"], equal_chunks=5, enhanced=True)
+    run_chunker_with_config(cfg)
+```
+
 ## Common Use Cases
 
 ### 1. Preparing Context for LLMs
