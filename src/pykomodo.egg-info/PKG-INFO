@@ -1,6 +1,6 @@
 Metadata-Version: 2.2
 Name: pykomodo
-Version: 0.0.7
+Version: 0.1.0
 Summary: A Python-based parallel file chunking system for large codebases
 Author: oha
 Description-Content-Type: text/markdown
@@ -43,7 +43,7 @@ A Python-based parallel file chunking system designed for processing large codeb
 ## Installation
 
 ```bash
-pip install komodo==0.0.7
+pip install komodo==0.1.0
 ```
 
 Link to pypi: https://pypi.org/project/pykomodo/
@@ -128,7 +128,13 @@ Without `--semantic-chunks`: Splits each file into chunks with at most M tokens 
   Uses PyMuPDF to split PDFs by pages and paragraphs, respecting --max-chunk-size in tokens.
 
     ```bash
-    komodo . --max-chunk-size 500 --file-type pdf
+    komodo . --max-chunk-size 500 /path/to/output --file-type pdf
+    ```
+
+    or 
+
+    ```bash
+    komodo . --equal-chunks 10 --output-dir /path/to/output --file-type pdf
     ```
 
     **IMPORTANT: Do note that for PDFs with a lot of images, this PDF chunker will NOT WORK. This current PDF chunker is NOT capable of chunking formulas/images** 
