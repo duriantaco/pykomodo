@@ -4,7 +4,7 @@ import os
 from pykomodo.multi_dirs_chunker import ParallelChunker
 from pykomodo.enhanced_chunker import EnhancedParallelChunker
 
-KOMODO_VERSION = "0.0.1" 
+KOMODO_VERSION = "0.0.6" 
 
 def main():
     parser = argparse.ArgumentParser(
@@ -56,6 +56,9 @@ def main():
     parser.add_argument("--no-summaries", action="store_true",
                         help="Disable summary generation")
 
+    parser.add_argument("--file-type", type=str, 
+                        help="Only chunk files of this type (e.g., 'pdf', 'py')")
+
     args = parser.parse_args()
 
     if args.output_dir:
@@ -83,9 +86,10 @@ def main():
         "user_unignore": args.unignore,
         "priority_rules": priority_rules,
         "num_threads": args.num_threads,
+        "dry_run": args.dry_run,
+        "semantic_chunking": args.semantic_chunks,
+        "file_type": args.file_type
     }
-
-    chunker_args["dry_run"] = args.dry_run
     
     if args.enhanced:
         chunker_args.update({

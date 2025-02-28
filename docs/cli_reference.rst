@@ -1,0 +1,149 @@
+.. _cli_reference:
+
+CLI Reference
+==============
+
+The ``komodo`` command-line tool supports the following arguments:
+
+Required Arguments
+------------------
+
+You must specify exactly one of these:
+
+- **--equal-chunks N**  
+  Split all content into N equal chunks.
+
+  **Example:**
+
+  .. code-block:: bash
+
+     komodo src/ --equal-chunks 4 --output-dir four_chunks/
+     # Creates 4 chunks in 'four_chunks/' directory
+
+- **--max-chunk-size M**  
+  Maximum size per chunk. With ``--semantic-chunks``, M is lines for `.py` files; otherwise, it’s tokens.
+
+  **Example:**
+
+  .. code-block:: bash
+
+     komodo docs/ --max-chunk-size 800 --output-dir size_chunks/
+     # Creates chunks with max 800 tokens each
+
+Optional Arguments
+-------------------
+
+- **--output-dir DIR**  
+  Directory for output chunks (default: ``chunks``).
+
+  **Example:**
+
+  .. code-block:: bash
+
+     komodo . --equal-chunks 3 --output-dir custom_chunks/
+     # Outputs to 'custom_chunks/' instead of default
+
+- **--ignore PATTERN**  
+  Skip files matching ``PATTERN``. Repeatable.
+
+  **Example:**
+
+  .. code-block:: bash
+
+     komodo src/ --max-chunk-size 500 --ignore "*.log" --ignore "**/tests/**"
+     # Ignores log files and test directories
+
+- **--unignore PATTERN**  
+  Re-include previously ignored patterns.
+
+  **Example:**
+
+  .. code-block:: bash
+
+     komodo . --equal-chunks 5 --ignore "**/tests/**" --unignore "**/tests/keep_this.py"
+     # Ignores all tests except 'keep_this.py'
+
+- **--priority "PATTERN,SCORE"**  
+  Assign priority scores to files (higher scores processed first). Repeatable.
+
+  **Example:**
+
+  .. code-block:: bash
+
+     komodo . --max-chunk-size 200 --priority "*.py,10" --priority "*.md,5"
+     # Processes Python files before Markdown files
+
+- **--dry-run**  
+  List files to be processed without creating chunks.
+
+  **Example:**
+
+  .. code-block:: bash
+
+     komodo src/ --equal-chunks 5 --dry-run
+     # Shows files without chunking
+
+- **--enhanced**  
+  Use ``EnhancedParallelChunker`` with extra features.
+
+  **Example:**
+
+  .. code-block:: bash
+
+     komodo src/ --max-chunk-size 1000 --enhanced --context-window 2048
+     # Uses enhanced chunker with 2048-byte context
+
+- **--semantic-chunks**  
+  Enable AST-based chunking for Python files.
+
+  **Example:**
+
+  .. code-block:: bash
+
+     komodo src/ --max-chunk-size 150 --semantic-chunks
+     # Splits Python files by functions/classes, max 150 lines
+
+- **--context-window SIZE**  
+  Target context window size (enhanced mode).
+
+  **Example:**
+
+  .. code-block:: bash
+
+     komodo . --equal-chunks 3 --enhanced --context-window 4096
+     # Aims for 4096-byte chunks
+
+- **--file-type EXT**  
+  Process only files with the specified extension (e.g., ``pdf``, ``py``).
+
+  **Example:**
+
+  .. code-block:: bash
+
+     komodo docs/ --max-chunk-size 600 --file-type md
+     # Processes only Markdown files
+
+Common Use Cases
+-----------------
+
+- **Prepare a codebase for LLM training:**
+
+  .. code-block:: bash
+
+     komodo src/ --max-chunk-size 4000 --enhanced --context-window 4096 \
+         --ignore "**/tests/**" --output-dir llm_chunks/
+     # Chunks code for LLM, skips tests
+
+- **Semantic chunking for Python projects:**
+
+  .. code-block:: bash
+
+     komodo src/ --max-chunk-size 200 --semantic-chunks --output-dir semantic_chunks/
+     # Splits Python files semantically
+
+- **Process only PDFs:**
+
+  .. code-block:: bash
+
+     komodo papers/ --max-chunk-size 500 --file-type pdf --output-dir pdf_chunks/
+     # Chunks only PDFs

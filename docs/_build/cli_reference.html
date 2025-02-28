@@ -1,0 +1,246 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CLI Reference &mdash; pykomodo 0.0.7 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=178c8cff" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=bbaf98b3"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api_reference.html" />
+    <link rel="prev" title="Chunking Guide" href="chunking_guide.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            pykomodo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chunking_guide.html">Chunking Guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">CLI Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#required-arguments">Required Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#optional-arguments">Optional Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#common-use-cases">Common Use Cases</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contribution.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pykomodo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">CLI Reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cli_reference.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cli-reference">
+<span id="id1"></span><h1>CLI Reference<a class="headerlink" href="#cli-reference" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">komodo</span></code> command-line tool supports the following arguments:</p>
+<section id="required-arguments">
+<h2>Required Arguments<a class="headerlink" href="#required-arguments" title="Link to this heading"></a></h2>
+<p>You must specify exactly one of these:</p>
+<ul>
+<li><p><strong>–equal-chunks N</strong>
+Split all content into N equal chunks.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>komodo<span class="w"> </span>src/<span class="w"> </span>--equal-chunks<span class="w"> </span><span class="m">4</span><span class="w"> </span>--output-dir<span class="w"> </span>four_chunks/
+<span class="c1"># Creates 4 chunks in &#39;four_chunks/&#39; directory</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>–max-chunk-size M</strong>
+Maximum size per chunk. With <code class="docutils literal notranslate"><span class="pre">--semantic-chunks</span></code>, M is lines for <cite>.py</cite> files; otherwise, it’s tokens.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>komodo<span class="w"> </span>docs/<span class="w"> </span>--max-chunk-size<span class="w"> </span><span class="m">800</span><span class="w"> </span>--output-dir<span class="w"> </span>size_chunks/
+<span class="c1"># Creates chunks with max 800 tokens each</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="optional-arguments">
+<h2>Optional Arguments<a class="headerlink" href="#optional-arguments" title="Link to this heading"></a></h2>
+<ul>
+<li><p><strong>–output-dir DIR</strong>
+Directory for output chunks (default: <code class="docutils literal notranslate"><span class="pre">chunks</span></code>).</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>komodo<span class="w"> </span>.<span class="w"> </span>--equal-chunks<span class="w"> </span><span class="m">3</span><span class="w"> </span>--output-dir<span class="w"> </span>custom_chunks/
+<span class="c1"># Outputs to &#39;custom_chunks/&#39; instead of default</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>–ignore PATTERN</strong>
+Skip files matching <code class="docutils literal notranslate"><span class="pre">PATTERN</span></code>. Repeatable.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>komodo<span class="w"> </span>src/<span class="w"> </span>--max-chunk-size<span class="w"> </span><span class="m">500</span><span class="w"> </span>--ignore<span class="w"> </span><span class="s2">&quot;*.log&quot;</span><span class="w"> </span>--ignore<span class="w"> </span><span class="s2">&quot;**/tests/**&quot;</span>
+<span class="c1"># Ignores log files and test directories</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>–unignore PATTERN</strong>
+Re-include previously ignored patterns.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>komodo<span class="w"> </span>.<span class="w"> </span>--equal-chunks<span class="w"> </span><span class="m">5</span><span class="w"> </span>--ignore<span class="w"> </span><span class="s2">&quot;**/tests/**&quot;</span><span class="w"> </span>--unignore<span class="w"> </span><span class="s2">&quot;**/tests/keep_this.py&quot;</span>
+<span class="c1"># Ignores all tests except &#39;keep_this.py&#39;</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>–priority “PATTERN,SCORE”</strong>
+Assign priority scores to files (higher scores processed first). Repeatable.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>komodo<span class="w"> </span>.<span class="w"> </span>--max-chunk-size<span class="w"> </span><span class="m">200</span><span class="w"> </span>--priority<span class="w"> </span><span class="s2">&quot;*.py,10&quot;</span><span class="w"> </span>--priority<span class="w"> </span><span class="s2">&quot;*.md,5&quot;</span>
+<span class="c1"># Processes Python files before Markdown files</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>–dry-run</strong>
+List files to be processed without creating chunks.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>komodo<span class="w"> </span>src/<span class="w"> </span>--equal-chunks<span class="w"> </span><span class="m">5</span><span class="w"> </span>--dry-run
+<span class="c1"># Shows files without chunking</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>–enhanced</strong>
+Use <code class="docutils literal notranslate"><span class="pre">EnhancedParallelChunker</span></code> with extra features.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>komodo<span class="w"> </span>src/<span class="w"> </span>--max-chunk-size<span class="w"> </span><span class="m">1000</span><span class="w"> </span>--enhanced<span class="w"> </span>--context-window<span class="w"> </span><span class="m">2048</span>
+<span class="c1"># Uses enhanced chunker with 2048-byte context</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>–semantic-chunks</strong>
+Enable AST-based chunking for Python files.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>komodo<span class="w"> </span>src/<span class="w"> </span>--max-chunk-size<span class="w"> </span><span class="m">150</span><span class="w"> </span>--semantic-chunks
+<span class="c1"># Splits Python files by functions/classes, max 150 lines</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>–context-window SIZE</strong>
+Target context window size (enhanced mode).</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>komodo<span class="w"> </span>.<span class="w"> </span>--equal-chunks<span class="w"> </span><span class="m">3</span><span class="w"> </span>--enhanced<span class="w"> </span>--context-window<span class="w"> </span><span class="m">4096</span>
+<span class="c1"># Aims for 4096-byte chunks</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>–file-type EXT</strong>
+Process only files with the specified extension (e.g., <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">py</span></code>).</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>komodo<span class="w"> </span>docs/<span class="w"> </span>--max-chunk-size<span class="w"> </span><span class="m">600</span><span class="w"> </span>--file-type<span class="w"> </span>md
+<span class="c1"># Processes only Markdown files</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="common-use-cases">
+<h2>Common Use Cases<a class="headerlink" href="#common-use-cases" title="Link to this heading"></a></h2>
+<ul>
+<li><p><strong>Prepare a codebase for LLM training:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>komodo<span class="w"> </span>src/<span class="w"> </span>--max-chunk-size<span class="w"> </span><span class="m">4000</span><span class="w"> </span>--enhanced<span class="w"> </span>--context-window<span class="w"> </span><span class="m">4096</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--ignore<span class="w"> </span><span class="s2">&quot;**/tests/**&quot;</span><span class="w"> </span>--output-dir<span class="w"> </span>llm_chunks/
+<span class="c1"># Chunks code for LLM, skips tests</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Semantic chunking for Python projects:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>komodo<span class="w"> </span>src/<span class="w"> </span>--max-chunk-size<span class="w"> </span><span class="m">200</span><span class="w"> </span>--semantic-chunks<span class="w"> </span>--output-dir<span class="w"> </span>semantic_chunks/
+<span class="c1"># Splits Python files semantically</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Process only PDFs:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>komodo<span class="w"> </span>papers/<span class="w"> </span>--max-chunk-size<span class="w"> </span><span class="m">500</span><span class="w"> </span>--file-type<span class="w"> </span>pdf<span class="w"> </span>--output-dir<span class="w"> </span>pdf_chunks/
+<span class="c1"># Chunks only PDFs</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="chunking_guide.html" class="btn btn-neutral float-left" title="Chunking Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api_reference.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, oha.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,11 +1,12 @@
 Metadata-Version: 2.2
 Name: pykomodo
-Version: 0.0.6
+Version: 0.0.7
 Summary: A Python-based parallel file chunking system for large codebases
 Author: oha
 Description-Content-Type: text/markdown
 License-File: NOTICE
 Requires-Dist: pathspec
+Requires-Dist: PyMuPDF
 
 <p align="center">
   <img src="assets/KOMODO.png" alt="KOMODO Logo" width="200">
@@ -18,32 +19,31 @@ A Python-based parallel file chunking system designed for processing large codeb
 * Parallel Processing: Multi-threaded file reading with configurable thread pools
 
 * Smart File Filtering:
-
     * Built-in patterns for common excludes (.git, node_modules, pycache, etc.)
     * Customizable ignore/unignore patterns
     * Intelligent binary file detection
 
-
 * Flexible Chunking:
-
     * Equal-parts chunking: Split content into N equal chunks
     * Size-based chunking: Split by maximum chunk size
-    * ** ***NEW*** **: **Semantic (AST-based) chunking** for Python files
-  
-* ** ***NEW*** ** Dry-run mode: If you only want to see which files **would** be chunked
-
+    * Semantic (AST-based) chunking for Python files  
+    * Dry-run mode: If you only want to see which files **would** be chunked
 
 * LLM Optimizations:
-
     * Metadata extraction (functions, classes, imports, docstrings)
     * Content relevance scoring
     * Redundancy removal across chunks
     * Configurable context window sizes
+  
+* **NEW** Chunking PDF Files:
+  * Split PDF content by pages and paragraphs (rather than lines)
+  * Perform basic text cleanup to handle multi-column layouts, or text from HTML-like elements if present
+  * Create multiple chunks for large PDFs while preserving some logical structure
 
 ## Installation
 
 ```bash
-pip install komodo==0.0.5
+pip install komodo==0.0.7
 ```
 
 Link to pypi: https://pypi.org/project/pykomodo/
@@ -51,6 +51,33 @@ Link to pypi: https://pypi.org/project/pykomodo/
 ## Quick Start
 
 ### Command Line Usage
+
+Here’s a complete list of available command-line options for the `komodo` tool:
+
+| Option                | Description                                                                                   | Default Value      |
+|-----------------------|-----------------------------------------------------------------------------------------------|--------------------|
+| `--version`           | Show the version of komodo         | N/A                |
+| `dirs`                | Directories to process (space-separated; e.g., `komodo dir1/ dir2/`).                         | Current directory (`.`) |
+| `--equal-chunks N`    | Split content into N equal chunks. Mutually exclusive with `--max-chunk-size`.                | None               |
+| `--max-chunk-size M`  | Maximum size per chunk (tokens without `--semantic-chunks`; lines for `.py` with it).         | None               |
+| `--output-dir DIR`    | Directory where chunk files are saved.                                                        | `"chunks"`         |
+| `--ignore PATTERN`    | Add a pattern to ignore (repeatable, e.g., `--ignore "*.log"`).                               | None               |
+| `--unignore PATTERN`  | Add a pattern to unignore (repeatable, overrides ignores).                                    | None               |
+| `--dry-run`           | List files that would be processed without creating chunks.                                   | False              |
+| `--priority PATTERN,SCORE` | Set priority for file patterns (repeatable, e.g., `--priority "*.py,10"`).                | None               |
+| `--num-threads N`     | Number of threads for parallel processing.                                                    | 4                  |
+| `--enhanced`          | Use `EnhancedParallelChunker` for LLM optimizations.                                          | False              |
+| `--semantic-chunks`   | Enable AST-based chunking for `.py` files (splits by functions/classes).                      | False              |
+| `--context-window N`  | Target LLM context window size in bytes (used with `--enhanced`).                             | 4096               |
+| `--min-relevance F`   | Minimum relevance score for chunks (0.0-1.0, used with `--enhanced`).                         | 0.3                |
+| `--no-metadata`       | Disable metadata extraction (used with `--enhanced`).                                         | False (metadata enabled) |
+| `--keep-redundant`    | Keep redundant content across chunks (used with `--enhanced`).                                | False (removes redundancy) |
+| `--no-summaries`      | Disable summary generation (used with `--enhanced`; currently a placeholder in code).          | False (summaries enabled) |
+| `--file-type TYPE`    | Only process files of this extension (e.g., `pdf`, `py`).                                     | None               |
+
+**Notes:**
+- Options like `--equal-chunks` and `--max-chunk-size` cannot be used together (enforced by the CLI).
+- Use `--dry-run` to test your ignore/unignore patterns or priority rules without generating output.
 
 #### Basic usage 
 
@@ -64,46 +91,47 @@ komodo path1/ path2/ --max-chunk-size 1000
 
 #### Chunking Modes
 
-Komodo supports two chunking modes:
+Komodo offers flexible chunking strategies, with behavior varying based on options and the chunker type (`ParallelChunker` or `EnhancedParallelChunker` with `--enhanced`).
 
-##### Fixed Number of Chunks: 
+- **Fixed Number of Chunks (`--equal-chunks N`)**:
+  - **Base Chunker**: Keeps files whole, distributing them into N chunks with approximately equal total character counts. i.e. 5 different chunks or 5 text files. 
+    ```bash
+    komodo . --equal-chunks 5 --output-dir chunks
+    ```
 
-```bash
-# Split into 5 equal chunks
-komodo . --equal-chunks 5 --output-dir chunks
-```
+  - **Enhanced Chunker**: Combines all file contents into one text blob, then splits into N chunks of roughly equal byte size, potentially splitting files mid-content.
+    ```bash
+    komodo . --equal-chunks 5 --enhanced
+    ```
 
-##### Fixed Number of Tokens:
+- **Fixed Size Chunks (--max-chunk-size M)**:
+Without `--semantic-chunks`: Splits each file into chunks with at most M tokens (words), keeping lines whole. i.e. x number of chunks with 2000 tokens each or 5000 tokens each etc. 
 
-```bash
-# Split into chunks of 1000 tokens each
-komodo . --max-chunk-size 1000 --output-dir chunks
-```
+  ```bash
+  komodo . --max-chunk-size 2000
+  ```
 
-##### ** ***NEW*** **: Semantic (AST-based) Chunking (For Python)
+  **Important: You must specify either --equal-chunks or --max-chunk-size, but not both.**
 
-```bash
-# Use semantic chunking for Python files
-# The .py files are split by top-level function/class boundaries;
-# all non-.py files are chunked by your usual line- or size-based approach.
-komodo . --max-chunk-size 200 --semantic-chunks
-```
 
-* What does `--max-chunk-size 200` mean here?
+- **With --semantic-chunks**:
 
-It means that when chunking lines from the file, Komodo aims for chunks no more than 200 **lines (not tokens)**. However, because we’re in “semantic” mode, each top-level Python definition (function or class) is considered atomic. If a single function or class is itself bigger than 200 lines, it will be placed into one oversized chunk on its own. **Komodo won’t split that function in half.** 
+* For .py files: Aims for chunks of M lines, grouping top-level functions/classes as atomic units. If a function exceeds M lines, it becomes a single chunk.
+* For non-.py files: Still splits by M tokens.
 
-* In practice
+  ```bash
+  komodo . --max-chunk-size 200 --semantic-chunks
+  ```
 
-  * For normal-sized functions/classes (<200 lines), Komodo accumulates them until adding another function would exceed 200 lines, then starts a new chunk.
+- **PDF Chunking**:
 
-  * For an extremely large function or class (e.g. 300 lines), Komodo ignores the usual 200-line limit for that one block and puts it all in a single chunk.
+  Uses PyMuPDF to split PDFs by pages and paragraphs, respecting --max-chunk-size in tokens.
 
-  * Non-Python files keep following line-based splitting at 200 lines per chunk.
+    ```bash
+    komodo . --max-chunk-size 500 --file-type pdf
+    ```
 
-This approach strikes a balance: you get roughly 200 lines per chunk unless a single function is bigger, in which case it remains “atomic” and goes into an oversize chunk. That way you never get a function split across two chunks.
-
-**Note**: If you face any issues and the function is still being split into 2, just increase the number, although good practise dictates that you **should not** be writing a 5000 line function. i.e. `komodo . --max-chunk-size 5000 --semantic-chunks`
+    **IMPORTANT: Do note that for PDFs with a lot of images, this PDF chunker will NOT WORK. This current PDF chunker is NOT capable of chunking formulas/images** 
 
 #### Ignoring & Unignoring Files
 
@@ -111,63 +139,63 @@ This approach strikes a balance: you get roughly 200 lines per chunk unless a si
 * Unignore specific patterns with --unignore.
 * Komodo also has built-in ignores like .git, __pycache__, node_modules, etc.
 
-```bash
-# Skip everything in "results/" (relative) and "docs/" (relative)
-komodo . --equal-chunks 5 \
-  --ignore "results/**" \
-  --ignore "docs/**"
+  ```bash
+  # Skip everything in "results/" (relative) and "docs/" (relative)
+  komodo . --equal-chunks 5 \
+    --ignore "results/**" \
+    --ignore "docs/**"
 
-# Skip an absolute path
-komodo . --equal-chunks 5 \
-  --ignore "/Users/oha/komodo/results/**"
+  # Skip an absolute path
+  komodo . --equal-chunks 5 \
+    --ignore "/Users/oha/komodo/results/**"
 
-# Skip all .rst files, but unignore README.rst
-komodo . --equal-chunks 5 \
-  --ignore "*.rst" \
-  --unignore "README.rst"
-```
+  # Skip all .rst files, but unignore README.rst
+  komodo . --equal-chunks 5 \
+    --ignore "*.rst" \
+    --unignore "README.rst"
+  ```
 
-##### Safest (Recursive) Ignoring
+  ##### Safest (Recursive) Ignoring
 
-If you want to ensure that Komodo skips all files inside a particular directory (including all subfolders), you can use the ** wildcard before and after the folder name:
+  If you want to ensure that Komodo skips all files inside a particular directory (including all subfolders), you can use the ** wildcard before and after the folder name:
 
-```bash
-# safest mode: skip everything in "results/" and "docs/" recursively
-komodo . --equal-chunks 5 \
-  --ignore "**/results/**" \
-  --ignore "**/docs/**"
-```
+    ```bash
+    # safest mode: skip everything in "results/" and "docs/" recursively
+    komodo . --equal-chunks 5 \
+      --ignore "**/results/**" \
+      --ignore "**/docs/**"
+    ```
 
-**Pro Tip: If in doubt, just use **/folder/** to recursively ignore that folder and everything beneath it. This is the most reliable way to avoid processing unwanted files in subdirectories.**
+  **Pro Tip: If in doubt, just use **/folder/** to recursively ignore that folder and everything beneath it. This is the most reliable way to avoid processing unwanted files in subdirectories.**
 
-#### Fixed Number of Chunks with ignore mode
+  ##### Fixed Number of Chunks with ignore mode
 
-* `--ignore "/Users/oha/treeline/results/**"` tells the chunker to skip any files in that absolute directory path.
-* `--ignore "docs/*"` tells it to skip any files under a relative folder named docs/.
+  * `--ignore "/Users/oha/treeline/results/**"` tells the chunker to skip any files in that absolute directory path.
+  * `--ignore "docs/*"` tells it to skip any files under a relative folder named docs/.
 
-```bash
-komodo . --equal-chunks 5 --ignore "/Users/oha/treeline/results/**" --ignore "docs/*" 
-```
+    ```bash
+    komodo . --equal-chunks 5 --ignore "/Users/oha/treeline/results/**" --ignore "docs/*" 
+    ```
 
-##### Priority Rules
+  ##### Priority Rules
 
-Priority Rules help determine which files should be processed first or given more importance. Files with higher priority scores are processed first
+  Priority Rules help determine which files should be processed first or given more importance. Files with higher priority scores are processed first
 
-```bash
-# With equal chunks, 10 which is .py is higher than 5, so 10 will get processed first
-komodo . \
-  --equal-chunks 5 \
-  --priority "*.py,10" \ 
-  --priority "*.md,5" \
-  --output-dir chunks
+  ```bash
+  # With equal chunks, 10 which is .py is higher than 5, so 10 will get processed first
+  komodo . \
+    --equal-chunks 5 \
+    --priority "*.py,10" \ 
+    --priority "*.md,5" \
+    --output-dir chunks
 
-# Or with max chunk size
-komodo . \
-  --max-chunk-size 1000 \
-  --priority "*.py,10" \
-  --priority "*.md,5" \
-  --output-dir chunks
-```
+  # Or with max chunk size
+  komodo . \
+    --max-chunk-size 1000 \
+    --priority "*.py,10" \
+    --priority "*.md,5" \
+    --output-dir chunks
+  ```
 
 #### LLM Optimization Options
 Enable metadata extraction and content optimization:
@@ -252,6 +280,25 @@ chunker = ParallelChunker(
 chunker.process_directories(["src/", "docs/", "tests/"])
 ```
 
+Basic configuration with file_type:
+```python
+import os
+from pykomodo.multi_dirs_chunker import ParallelChunker
+
+os.makedirs("/Users/test/komodo/pdf", exist_ok=True)
+output_dir = "/Users/test/komodo/pdf"
+
+chunker = ParallelChunker(
+    max_chunk_size=1000,
+    output_dir=output_dir,
+    file_type="pdf" 
+)
+
+chunker.process_directory("/Users/test/komodo/")
+
+print("PDF processing completed successfully!")
+```
+
 ## Advanced LLM Features
 
 ### Metadata Extraction
@@ -283,9 +330,31 @@ chunker = ParallelChunker(
 )
 ```
 
-### ** ***New*** ** Typed Classes & Pydantic-Based Configuration
+### File Type Restriction
 
-As of **v0.0.5**, Komodo’s main classes (`ParallelChunker`, `EnhancedParallelChunker`, etc.) now include **type hints**. Nothing changes at runtime, but if you’re using an IDE or a type checker like `mypy`, you’ll get improved error checking and auto-completion - or hopefully. 
+The file_type parameter of the ParallelChunker constructor lets you restrict which file extensions you process.
+
+```python
+import os
+from pykomodo.multi_dirs_chunker import ParallelChunker
+
+os.makedirs("/path/to/dir", exist_ok=True)
+output_dir = "/path/to/dir"
+
+chunker = ParallelChunker(
+    max_chunk_size=1000,
+    output_dir=output_dir,
+    file_type="pdf" 
+)
+
+chunker.process_directory("/path/to/dir")
+
+print("PDF processing completed successfully!")
+```
+
+### Typed Classes & Pydantic-Based Configuration
+
+Komodo’s main classes (`ParallelChunker`, `EnhancedParallelChunker`, etc.) now include **type hints**. Nothing changes at runtime, but if you’re using an IDE or a type checker like `mypy`, you’ll get improved error checking and auto-completion - or hopefully. 
 
 You can also use **Pydantic** to configure Komodo with strongly typed settings. For instance:
 
@@ -349,24 +418,6 @@ chunker = ParallelChunker(
 chunker.process_directory("my_project")
 ```
 
-## Configuration Options
-
-| Option | Description | Default | Type |
-|--------|-------------|---------|------|
-| `equal_chunks` | Number of equal-sized chunks | None | int |
-| `max_chunk_size` | Maximum tokens per chunk | None | int | 
-| `output_dir` | Directory for output files | "chunks" | str |
-| `num_threads` | Number of parallel processing threads | 4 | int | 
-| `ignore` | Patterns to ignore | [] | List[str] |
-| `user_unignore` | Patterns to explicitly include | [] | List[str] |
-| `binary_extensions` | Extensions to treat as binary | ["exe", "dll", "so"] | List[str] |
-| `priority_rules` | File patterns and their priorities| [] | List[Tuple[str, int]] |
-| `extract_metadata` | Extract code elements like functions and classes | true | bool |
-| `add_summaries` | Add content summaries to chunks | true | bool |
-| `remove_redundancy` | Remove duplicate content across chunks | true | bool |
-| `context_window` | Maximum context window size (for LLMs) | 4096 | int | 
-| `min_relevance_score` | Minimum relevance threshold for chunks | 0.3 | float |
-
 ## Built-in Ignore Patterns
 
 The chunker automatically ignores common non-text and build-related files:
@@ -384,13 +435,13 @@ The chunker automatically ignores common non-text and build-related files:
 
 1. Leading Slash for Absolute Paths
 
-If you omit the leading `/` in a pattern like `/Users/oha/...`, Komodo treats it as relative and won’t match your actual absolute path.
+  * If you omit the leading `/` in a pattern like `/Users/oha/...`, Komodo treats it as relative and won’t match your actual absolute path.
 
 2. `/**` vs. `/*`
 
 * `folder/**` matches all files and subfolders under folder.
 * `folder/*` only matches the immediate contents of folder, not deeper subdirectories.
-Overwriting Multiple `--ignore` Flags
+* Overwriting Multiple `--ignore` Flags
 
 3. Folder Name vs. Actual Path
 

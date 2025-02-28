@@ -3,6 +3,7 @@ import fnmatch
 import re
 import concurrent.futures
 from typing import Optional, List, Tuple
+import fitz
 
 BUILTIN_IGNORES = [
     "**/.git/**",
@@ -44,7 +45,8 @@ class ParallelChunker:
         priority_rules: Optional[List[Tuple[str,int]]] = None,
         num_threads: int = 4,
         dry_run: bool = False,
-        semantic_chunking: bool = False
+        semantic_chunking: bool = False,
+        file_type: Optional[str] = None
     ) -> None:
         if equal_chunks is not None and max_chunk_size is not None:
             raise ValueError("Cannot specify both equal_chunks and max_chunk_size")
@@ -57,6 +59,7 @@ class ParallelChunker:
         self.num_threads = num_threads
         self.dry_run = dry_run 
         self.semantic_chunking = semantic_chunking
+        self.file_type = file_type.lower() if file_type else None
 
         if user_ignore is None:
             user_ignore = []
@@ -83,6 +86,20 @@ class ParallelChunker:
 
         self.loaded_files = []
         self.current_walk_root = None
+    
+    def _get_text_content(self, path, content_bytes):
+        if path.endswith(".pdf"):
+            try:
+                doc = fitz.open(path)
+                text = ""
+                for page in doc:
+                    text += page.get_text("text")
+                return text
+            except Exception as e:
+                print(f"Error extracting text from PDF {path}: {e}")
+                return ""
+        else:
+            return content_bytes.decode("utf-8", errors="replace")
 
     def is_absolute_pattern(self, pattern):
         if pattern.startswith("/"):
@@ -142,9 +159,8 @@ class ParallelChunker:
         return False
 
     def is_binary_file(self, path):
-        _, ext = os.path.splitext(path)
-        ext = ext.lstrip(".").lower()
-        if ext == "py":
+        ext = path.split(".")[-1].lower()
+        if ext in {"py", "pdf"}:
             return False
         if ext in self.binary_exts:
             return True
@@ -164,6 +180,10 @@ class ParallelChunker:
             for root, dirs, files in os.walk(directory):
                 for filename in files:
                     full_path = os.path.join(root, filename)
+                    if self.file_type:
+                        _, ext = os.path.splitext(full_path)
+                        if ext.lower() != f".{self.file_type}":
+                            continue
                     if os.path.commonprefix([
                         os.path.abspath(self.output_dir),
                         os.path.abspath(full_path)
@@ -214,6 +234,49 @@ class ParallelChunker:
         self.loaded_files.sort(key=lambda x: (-x[2], x[0]))
         self._process_chunks()
 
+    def process_file(self, file_path: str, custom_chunk_size: Optional[int] = None, force_process: bool = False) -> None:
+        """
+        Process a single file and create chunks from it.
+        
+        Args:
+            file_path: Path to the file to process
+            custom_chunk_size: Optional custom chunk size for this specific file, overriding the global setting
+            force_process: If True, process the file even if it would normally be ignored
+        """
+        if not os.path.isfile(file_path):
+            raise ValueError(f"File not found: {file_path}")
+            
+        if self.should_ignore_file(file_path) and not force_process and not self.dry_run:
+            print(f"Skipping ignored file: {file_path}")
+            return
+            
+        if self.dry_run:
+            priority = self.calculate_priority(file_path)
+            print(f"[DRY-RUN] Would process file: {file_path} (priority={priority})")
+            return
+            
+        if self.is_binary_file(file_path) and not file_path.endswith(".pdf") and not force_process:
+            print(f"Skipping binary file: {file_path}")
+            return
+            
+        path, content, priority = self._load_file_data(file_path)
+        if content is None:
+            print(f"Error loading file: {file_path}")
+            return
+            
+        self.loaded_files = [(path, content, priority)]
+        
+        original_max_chunk_size = None
+        if custom_chunk_size is not None and not self.equal_chunks:
+            original_max_chunk_size = self.max_chunk_size
+            self.max_chunk_size = custom_chunk_size
+            
+        try:
+            self._process_chunks()
+        finally:
+            if original_max_chunk_size is not None:
+                self.max_chunk_size = original_max_chunk_size
+
     def process_directory(self, directory):
         self.process_directories([directory])
 
@@ -232,6 +295,136 @@ class ParallelChunker:
         except:
             pass
 
+    def _improved_pdf_chunking(self, path, idx):
+        """
+        Process a PDF file with improved text formatting for academic papers.
+        Uses multiple extraction methods to get the best text representation.
+        
+        Args:
+            path: Path to the PDF file
+            idx: Starting chunk index
+            
+        Returns:
+            Updated chunk index
+        """
+        try:
+            doc = fitz.open(path)
+            
+            all_pages_content = []
+            
+            for page_num in range(len(doc)):
+                page = doc[page_num]
+                
+                text_as_text = page.get_text("text")  
+                text_as_html = page.get_text("html")  
+                text_as_dict = page.get_text("dict") 
+
+                if "<p>" in text_as_html:
+                    import re
+                    paragraphs = re.findall(r'<p>(.*?)</p>', text_as_html, re.DOTALL)
+                    processed_text = []
+                    
+                    for p in paragraphs:
+                        clean_p = re.sub(r'<.*?>', ' ', p)
+                        clean_p = re.sub(r'&[a-zA-Z]+;', ' ', clean_p)
+                        clean_p = re.sub(r'\s+', ' ', clean_p).strip()
+                        if clean_p:
+                            processed_text.append(clean_p)
+                    
+                    page_text = "\n\n".join(processed_text)
+                
+                elif len(text_as_dict.get("blocks", [])) > 0:
+                    blocks = sorted(text_as_dict["blocks"], key=lambda b: b["bbox"][1])
+                    processed_text = []
+                    
+                    for block in blocks:
+                        if "lines" not in block:
+                            continue
+                        
+                        block_lines = []
+                        for line in block["lines"]:
+                            if "spans" not in line:
+                                continue
+                            
+                            line_text = " ".join(span["text"] for span in line["spans"] if "text" in span)
+                            if line_text.strip():
+                                block_lines.append(line_text)
+                        
+                        if block_lines:
+                            processed_text.append(" ".join(block_lines))
+                    
+                    page_text = "\n\n".join(processed_text)
+                
+                else:
+                    lines = text_as_text.split('\n')
+                    paragraphs = []
+                    current_paragraph = []
+                    
+                    for line in lines:
+                        line = line.strip()
+                        words = line.split()
+                        if len(words) <= 2 and not line.endswith('.') and not line.endswith(':'):
+                            current_paragraph.append(line)
+                        else:
+                            if current_paragraph:
+                                paragraphs.append(" ".join(current_paragraph))
+                                current_paragraph = []
+                            if line:
+                                paragraphs.append(line)
+                    
+                    if current_paragraph:
+                        paragraphs.append(" ".join(current_paragraph))
+                    
+                    page_text = "\n\n".join(paragraphs)
+                
+                page_content = f"--- Page {page_num + 1} ---\n\n{page_text}"
+                all_pages_content.append(page_content)
+            
+            full_document = "\n\n".join(all_pages_content)
+            
+            paragraphs = full_document.split("\n\n")
+            current_chunk = []
+            current_size = 0
+            
+            for paragraph in paragraphs:
+                if not paragraph.strip():
+                    continue
+                    
+                para_size = len(paragraph.split())
+                
+                if current_size + para_size > self.max_chunk_size and current_chunk:
+                    chunk_text = "\n\n".join(current_chunk)
+                    final_text = f"{'='*80}\nFILE: {path}\n{'='*80}\n\n{chunk_text}"
+                    self._write_chunk(final_text.encode("utf-8"), idx)
+                    idx += 1
+                    current_chunk = []
+                    current_size = 0
+                
+                current_chunk.append(paragraph)
+                current_size += para_size
+            
+            if current_chunk:
+                chunk_text = "\n\n".join(current_chunk)
+                final_text = f"{'='*80}\nFILE: {path}\n{'='*80}\n\n{chunk_text}"
+                self._write_chunk(final_text.encode("utf-8"), idx)
+                idx += 1
+            
+            return idx
+        
+        except Exception as e:
+            print(f"Error processing PDF {path}: {e}")
+            t = (
+                "="*80 + "\n"
+                + f"CHUNK {idx + 1}\n"
+                + "="*80 + "\n\n"
+                + "="*40 + "\n"
+                + f"File: {path}\n"
+                + "="*40 + "\n"
+                + f"[Error processing PDF: {str(e)}]\n"
+            )
+            self._write_chunk(t.encode("utf-8"), idx)
+            return idx + 1
+
     def _process_chunks(self):
         if not self.loaded_files:
             return
@@ -241,64 +434,81 @@ class ParallelChunker:
             self._chunk_by_equal_parts()
         else:
             self._chunk_by_size()
+    
+    def _extract_pdf_paragraphs(self, path):
+        try:
+            doc = fitz.open(path)
+            paragraphs = []
+            for page in doc:
+                text = page.get_text("text")
+                page_paras = text.split("\n\n")
+                paragraphs.extend([para.strip() for para in page_paras if para.strip()])
+            return paragraphs
+        except Exception as e:
+            print(f"Error extracting paragraphs from PDF {path}: {e}")
+            return []
 
     def _chunk_by_equal_parts(self) -> None:
-        total_content = []
-        total_size = 0
+        text_blocks = []
         for (path, content_bytes, _) in self.loaded_files:
-            try:
-                c = content_bytes.decode("utf-8", errors="replace")
-                s = len(c)
-                total_content.append((path, c, s))
-                total_size += s
-            except:
-                continue
-        if not total_content:
+            if path.endswith(".pdf"):
+                paragraphs = self._extract_pdf_paragraphs(path)
+                for para in paragraphs:
+                    s = len(para.split())
+                    if s > 0:
+                        text_blocks.append((path, para, s))
+            else:
+                text = self._get_text_content(path, content_bytes)
+                if text:
+                    s = len(text.split())
+                    text_blocks.append((path, text, s))
+        if not text_blocks:
             return
         n_chunks = self.equal_chunks
-        tgt = max(1, total_size // n_chunks)
-        cur_size = 0
-        for i in range(n_chunks):
-            chunk_content = []
-            while total_content and cur_size < tgt:
-                p, c, s = total_content[0]
-                chunk_content.extend([
-                    "\n" + "="*40,
-                    f"File: {p}",
-                    "="*40 + "\n",
-                    c
-                ])
-                cur_size += s
-                total_content.pop(0)
-            txt = (
-                "="*80 + "\n"
-                + f"CHUNK {i + 1} OF {n_chunks}\n"
-                + "="*80 + "\n\n"
-                + "\n".join(chunk_content)
-                + "\n"
-            )
-            self._write_chunk(txt.encode("utf-8"), i)
-            cur_size = 0
+        text_blocks.sort(key=lambda x: -x[2])  
+        chunk_contents = [[] for _ in range(n_chunks)]
+        chunk_sizes = [0] * n_chunks
+        for block in text_blocks:
+            min_idx = 0
+            min_size = chunk_sizes[0]
+            for i in range(1, n_chunks):
+                if chunk_sizes[i] < min_size:
+                    min_size = chunk_sizes[i]
+                    min_idx = i
+            chunk_contents[min_idx].append(block)
+            chunk_sizes[min_idx] += block[2]
+        for i, chunk in enumerate(chunk_contents):
+            if chunk:
+                self._write_equal_chunk([(path, text) for path, text, _ in chunk], i)
+    
+    def _write_equal_chunk(self, chunk_data, chunk_num):
+        txt = "="*80 + "\n" + f"CHUNK {chunk_num + 1} OF {self.equal_chunks}\n" + "="*80 + "\n\n"
+        for path, text in chunk_data:
+            txt += "="*40 + "\n" + f"File: {path}\n" + "="*40 + "\n" + text + "\n"
+        self._write_chunk(txt.encode("utf-8"), chunk_num)
 
     def _chunk_by_size(self):
         idx = 0
         for (path, content_bytes, _) in self.loaded_files:
-            try:
-                c = content_bytes.decode("utf-8", errors="replace")
-                lines = c.splitlines()
-                if not lines:
-                    t = (
-                        "="*80 + "\n"
-                        + f"CHUNK {idx + 1}\n"
-                        + "="*80 + "\n\n"
-                        + "="*40 + "\n"
-                        + f"File: {path}\n"
-                        + "="*40 + "\n"
-                        + "[Empty File]\n"
-                    )
-                    self._write_chunk(t.encode("utf-8"), idx)
-                    idx += 1
-                    continue
+            text = self._get_text_content(path, content_bytes)
+            if not text:
+                t = (
+                    "="*80 + "\n"
+                    + f"CHUNK {idx + 1}\n"
+                    + "="*80 + "\n\n"
+                    + "="*40 + "\n"
+                    + f"File: {path}\n"
+                    + "="*40 + "\n"
+                    + "[Empty File]\n"
+                )
+                self._write_chunk(t.encode("utf-8"), idx)
+                idx += 1
+                continue
+
+            if path.endswith(".pdf"):
+                idx = self._improved_pdf_chunking(path, idx)
+            else:
+                lines = text.splitlines()
                 current_chunk_lines = []
                 current_size = 0
                 for line in lines:
@@ -319,8 +529,9 @@ class ParallelChunker:
                         idx += 1
                         current_chunk_lines = []
                         current_size = 0
-                    current_chunk_lines.append(line)
-                    current_size += line_size
+                    if line.strip():
+                        current_chunk_lines.append(line)
+                        current_size += line_size
                 if current_chunk_lines:
                     h = [
                         "="*80,
@@ -335,22 +546,13 @@ class ParallelChunker:
                     chunk_data = "\n".join(h + current_chunk_lines) + "\n"
                     self._write_chunk(chunk_data.encode("utf-8"), idx)
                     idx += 1
-            except:
-                continue
 
     def _chunk_by_semantic(self):
-        """
-        For each loaded file:
-        - If .py => parse AST, chunk by top-level function/class
-        - Otherwise => fallback to one chunk or call your old logic.
-        """
         chunk_index = 0
         for (path, content_bytes, priority) in self.loaded_files:
-            try:
-                text = content_bytes.decode("utf-8", errors="replace")
-            except:
+            text = self._get_text_content(path, content_bytes)
+            if not text and not path.endswith(".pdf"):
                 continue
-
             if path.endswith(".py"):
                 chunk_index = self._chunk_python_file_ast(path, text, chunk_index)
             else:
@@ -459,7 +661,6 @@ class ParallelChunker:
                 continue
 
             if block_size > self.max_chunk_size:
-                # flush whatever wuz in current_lines
                 if current_lines:
                     chunk_data = "\n\n".join(current_lines)
                     final_text = f"{'='*80}\nFILE: {path}\n{'='*80}\n\n{chunk_data}"
@@ -471,7 +672,6 @@ class ParallelChunker:
                 big_block_data = f"{'='*80}\nFILE: {path}\n{'='*80}\n\n{block}"
                 self._write_chunk(big_block_data.encode("utf-8"), chunk_index)
                 chunk_index += 1
-                # done, skip to the next block
                 continue
 
             if current_count + block_size > self.max_chunk_size and current_lines:
@@ -493,7 +693,6 @@ class ParallelChunker:
             chunk_index += 1
 
         return chunk_index
-
 
     def close(self):
         pass
