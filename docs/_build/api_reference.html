@@ -51,7 +51,7 @@
 <li class="toctree-l1"><a class="reference internal" href="chunking_guide.html">Chunking Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_reference.html">CLI Reference</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#core-module">Core Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-pykomodo.core">Core Module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#pykomodo.core.PriorityRule"><code class="docutils literal notranslate"><span class="pre">PriorityRule</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#pykomodo.core.PriorityRule.__init__"><code class="docutils literal notranslate"><span class="pre">PriorityRule.__init__()</span></code></a></li>
 </ul>
@@ -71,7 +71,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#multi-directory-chunker">Multi-Directory Chunker</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-pykomodo.multi_dirs_chunker">Multi-Directory Chunker</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#pykomodo.multi_dirs_chunker.ParallelChunker"><code class="docutils literal notranslate"><span class="pre">ParallelChunker</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#pykomodo.multi_dirs_chunker.ParallelChunker.__init__"><code class="docutils literal notranslate"><span class="pre">ParallelChunker.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pykomodo.multi_dirs_chunker.ParallelChunker.calculate_priority"><code class="docutils literal notranslate"><span class="pre">ParallelChunker.calculate_priority()</span></code></a></li>
@@ -90,18 +90,18 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#enhanced-chunker">Enhanced Chunker</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-pykomodo.enhanced_chunker">Enhanced Chunker</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#pykomodo.enhanced_chunker.EnhancedParallelChunker"><code class="docutils literal notranslate"><span class="pre">EnhancedParallelChunker</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#pykomodo.enhanced_chunker.EnhancedParallelChunker.__init__"><code class="docutils literal notranslate"><span class="pre">EnhancedParallelChunker.__init__()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#command-line-interface">Command Line Interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-pykomodo.command_line">Command Line Interface</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#pykomodo.command_line.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-pykomodo.pykomodo_config">Configuration</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#pykomodo.pykomodo_config.KomodoConfig"><code class="docutils literal notranslate"><span class="pre">KomodoConfig</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#pykomodo.pykomodo_config.KomodoConfig.context_window"><code class="docutils literal notranslate"><span class="pre">KomodoConfig.context_window</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pykomodo.pykomodo_config.KomodoConfig.directories"><code class="docutils literal notranslate"><span class="pre">KomodoConfig.directories</span></code></a></li>
@@ -155,16 +155,16 @@
 <nav class="contents local" id="table-of-contents">
 <p class="topic-title">Table of Contents</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#core-module" id="id2">Core Module</a></p></li>
-<li><p><a class="reference internal" href="#multi-directory-chunker" id="id3">Multi-Directory Chunker</a></p></li>
-<li><p><a class="reference internal" href="#enhanced-chunker" id="id4">Enhanced Chunker</a></p></li>
-<li><p><a class="reference internal" href="#command-line-interface" id="id5">Command Line Interface</a></p></li>
-<li><p><a class="reference internal" href="#configuration" id="id6">Configuration</a></p></li>
+<li><p><a class="reference internal" href="#module-pykomodo.core" id="id2">Core Module</a></p></li>
+<li><p><a class="reference internal" href="#module-pykomodo.multi_dirs_chunker" id="id3">Multi-Directory Chunker</a></p></li>
+<li><p><a class="reference internal" href="#module-pykomodo.enhanced_chunker" id="id4">Enhanced Chunker</a></p></li>
+<li><p><a class="reference internal" href="#module-pykomodo.command_line" id="id5">Command Line Interface</a></p></li>
+<li><p><a class="reference internal" href="#module-pykomodo.pykomodo_config" id="id6">Configuration</a></p></li>
 </ul>
 </nav>
-<section id="core-module">
-<h2><a class="toc-backref" href="#id2" role="doc-backlink">Core Module</a><a class="headerlink" href="#core-module" title="Link to this heading"></a></h2>
-<dl class="py class" id="module-pykomodo.core">
+<section id="module-pykomodo.core">
+<span id="core-module"></span><h2><a class="toc-backref" href="#id2" role="doc-backlink">Core Module</a><a class="headerlink" href="#module-pykomodo.core" title="Link to this heading"></a></h2>
+<dl class="py class">
 <dt class="sig sig-object py" id="pykomodo.core.PriorityRule">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pykomodo.core.</span></span><span class="sig-name descname"><span class="pre">PriorityRule</span></span><a class="reference internal" href="_modules/pykomodo/core.html#PriorityRule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.core.PriorityRule" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
@@ -331,9 +331,9 @@ unless it matches unignore_patterns first.</p>
 </pre></div>
 </div>
 </section>
-<section id="multi-directory-chunker">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">Multi-Directory Chunker</a><a class="headerlink" href="#multi-directory-chunker" title="Link to this heading"></a></h2>
-<dl class="py class" id="module-pykomodo.multi_dirs_chunker">
+<section id="module-pykomodo.multi_dirs_chunker">
+<span id="multi-directory-chunker"></span><h2><a class="toc-backref" href="#id3" role="doc-backlink">Multi-Directory Chunker</a><a class="headerlink" href="#module-pykomodo.multi_dirs_chunker" title="Link to this heading"></a></h2>
+<dl class="py class">
 <dt class="sig sig-object py" id="pykomodo.multi_dirs_chunker.ParallelChunker">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pykomodo.multi_dirs_chunker.</span></span><span class="sig-name descname"><span class="pre">ParallelChunker</span></span><a class="reference internal" href="_modules/pykomodo/multi_dirs_chunker.html#ParallelChunker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.multi_dirs_chunker.ParallelChunker" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
@@ -444,9 +444,9 @@ unless it matches unignore_patterns first.</p>
 </pre></div>
 </div>
 </section>
-<section id="enhanced-chunker">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">Enhanced Chunker</a><a class="headerlink" href="#enhanced-chunker" title="Link to this heading"></a></h2>
-<dl class="py class" id="module-pykomodo.enhanced_chunker">
+<section id="module-pykomodo.enhanced_chunker">
+<span id="enhanced-chunker"></span><h2><a class="toc-backref" href="#id4" role="doc-backlink">Enhanced Chunker</a><a class="headerlink" href="#module-pykomodo.enhanced_chunker" title="Link to this heading"></a></h2>
+<dl class="py class">
 <dt class="sig sig-object py" id="pykomodo.enhanced_chunker.EnhancedParallelChunker">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pykomodo.enhanced_chunker.</span></span><span class="sig-name descname"><span class="pre">EnhancedParallelChunker</span></span><a class="reference internal" href="_modules/pykomodo/enhanced_chunker.html#EnhancedParallelChunker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.enhanced_chunker.EnhancedParallelChunker" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pykomodo.multi_dirs_chunker.ParallelChunker" title="pykomodo.multi_dirs_chunker.ParallelChunker"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParallelChunker</span></code></a></p>
@@ -480,17 +480,17 @@ unless it matches unignore_patterns first.</p>
 </dd></dl>
 
 </section>
-<section id="command-line-interface">
-<h2><a class="toc-backref" href="#id5" role="doc-backlink">Command Line Interface</a><a class="headerlink" href="#command-line-interface" title="Link to this heading"></a></h2>
-<dl class="py function" id="module-pykomodo.command_line">
+<section id="module-pykomodo.command_line">
+<span id="command-line-interface"></span><h2><a class="toc-backref" href="#id5" role="doc-backlink">Command Line Interface</a><a class="headerlink" href="#module-pykomodo.command_line" title="Link to this heading"></a></h2>
+<dl class="py function">
 <dt class="sig sig-object py" id="pykomodo.command_line.main">
 <span class="sig-prename descclassname"><span class="pre">pykomodo.command_line.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/command_line.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.command_line.main" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </section>
-<section id="configuration">
-<h2><a class="toc-backref" href="#id6" role="doc-backlink">Configuration</a><a class="headerlink" href="#configuration" title="Link to this heading"></a></h2>
-<dl class="py class" id="module-pykomodo.pykomodo_config">
+<section id="module-pykomodo.pykomodo_config">
+<span id="configuration"></span><h2><a class="toc-backref" href="#id6" role="doc-backlink">Configuration</a><a class="headerlink" href="#module-pykomodo.pykomodo_config" title="Link to this heading"></a></h2>
+<dl class="py class">
 <dt class="sig sig-object py" id="pykomodo.pykomodo_config.KomodoConfig">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pykomodo.pykomodo_config.</span></span><span class="sig-name descname"><span class="pre">KomodoConfig</span></span><a class="reference internal" href="_modules/pykomodo/pykomodo_config.html#KomodoConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.pykomodo_config.KomodoConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>

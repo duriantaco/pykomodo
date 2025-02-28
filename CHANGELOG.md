@@ -1,11 +1,22 @@
 # Changelog
 
-## [0.0.6] - 2025-03-03
+## [0.1.0] - 2025-02-28
+
+### Fixed
+- Resolved an issue in the chunking logic to ensure that the exact number of chunks is correct
+
+### Added
+- **Introducing PDF chunking** which will work for `--equal-chunks` and `--max-chunk-size`.
+- **New flag** to specify what file types you want
+
+Bumped version up to 0.1.0 for major changes
+
+## [0.0.6] - 2025-02-25
 ### Added
 - **Type hints** for key classes (`ParallelChunker`, `EnhancedParallelChunker`, `PyCConfig`), improving IDE auto-completion and static analysis
 - **Pydantic-based configuration** example (`pykomodo_config.py`), demonstrating how to validate and run the chunker with typed settings
 
-## [0.0.4] - 2025-03-02
+## [0.0.4] - 2025-02-24
 ### Added
 - **AST-based semantic chunking** for Python files:
   - Use `--semantic-chunking` on the CLI or `semantic_chunking=True` in the Python API

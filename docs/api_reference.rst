@@ -11,7 +11,7 @@ PyKomodo provides several modules for document processing, chunking, and managem
    :local:
 
 Core Module
-==========
+============
 
 .. automodule:: pykomodo.core
    :members:
@@ -28,7 +28,7 @@ Example usage::
     result = processor.process_text(my_document)
 
 Multi-Directory Chunker
-=====================
+========================
 
 .. automodule:: pykomodo.multi_dirs_chunker
    :members:
@@ -45,7 +45,7 @@ Example usage::
     chunks = chunker.chunk_directories(['path/to/dir1', 'path/to/dir2'], chunk_size=1000)
 
 Enhanced Chunker
-==============
+=================
 
 .. automodule:: pykomodo.enhanced_chunker
    :members:
@@ -53,7 +53,7 @@ Enhanced Chunker
    :show-inheritance:
 
 Command Line Interface
-====================
+=======================
 
 .. automodule:: pykomodo.command_line
    :members:
@@ -61,7 +61,7 @@ Command Line Interface
    :show-inheritance:
 
 Configuration
-===========
+==============
 
 .. automodule:: pykomodo.pykomodo_config
    :members:

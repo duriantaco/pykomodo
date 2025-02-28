@@ -10,7 +10,7 @@ Install pykomodo via pip:
 
 .. code-block:: bash
 
-   pip install pykomodo==0.0.7
+   pip install pykomodo==0.1.0
 
 CLI Example
 ------------

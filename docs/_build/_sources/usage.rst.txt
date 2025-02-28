@@ -12,7 +12,7 @@ Command Line Interface
 
    .. code-block:: bash
 
-      pip install pykomodo==0.0.7
+      pip install pykomodo==0.1.0
 
 2. Chunk your directory into 5 equal parts:
 

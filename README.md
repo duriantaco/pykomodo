@@ -33,7 +33,7 @@ A Python-based parallel file chunking system designed for processing large codeb
 ## Installation
 
 ```bash
-pip install komodo==0.0.7
+pip install komodo==0.1.0
 ```
 
 Link to pypi: https://pypi.org/project/pykomodo/
