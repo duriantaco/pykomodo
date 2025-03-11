@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.1] - 2025-03-11
+
+### Fixed
+- Built-in ignores added `.env`
+
+### Added
+- **Automatic redaction of api keys** pykomodo automatically scans your repo and redacts all api keys. 
+
+
 ## [0.1.0] - 2025-02-28
 
 ### Fixed

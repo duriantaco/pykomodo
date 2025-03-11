@@ -25,15 +25,17 @@ A Python-based parallel file chunking system designed for processing large codeb
     * Redundancy removal across chunks
     * Configurable context window sizes
   
-* **NEW** Chunking PDF Files:
+* Chunking PDF Files:
   * Split PDF content by pages and paragraphs (rather than lines)
   * Perform basic text cleanup to handle multi-column layouts, or text from HTML-like elements if present
   * Create multiple chunks for large PDFs while preserving some logical structure
 
+* We scan your repos for api keys and automatically redact it. `.env` files are also ignored
+
 ## Installation
 
 ```bash
-pip install komodo==0.1.0
+pip install komodo==0.1.1
 ```
 
 Link to pypi: https://pypi.org/project/pykomodo/

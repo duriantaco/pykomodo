@@ -181,16 +181,14 @@ class TestParallelChunker(unittest.TestCase):
         c.process_directory(self.test_dir)
 
     def test_chunk_file_names(self):
-        """Test chunk file naming and numbering"""
         d = os.path.join(self.test_dir, "chunk_names")
         os.mkdir(d)
+        with open(os.path.join(self.test_dir, "file3.txt"), "w") as f:
+            f.write("Third file\nWith text.")
         c = ParallelChunker(equal_chunks=3, output_dir=d)
         c.process_directory(self.test_dir)
-
         files = sorted(os.listdir(d))
         self.assertEqual(files, ["chunk-0.txt", "chunk-1.txt", "chunk-2.txt"])
-
-    ## NEW TESTS FOR SEMANTIC CHUNKING BELOW
 
     def test_semantic_chunking_python_and_nonpy(self):
         """
@@ -204,7 +202,6 @@ class TestParallelChunker(unittest.TestCase):
         py_file = os.path.join(self.test_dir, "example.py")
         with open(py_file, "w", encoding="utf-8") as f:
 
-            ## fixed this for the failing test assertion error false is not true cos of spacing. zzzz
             f.write('''def func1():
     pass
 def func2():
@@ -293,6 +290,49 @@ class MyClass:
             self.assertNotIn("Function: broken_func", content,
                             "Should not see 'Function: broken_func' because AST parse failed.")
 
+    def test_api_key_redaction(self):
+        test_file = os.path.join(self.test_dir, "api_test.txt")
+        with open(test_file, "w", encoding="utf-8") as f:
+            f.write("Normal line without quotes\n")
+            f.write("Line with short quoted string: \"short\"\n")
+            f.write("Line with exactly 20 characters: \"abcdefghijklmnopqrst\"\n")
+            f.write("Line with 19 characters: \"abcdefghijklmnopqrs\"\n")
+            f.write("Line with long quoted string: \"this_is_a_very_long_string_with_more_than_twenty_characters\"\n")
+            f.write("Line with multiple quoted strings: \"short\" and \"long_string_with_more_than_twenty_characters\"\n")
+            f.write("Line with special characters: \"!@#$%^&*()_long_string_with_more_than_twenty_characters\"\n")
+            f.write("Line with interrupted long string: \"abcde!abcde!abcde!abcde\"\n")
+            f.write("Line with long string not quoted: abcdefghijklmnopqrstuvwxyz\n")
+            f.write("Another normal line\n")
+
+        out_dir = os.path.join(self.test_dir, "api_redaction_output")
+        os.mkdir(out_dir)
+        c = ParallelChunker(max_chunk_size=1000, output_dir=out_dir)
+
+        c.process_file(test_file)
+
+        chunk_files = [f for f in os.listdir(out_dir) if f.startswith("chunk-")]
+        self.assertEqual(len(chunk_files), 1, "Should generate exactly one chunk file for the small file")
+
+        with open(os.path.join(out_dir, chunk_files[0]), "r", encoding="utf-8") as f:
+            content = f.read()
+
+        lines = content.splitlines()
+        file_content_lines = lines[8:] 
+
+        expected_lines = [
+            "Normal line without quotes",
+            "Line with short quoted string: \"short\"",
+            "[API_KEY_REDACTED]",  
+            "Line with 19 characters: \"abcdefghijklmnopqrs\"",
+            "[API_KEY_REDACTED]", 
+            "[API_KEY_REDACTED]", 
+            "[API_KEY_REDACTED]",  
+            "Line with interrupted long string: \"abcde!abcde!abcde!abcde\"",
+            "Line with long string not quoted: abcdefghijklmnopqrstuvwxyz",
+            "Another normal line"
+        ]
+
+        self.assertEqual(file_content_lines, expected_lines, "Chunk content does not match expected redacted output")
 
 if __name__ == "__main__":
     unittest.main()

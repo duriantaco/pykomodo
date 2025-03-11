@@ -79,6 +79,9 @@ Komodo automatically ignores:
 - .git, .idea, __pycache__, node_modules
 - Common binary file extensions (exe, dll, etc.)
 - Image files like .png, .jpg, etc.
+- .env
+
+We also scan your repo for any api keys and redact them automatically
 
 If you want to override, pass additional patterns with ``--ignore`` or ``--unignore``.
 

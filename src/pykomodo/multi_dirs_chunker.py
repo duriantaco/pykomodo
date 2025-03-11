@@ -26,6 +26,7 @@ BUILTIN_IGNORES = [
     "*.gif",
     "*.webp",
     "*.bmp",
+    "**/*.env",
 ]
 
 class PriorityRule:
@@ -99,7 +100,9 @@ class ParallelChunker:
                 print(f"Error extracting text from PDF {path}: {e}")
                 return ""
         else:
-            return content_bytes.decode("utf-8", errors="replace")
+            text = content_bytes.decode("utf-8", errors="replace")
+            text = self._filter_api_keys(text)
+            return text
 
     def is_absolute_pattern(self, pattern):
         if pattern.startswith("/"):
@@ -107,6 +110,22 @@ class ParallelChunker:
         if re.match(r"^[a-zA-Z]:\\", pattern):
             return True
         return False
+    
+    def _contains_api_key(self, line: str) -> bool:
+        pattern = r'[\'"].*[a-zA-Z0-9_-]{20,}.*[\'"]'
+        return bool(re.search(pattern, line))
+
+    def _filter_api_keys(self, text: str) -> str:
+        lines = text.splitlines()
+        filtered_lines = []
+        for line in lines:
+            contains_key = self._contains_api_key(line)
+            if contains_key:
+                filtered_lines.append("[API_KEY_REDACTED]")
+            else:
+                filtered_lines.append(line)
+        result = "\n".join(filtered_lines)
+        return result
 
     def _match_segments(self, path_segs, pattern_segs, pi=0, pj=0):
         if pj == len(pattern_segs):

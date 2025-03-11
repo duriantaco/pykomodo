@@ -246,5 +246,36 @@ class TestEnhancedParallelChunker(unittest.TestCase):
         
         self.assertTrue(any(s > 0.5 for s in scores), "Should have some high relevance chunks")
 
+    def test_api_key_redaction(self):
+        """Test if API keys are properly redacted in the output chunks"""
+        api_key_file = os.path.join(self.test_dir, "api_key_test.py")
+        with open(api_key_file, "w", encoding="utf-8") as f:
+            f.write('''
+    API_KEY = "sk-abc123def456ghi789jkl"
+    SECRET_KEY = "xyz9876543210abcdefghijk"
+    normal_variable = "shortstring"
+    def some_function():
+        pass
+            ''')
+
+        chunker = EnhancedParallelChunker(
+            equal_chunks=1,
+            output_dir=self.output_dir,
+            extract_metadata=True
+        )
+        chunker.process_directory(self.test_dir)
+
+        chunk_files = [f for f in os.listdir(self.output_dir) if f.startswith('chunk-')]
+        self.assertEqual(len(chunk_files), 1, "Expected exactly one chunk file")
+
+        with open(os.path.join(self.output_dir, chunk_files[0]), 'r') as f:
+            content = f.read()
+
+        self.assertIn('[API_KEY_REDACTED]', content, "API keys should be redacted")
+        self.assertNotIn('sk-abc123def456ghi789jkl', content, "Original API key should not appear")
+        self.assertNotIn('xyz9876543210abcdefghijk', content, "Original secret key should not appear")
+        self.assertIn('normal_variable = "shortstring"', content, "Non-API key content should remain unchanged")
+        self.assertIn('some_function', content, "Function metadata should still be present")
+
 if __name__ == '__main__':
     unittest.main()
