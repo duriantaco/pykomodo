@@ -13,7 +13,7 @@ Basic Install
 
 .. code-block:: bash
 
-   pip install pykomodo==0.1.0
+   pip install pykomodo==0.1.1
 
 Or from source:
 
