@@ -1,7 +1,7 @@
 [build-system]
 requires = [
-    "setuptools>=64 --hash=sha256:actualhash1",
-    "wheel --hash=sha256:actualhash2"
+    "setuptools>=64",
+    "wheel"
 ]
 build-backend = "setuptools.build_meta"
 
