@@ -1,14 +1,13 @@
 import sys
 import argparse
 import os
-from pykomodo.multi_dirs_chunker import ParallelChunker
-from pykomodo.enhanced_chunker import EnhancedParallelChunker
 
-KOMODO_VERSION = "0.0.6" 
+KOMODO_VERSION = "0.1.2"
 
 def main():
+    """Main entry point for the komodo CLI."""
     parser = argparse.ArgumentParser(
-        description="Process and chunk codebase content with optional LLM optimizations."
+        description="Process and chunk codebase content with advanced chunking strategies."
     )
 
     parser.add_argument("--version", action="version", version=f"komodo {KOMODO_VERSION}")
@@ -20,7 +19,9 @@ def main():
     chunk_group.add_argument("--equal-chunks", type=int, 
                             help="Split into N equal chunks")
     chunk_group.add_argument("--max-chunk-size", type=int, 
-                            help="Maximum tokens per chunk")
+                            help="Maximum tokens/lines per chunk")
+    chunk_group.add_argument("--max-tokens", type=int,
+                            help="Maximum tokens per chunk (token-based chunking)")
     
     parser.add_argument("--output-dir", default="chunks",
                         help="Output directory for chunks (default: chunks)")
@@ -58,6 +59,9 @@ def main():
 
     parser.add_argument("--file-type", type=str, 
                         help="Only chunk files of this type (e.g., 'pdf', 'py')")
+                        
+    parser.add_argument("--verbose", action="store_true",
+                        help="Enable verbose output")
 
     args = parser.parse_args()
 
@@ -76,32 +80,59 @@ def main():
                   file=sys.stderr)
             sys.exit(1)
 
-    chunker_class = EnhancedParallelChunker if args.enhanced else ParallelChunker
-    
-    chunker_args = {
-        "equal_chunks": args.equal_chunks,
-        "max_chunk_size": args.max_chunk_size,
-        "output_dir": args.output_dir,
-        "user_ignore": args.ignore,
-        "user_unignore": args.unignore,
-        "priority_rules": priority_rules,
-        "num_threads": args.num_threads,
-        "dry_run": args.dry_run,
-        "semantic_chunking": args.semantic_chunks,
-        "file_type": args.file_type
-    }
-    
-    if args.enhanced:
-        chunker_args.update({
-            "extract_metadata": not args.no_metadata,
-            "add_summaries": not args.no_summaries,
-            "remove_redundancy": not args.keep_redundant,
-            "context_window": args.context_window,
-            "min_relevance_score": args.min_relevance
-        })
+    if args.max_tokens:
+        try:
+            from pykomodo.token_chunker import TokenBasedChunker as ChunkerClass
+            if args.verbose:
+                print("Using TokenBasedChunker for token-based chunking")
+        except ImportError:
+            print("[Error] TokenBasedChunker not available. Please install tiktoken or update pykomodo.", 
+                  file=sys.stderr)
+            sys.exit(1)
+            
+        chunker_args = {
+            "max_tokens_per_chunk": args.max_tokens,
+            "output_dir": args.output_dir,
+            "user_ignore": args.ignore,
+            "user_unignore": args.unignore,
+            "priority_rules": priority_rules,
+            "num_threads": args.num_threads,
+            "dry_run": args.dry_run,
+            "semantic_chunking": args.semantic_chunks,
+            "file_type": args.file_type,
+            "verbose": args.verbose
+        }
+    else:
+        chunker_class = None
+        if args.enhanced:
+            from pykomodo.enhanced_chunker import EnhancedParallelChunker as ChunkerClass
+        else:
+            from pykomodo.multi_dirs_chunker import ParallelChunker as ChunkerClass
+            
+        chunker_args = {
+            "equal_chunks": args.equal_chunks,
+            "max_chunk_size": args.max_chunk_size,
+            "output_dir": args.output_dir,
+            "user_ignore": args.ignore,
+            "user_unignore": args.unignore,
+            "priority_rules": priority_rules,
+            "num_threads": args.num_threads,
+            "dry_run": args.dry_run,
+            "semantic_chunking": args.semantic_chunks,
+            "file_type": args.file_type
+        }
+        
+        if args.enhanced:
+            chunker_args.update({
+                "extract_metadata": not args.no_metadata,
+                "add_summaries": not args.no_summaries,
+                "remove_redundancy": not args.keep_redundant,
+                "context_window": args.context_window,
+                "min_relevance_score": args.min_relevance
+            })
     
     try:
-        chunker = chunker_class(**chunker_args)
+        chunker = ChunkerClass(**chunker_args)
         chunker.process_directories(args.dirs)
     except Exception as e:
         print(f"[Error] Processing failed: {e}", file=sys.stderr)

@@ -30,6 +30,16 @@ You must specify exactly one of these:
      komodo docs/ --max-chunk-size 800 --output-dir size_chunks/
      # Creates chunks with max 800 tokens each
 
+- **--max-tokens N**  
+  Maximum tokens per chunk using token-based chunking with tiktoken (when available).
+
+  **Example:**
+
+  .. code-block:: bash
+
+     komodo src/ --max-tokens 1000 --output-dir token_chunks/
+     # Creates chunks with max 1000 tokens, counted with tiktoken
+
 Optional Arguments
 -------------------
 
@@ -147,3 +157,10 @@ Common Use Cases
 
      komodo papers/ --max-chunk-size 500 --file-type pdf --output-dir pdf_chunks/
      # Chunks only PDFs
+
+- **Token-based chunking for LLM context windows:**
+
+  .. code-block:: bash
+
+     komodo src/ --max-tokens 3000 --verbose --output-dir token_chunks/
+     # Chunks code with precise LLM token counting

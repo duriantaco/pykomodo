@@ -46,6 +46,31 @@ Splits Python files by AST (functions/classes).
 
    komodo src/ --max-chunk-size 200 --semantic-chunks
 
+Token-Based Chunking
+---------------------
+
+Uses accurate token counting with tiktoken (when available) for precise LLM-oriented chunks.
+
+- **Pros:** Accurate token counts for LLMs, respects true context window sizes.
+- **Cons:** Requires tiktoken library for optimal performance.
+- **Use When:** Preparing content for specific LLM token limits.
+
+**Example:**
+
+.. code-block:: bash
+
+   komodo src/ --max-tokens 1000
+
+**Features:**
+
+- Integrates with OpenAI's tiktoken library for accurate LLM token counting
+- Falls back to word-based counting when tiktoken is unavailable
+- Handles long lines by intelligently splitting them
+- Works with both equal chunking and max token approaches
+- Applies the same PDF processing capabilities as size-based chunking
+
+Token-based chunking differs from standard size-based chunking by counting actual tokens instead of rough word or line counts, which ensures chunks precisely match LLM token limits.
+
 PDF Chunking
 -------------
 

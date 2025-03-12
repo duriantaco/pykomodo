@@ -7,10 +7,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pykomodo"
-version = "0.1.1"
+version = "0.1.2"
 description = "A Python-based parallel file chunking system for large codebases"
 dependencies = ["pathspec", 
-                "PyMuPDF"]
+                "PyMuPDF",
+                "tiktoken"]
 readme = { file = "README.md", content-type = "text/markdown" }
 authors = [{ name = "oha" }]
 

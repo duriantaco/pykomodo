@@ -12,7 +12,7 @@ Command Line Interface
 
    .. code-block:: bash
 
-      pip install pykomodo==0.1.1
+      pip install pykomodo==0.1.2
 
 2. Chunk your directory into 5 equal parts:
 
@@ -55,6 +55,22 @@ Command Line Interface
       komodo src/ --max-chunk-size 200 --semantic-chunks --output-dir semantic_chunks/
 
 2. Files are split by functions/classes, targeting 200 lines per chunk.
+
+**Workflow 4: Token-Based Chunking for LLMs**
+
+1. Use token-based chunking with tiktoken integration:
+
+   .. code-block:: bash
+
+      komodo . --max-tokens 1000 --output-dir token_chunks/
+
+2. The TokenBasedChunker will split files into chunks with at most 1000 tokens each, using accurate LLM token counting.
+
+3. For PDF documents, it will intelligently split by paragraphs while respecting token limits:
+
+   .. code-block:: bash
+
+      komodo papers/ --max-tokens 800 --file-type pdf --output-dir pdf_chunks/
 
 Python API
 -----------

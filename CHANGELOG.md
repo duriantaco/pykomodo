@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.2] - 2025-03-14
+
+### Added
+- **Token-Based Chunking**: Added a new `TokenBasedChunker` that provides token-based chunking with tiktoken integration
+  - `--max-tokens` CLI flag for accurate token counting using tiktoken (when available)
+  - Fallback to word-based counting when tiktoken isn't installed
+  - Compatible with both equal chunks and maximum size approaches
+  - Handles long lines by intelligently splitting them into multiple chunks
+  - Applies semantic chunking for Python files
+  - Integrates with the PDF chunking system
+
+### Improved
+- Better handling of lines that exceed token limits
+- Verbose mode with detailed output on token counts
+
 ## [0.1.1] - 2025-03-11
 
 ### Fixed

@@ -18,6 +18,7 @@ A Python-based parallel file chunking system designed for processing large codeb
     * Size-based chunking: Split by maximum chunk size
     * Semantic (AST-based) chunking for Python files  
     * Dry-run mode: If you only want to see which files **would** be chunked
+    * **NEW** Token based chunking: Split by tokens for LLMs
 
 * LLM Optimizations:
     * Metadata extraction (functions, classes, imports, docstrings)
@@ -35,7 +36,7 @@ A Python-based parallel file chunking system designed for processing large codeb
 ## Installation
 
 ```bash
-pip install komodo==0.1.1
+pip install komodo==0.1.2
 ```
 
 Link to pypi: https://pypi.org/project/pykomodo/
@@ -52,6 +53,7 @@ Here’s a complete list of available command-line options for the `komodo` tool
 | `dirs`                | Directories to process (space-separated; e.g., `komodo dir1/ dir2/`).                         | Current directory (`.`) |
 | `--equal-chunks N`    | Split content into N equal chunks. Mutually exclusive with `--max-chunk-size`.                | None               |
 | `--max-chunk-size M`  | Maximum size per chunk (tokens without `--semantic-chunks`; lines for `.py` with it).         | None               |
+| `--max-tokens N`    | Maximum tokens per chunk (uses token-based chunking).                                      | None               |
 | `--output-dir DIR`    | Directory where chunk files are saved.                                                        | `"chunks"`         |
 | `--ignore PATTERN`    | Add a pattern to ignore (repeatable, e.g., `--ignore "*.log"`).                               | None               |
 | `--unignore PATTERN`  | Add a pattern to unignore (repeatable, overrides ignores).                                    | None               |
@@ -114,6 +116,16 @@ Without `--semantic-chunks`: Splits each file into chunks with at most M tokens 
   ```bash
   komodo . --max-chunk-size 200 --semantic-chunks
   ```
+
+- ****NEW**** **With --max-tokens**:
+
+  ```bash
+  komodo . --max-tokens 1000 --output-dir chunks
+  ```
+
+* Precise token limits: Chunks content based on token counts rather than line counts
+* Tiktoken integration: Uses OpenAI's tiktoken library when available for accurate LLM token counting
+* Fallback tokenization: Falls back to word-based splitting when tiktoken is unavailable
 
 - **PDF Chunking**:
 
@@ -222,7 +234,7 @@ komodo . \
   --context-window 8192
 ```
 
-### ** ***New*** ** Dry Run
+### Dry Run
 
 If you only want to see which files **would** be chunked (and in what priority order), without actually writing any output chunks, you can specify `--dry-run`. This is especially helpful if you’re testing new ignore/unignore patterns or priority rules. Note again, there will be **NO CHUNKING** being done. This is just to let you see what files will be chunked.
 
