@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.3] - 2025-03-19
+
+### Fixed
+- Fixed ignore node modules, but if it doesn't work also, try this `komodo . --equal-chunks 5 --file-type js --ignore "**/node_modules/**"`. Difference here is we are specifying the file-type
+
 ## [0.1.2] - 2025-03-14
 
 ### Added

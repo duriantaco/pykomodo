@@ -36,7 +36,7 @@ A Python-based parallel file chunking system designed for processing large codeb
 ## Installation
 
 ```bash
-pip install komodo==0.1.2
+pip install komodo==0.1.3
 ```
 
 Link to pypi: https://pypi.org/project/pykomodo/
@@ -164,6 +164,8 @@ Without `--semantic-chunks`: Splits each file into chunks with at most M tokens 
     --ignore "*.rst" \
     --unignore "README.rst"
   ```
+
+  **Note: If node_modules fails to be ignored, run this command instead `komodo . --equal-chunks 5 --file-type js --ignore "**/node_modules/**"`. The key here is that you are specifying the file type.**
 
   ##### Safest (Recursive) Ignoring
 

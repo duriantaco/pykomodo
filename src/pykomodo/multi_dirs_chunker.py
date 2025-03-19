@@ -17,7 +17,6 @@ BUILTIN_IGNORES = [
     "__pycache__",
     "*.pyc",
     "*.pyo",
-    "**/node_modules/**",
     "target",
     "venv",
     "*.png",
@@ -164,17 +163,13 @@ class ParallelChunker:
         abs_path = os.path.abspath(path)
         root = self.current_walk_root or os.path.dirname(abs_path)
         rel_path = os.path.relpath(abs_path, start=root).replace("\\", "/")
-        if rel_path.startswith("./"):
-            rel_path = rel_path[2:]
-
-        for pat in self.unignore_patterns:
-            if self._matches_pattern(abs_path, rel_path, pat):
-                return False
-
         for pat in self.ignore_patterns:
             if self._matches_pattern(abs_path, rel_path, pat):
-                return True
-
+                for unignore_pat in self.unignore_patterns:
+                    if self._matches_pattern(abs_path, rel_path, unignore_pat):
+                        return False  
+                return True  
+        
         return False
 
     def is_binary_file(self, path):
