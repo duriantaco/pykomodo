@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.4] - 2025-03-23
+
+### Fixed
+- Improved ignore pattern system to properly exclude virtual environments, site-packages, and test data
+- Fixed issue with verbose parameter in file reading methods
+- Enhanced builtin ignores to properly handle paths with double-star notation (`**/pattern/**`)
+
+### Added
+- Support for reading `.pykomodo-ignore` file in project directories
+- Integration with existing `.gitignore` files for more consistent ignoring
+- Smarter Python file handling in virtual environments to prevent processing library files
+- Additional ignore patterns for common directories and file types that should be excluded:
+  - Better handling for environment directories (`venv`, `.venv`, `env`, etc.)
+  - Proper ignoring of package metadata and build artifacts
+  - Exclusion of temporary files and system directories
+  - Improved handling of test data directories
+
+### Changed
+- Modified Python file unignoring to respect virtual environment paths
+- Improved pattern matching for more reliable file filtering
+
 ## [0.1.3] - 2025-03-19
 
 ### Fixed

@@ -7,25 +7,58 @@ import fitz
 
 BUILTIN_IGNORES = [
     "**/.git/**",
+    "**/.svn/**",
+    "**/.hg/**",
     "**/.idea/**",
     "**/.vscode/**",
     "**/__pycache__/**",
     "**/*.pyc",
+    "**/*.pyo",
     "**/.pytest_cache/**",
+    "**/.coverage",
+    "**/.tox/**",
+    "**/.eggs/**",
+    "**/Cython/Debugger/**",    
+    "**/*.egg-info/**",
+    "**/build/**",
+    "**/dist/**",
+    
+    "**/venv/**",
+    "**/.venv/**",
+    "**/env/**",
+    "**/ENV/**",
+    "**/virtualenv/**",
+    "**/site-packages/**",
+    "**/pip/**",
+    
     "**/.DS_Store",
+    "**/Thumbs.db",
+    
     "**/node_modules/**",
+    
+    "**/*.env",
+    "**/.env",
+    
+    "**/*.png",
+    "**/*.jpg",
+    "**/*.jpeg",
+    "**/*.gif",
+    "**/*.webp",
+    "**/*.bmp",
+    "**/*.mp3",
+    "**/*.mp4",
+    "**/tmp/**",
+    "**/temp/**",
+    "**/var/folders/**",
+    "**/test/data/**",
+    "**/tests/data/**",
+    "**/test_data/**",
+    "**/tests_data/**",
     "__pycache__",
     "*.pyc",
     "*.pyo",
     "target",
-    "venv",
-    "*.png",
-    "*.jpg",
-    "*.jpeg",
-    "*.gif",
-    "*.webp",
-    "*.bmp",
-    "**/*.env",
+    "venv"
 ]
 
 class PriorityRule:
@@ -46,7 +79,8 @@ class ParallelChunker:
         num_threads: int = 4,
         dry_run: bool = False,
         semantic_chunking: bool = False,
-        file_type: Optional[str] = None
+        file_type: Optional[str] = None,
+        verbose: bool = False
     ) -> None:
         if equal_chunks is not None and max_chunk_size is not None:
             raise ValueError("Cannot specify both equal_chunks and max_chunk_size")
@@ -60,7 +94,8 @@ class ParallelChunker:
         self.dry_run = dry_run 
         self.semantic_chunking = semantic_chunking
         self.file_type = file_type.lower() if file_type else None
-
+        self.verbose = verbose
+        
         if user_ignore is None:
             user_ignore = []
         if user_unignore is None:
@@ -69,7 +104,8 @@ class ParallelChunker:
         self.ignore_patterns = BUILTIN_IGNORES[:]
         self.ignore_patterns.extend(user_ignore)
         self.unignore_patterns = list(user_unignore)
-        self.unignore_patterns.append("*.py")
+        if not any("site-packages" in pattern or "venv" in pattern for pattern in user_unignore or []):
+            self.unignore_patterns.append("*.py") 
 
         if binary_extensions is None:
             binary_extensions = ["exe", "dll", "so"]
@@ -158,6 +194,25 @@ class ParallelChunker:
             if fnmatch.fnmatch(os.path.basename(abs_path), pattern):
                 return True
         return False
+    
+    def _read_ignore_file(self, directory):
+        """Read .pykomodo-ignore file in the given directory and add patterns to ignore_patterns."""
+        for filename in ['.pykomodo-ignore', '.gitignore']:
+            ignore_file_path = os.path.join(directory, filename)
+            if os.path.exists(ignore_file_path):
+                try:
+                    with open(ignore_file_path, 'r') as f:
+                        for line in f:
+                            line = line.strip()
+                            if line and not line.startswith('#'):
+                                if filename == '.gitignore' and '**' not in line:
+                                    if not line.startswith('/'):
+                                        line = f"**/{line}"
+                                    if line.endswith('/'):
+                                        line = f"{line}**"
+                                self.ignore_patterns.append(line)
+                except Exception as e:
+                    print(f"Error reading {filename} file: {e}")
 
     def should_ignore_file(self, path):
         abs_path = os.path.abspath(path)
@@ -226,6 +281,8 @@ class ParallelChunker:
         return highest
 
     def process_directories(self, dirs: List[str]) -> None:
+        for directory in dirs:
+            self._read_ignore_file(directory)
         all_paths = self._collect_paths(dirs)
         self.loaded_files.clear()
         if self.dry_run:
