@@ -2,7 +2,7 @@ import sys
 import argparse
 import os
 
-KOMODO_VERSION = "0.1.4"
+KOMODO_VERSION = "0.1.5"
 
 def main():
     """Main entry point for the komodo CLI."""

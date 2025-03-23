@@ -22,7 +22,6 @@ BUILTIN_IGNORES = [
     "**/*.egg-info/**",
     "**/build/**",
     "**/dist/**",
-    
     "**/venv/**",
     "**/.venv/**",
     "**/env/**",
@@ -30,15 +29,11 @@ BUILTIN_IGNORES = [
     "**/virtualenv/**",
     "**/site-packages/**",
     "**/pip/**",
-    
     "**/.DS_Store",
     "**/Thumbs.db",
-    
     "**/node_modules/**",
-    
     "**/*.env",
-    "**/.env",
-    
+    "**/.env", 
     "**/*.png",
     "**/*.jpg",
     "**/*.jpeg",
@@ -67,6 +62,21 @@ class PriorityRule:
         self.score = score
 
 class ParallelChunker:
+    DIR_IGNORE_NAMES = [
+        "venv",
+        ".venv",
+        "env",
+        "node_modules",
+        ".git",
+        ".svn",
+        ".hg",
+        "__pycache__",
+        ".pytest_cache",
+        ".tox",
+        ".eggs",
+        "build",
+        "dist"
+    ]
     def __init__(
         self,
         equal_chunks: Optional[int] = None,
@@ -86,7 +96,7 @@ class ParallelChunker:
             raise ValueError("Cannot specify both equal_chunks and max_chunk_size")
         if equal_chunks is None and max_chunk_size is None:
             raise ValueError("Must specify either equal_chunks or max_chunk_size")
-
+        self.dir_ignore_names = self.DIR_IGNORE_NAMES
         self.equal_chunks = equal_chunks
         self.max_chunk_size = max_chunk_size
         self.output_dir = output_dir
@@ -95,7 +105,7 @@ class ParallelChunker:
         self.semantic_chunking = semantic_chunking
         self.file_type = file_type.lower() if file_type else None
         self.verbose = verbose
-        
+
         if user_ignore is None:
             user_ignore = []
         if user_unignore is None:
@@ -105,7 +115,7 @@ class ParallelChunker:
         self.ignore_patterns.extend(user_ignore)
         self.unignore_patterns = list(user_unignore)
         if not any("site-packages" in pattern or "venv" in pattern for pattern in user_unignore or []):
-            self.unignore_patterns.append("*.py") 
+            self.unignore_patterns.append("*.py")
 
         if binary_extensions is None:
             binary_extensions = ["exe", "dll", "so"]
@@ -247,21 +257,18 @@ class ParallelChunker:
         for directory in dir_list:
             self.current_walk_root = os.path.abspath(directory)
             for root, dirs, files in os.walk(directory):
+                dirs[:] = [d for d in dirs if d not in self.dir_ignore_names]
                 for filename in files:
                     full_path = os.path.join(root, filename)
                     if self.file_type:
                         _, ext = os.path.splitext(full_path)
                         if ext.lower() != f".{self.file_type}":
                             continue
-                    if os.path.commonprefix([
-                        os.path.abspath(self.output_dir),
-                        os.path.abspath(full_path)
-                    ]) == os.path.abspath(self.output_dir):
+                    if os.path.commonprefix([os.path.abspath(self.output_dir), os.path.abspath(full_path)]) == os.path.abspath(self.output_dir):
                         continue
                     if self.should_ignore_file(full_path):
                         continue
                     collected.append(full_path)
-
         return collected
 
     def _load_file_data(self, path):

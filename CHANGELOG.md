@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.5] - 2025-03-24
+
+### Patch
+- Ignore venv 
+
 ## [0.1.4] - 2025-03-23
 
 ### Fixed
