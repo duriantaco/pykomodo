@@ -123,6 +123,17 @@ Optional Arguments
      komodo docs/ --max-chunk-size 600 --file-type md
      # Processes only Markdown files
 
+Front-End
+-----------
+- **--front-end**  
+  Use the front-end chunker for specific file types.
+
+  **Example:**
+
+  .. code-block:: bash
+
+     komodo --dashboard
+
 Common Use Cases
 -----------------
 

@@ -5,6 +5,7 @@ src/pykomodo/__init__.py
 src/pykomodo/command_line.py
 src/pykomodo/config.py
 src/pykomodo/core.py
+src/pykomodo/dashboard.py
 src/pykomodo/enhanced_chunker.py
 src/pykomodo/multi_dirs_chunker.py
 src/pykomodo/pykomodo_config.py

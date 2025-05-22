@@ -6,6 +6,8 @@ A Python-based parallel file chunking system designed for processing large codeb
 
 ## Core Features
 
+* **NEW** Front end tool for chunking. Run `komodo --dashboard`
+
 * Parallel Processing: Multi-threaded file reading with configurable thread pools
 
 * Smart File Filtering:
@@ -18,7 +20,7 @@ A Python-based parallel file chunking system designed for processing large codeb
     * Size-based chunking: Split by maximum chunk size
     * Semantic (AST-based) chunking for Python files  
     * Dry-run mode: If you only want to see which files **would** be chunked
-    * **NEW** Token based chunking: Split by tokens for LLMs
+    * Token based chunking: Split by tokens for LLMs
 
 * LLM Optimizations:
     * Metadata extraction (functions, classes, imports, docstrings)
@@ -36,7 +38,7 @@ A Python-based parallel file chunking system designed for processing large codeb
 ## Installation
 
 ```bash
-pip install komodo==0.1.5
+pip install komodo==0.2.5
 ```
 
 Link to pypi: https://pypi.org/project/pykomodo/
@@ -49,6 +51,7 @@ Here’s a complete list of available command-line options for the `komodo` tool
 
 | Option                | Description                                                                                   | Default Value      |
 |-----------------------|-----------------------------------------------------------------------------------------------|--------------------|
+| `--dashboard`         | Launches the front end for chunking     | N/A                |
 | `--version`           | Show the version of komodo         | N/A                |
 | `dirs`                | Directories to process (space-separated; e.g., `komodo dir1/ dir2/`).                         | Current directory (`.`) |
 | `--equal-chunks N`    | Split content into N equal chunks. Mutually exclusive with `--max-chunk-size`.                | None               |
@@ -73,7 +76,9 @@ Here’s a complete list of available command-line options for the `komodo` tool
 - Options like `--equal-chunks` and `--max-chunk-size` cannot be used together (enforced by the CLI).
 - Use `--dry-run` to test your ignore/unignore patterns or priority rules without generating output.
 
-#### Basic usage 
+#### Basic usage
+
+##### CLI
 
 ```bash
 # Split into 5 equal chunks
@@ -117,7 +122,7 @@ Without `--semantic-chunks`: Splits each file into chunks with at most M tokens 
   komodo . --max-chunk-size 200 --semantic-chunks
   ```
 
-- ****NEW**** **With --max-tokens**:
+- **With --max-tokens**:
 
   ```bash
   komodo . --max-tokens 1000 --output-dir chunks
@@ -310,6 +315,10 @@ chunker.process_directory("/Users/test/komodo/")
 
 print("PDF processing completed successfully!")
 ```
+
+### Front-end Usage
+
+To run the front end for chunking, just use `komodo --dashboard`
 
 ## Advanced LLM Features
 

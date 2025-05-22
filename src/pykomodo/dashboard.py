@@ -1,6 +1,5 @@
 import gradio as gr
 import os
-import json
 import concurrent.futures
 import types
 
@@ -102,69 +101,317 @@ def process_chunks(strategy, num_chunks, max_chunk_size, output_dir, selected_fi
 
 def launch_dashboard():
     
-    with gr.Blocks(theme=gr.themes.Soft(), title="Komodo Chunking Tool") as demo:
+    custom_css = """
+    .gradio-container {
+        max-width: 1200px !important;
+        margin: 0 auto !important;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    }
+    
+    .header {
+        text-align: center;
+        padding: 30px 0;
+        border-bottom: 2px solid #e5e7eb;
+        margin-bottom: 30px;
+    }
+    
+    .header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+    
+    .header p {
+        font-size: 1.1rem;
+        color: #6b7280;
+        margin: 10px 0 0 0;
+    }
+    
+    .step-section {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .step-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .step-number {
+        background: #1f2937;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin-right: 16px;
+        font-size: 14px;
+    }
+    
+    .step-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+    
+    .instructions {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .instructions h3 {
+        margin: 0 0 12px 0;
+        color: #1e293b;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    
+    .instructions ol {
+        margin: 0;
+        padding-left: 20px;
+        color: #475569;
+    }
+    
+    .instructions li {
+        margin-bottom: 4px;
+    }
+    
+    .config-panel {
+        background: #fafafa;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 24px;
+    }
+    
+    .config-header {
+        text-align: center;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .config-header h2 {
+        margin: 0;
+        color: #1f2937;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    
+    .gr-button {
+        border-radius: 6px !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+    }
+    
+    .gr-button-primary {
+        background: #1f2937 !important;
+        border: 1px solid #1f2937 !important;
+    }
+    
+    .gr-button-primary:hover {
+        background: #111827 !important;
+        border: 1px solid #111827 !important;
+    }
+    
+    .gr-button-secondary {
+        background: white !important;
+        border: 1px solid #d1d5db !important;
+        color: #374151 !important;
+    }
+    
+    .gr-button-secondary:hover {
+        background: #f9fafb !important;
+        border: 1px solid #9ca3af !important;
+    }
+    
+    .gr-textbox, .gr-dropdown {
+        border-radius: 6px !important;
+        border: 1px solid #d1d5db !important;
+    }
+    
+    .gr-textbox:focus, .gr-dropdown:focus {
+        border-color: #1f2937 !important;
+        box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.1) !important;
+    }
+    
+    .status-display {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 16px;
+        font-family: 'SF Mono', Monaco, monospace;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+    
+    .file-selection {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 16px;
+        min-height: 200px;
+    }
+    
+    .selection-summary {
+        background: #f9fafb;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 16px;
+        margin-top: 16px;
+    }
+    
+    .selection-summary h4 {
+        margin: 0 0 8px 0;
+        color: #374151;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    """
+    
+    with gr.Blocks(
+        theme=gr.themes.Default(),
+        css=custom_css,
+        title="Komodo Chunking Tool"
+    ) as demo:
         
-        gr.Markdown("""
-        # 🦎 Komodo Chunking Tool
-        ### No hassle chunking for your code files!
+        gr.HTML("""
+            <div class="header">
+                <h1>Komodo Chunking Tool</h1>
+                <p>Professional code file processing and chunking</p>
+            </div>
+        """)
+        
+        gr.HTML("""
+            <div class="instructions">
+                <h3>How to use this tool:</h3>
+                <ol>
+                    <li>Enter your repository path and click "Load Repository"</li>
+                    <li>Select a folder from the dropdown to view its files</li>
+                    <li>Check the files you want to process</li>
+                    <li>Configure chunking settings and click "Process Files"</li>
+                </ol>
+            </div>
         """)
         
         current_folder = gr.State(value="")
         all_files_data = gr.State(value={})
+        all_selected_files = gr.State(value=[])
         
         with gr.Row():
-            with gr.Column(scale=3):
-                gr.Markdown("### 📁 Repository Selection")
+            
+            with gr.Column(scale=2):
+                
+                gr.HTML("""
+                    <div class="step-section">
+                        <div class="step-header">
+                            <div class="step-number">1</div>
+                            <h3 class="step-title">Load Repository</h3>
+                        </div>
+                """)
+                
                 repo_path = gr.Textbox(
-                    label="Repository Path", 
-                    placeholder="Enter path (e.g., /path/to/repo or .)",
+                    label="Repository Path",
+                    placeholder="Enter path to your code repository (e.g., /Users/yourname/project or .)",
                     value=".",
-                    info="Path to your code repository"
+                    info="Path to the directory containing your code files"
                 )
                 
-                load_btn = gr.Button("🔄 Load Files", variant="primary")
-                
-                gr.Markdown("### 📂 Select Folder to View")
-                folder_dropdown = gr.Dropdown(
-                    label="Choose Folder",
-                    choices=[],
-                    value="",
-                    info="Select a folder to see its files"
-                )
-                
-                gr.Markdown("### 📄 Files in Selected Folder")
-                file_checkboxes = gr.CheckboxGroup(
-                    label="Select Files to Process",
-                    choices=[],
-                    value=[],
-                    info="Select files from the current folder"
-                )
-                
-                with gr.Row():
-                    select_all_btn = gr.Button("✅ Select All in Folder", size="sm")
-                    clear_selection_btn = gr.Button("❌ Clear Selection", size="sm")
-                
-                gr.Markdown("### 📋 Currently Selected Files")
-                selected_display = gr.Textbox(
-                    label="Selected Files",
-                    interactive=False,
-                    lines=4,
-                    value="No files selected"
-                )
+                load_btn = gr.Button("Load Repository", variant="primary", size="lg")
                 
                 load_status = gr.Textbox(
                     label="Status",
                     interactive=False,
-                    value="Enter a repository path and click 'Load Files' to start..."
+                    value="Enter repository path and click 'Load Repository' to begin",
+                    elem_classes="status-display"
                 )
+                
+                gr.HTML("</div>")
+
+                ## step2 -> select folder
+                gr.HTML("""
+                    <div class="step-section">
+                        <div class="step-header">
+                            <div class="step-number">2</div>
+                            <h3 class="step-title">Select Folder</h3>
+                        </div>
+                """)
+                
+                folder_dropdown = gr.Dropdown(
+                    label="Choose folder to explore",
+                    choices=[],
+                    value="",
+                    info="Select a folder to view its files"
+                )
+                
+                gr.HTML("</div>")
+                
+                # step3 -> file select
+                gr.HTML("""
+                    <div class="step-section">
+                        <div class="step-header">
+                            <div class="step-number">3</div>
+                            <h3 class="step-title">Select Files</h3>
+                        </div>
+                """)
+                
+                file_checkboxes = gr.CheckboxGroup(
+                    label="Files in selected folder",
+                    choices=[],
+                    value=[],
+                    info="Check the files you want to process",
+                    elem_classes="file-selection"
+                )
+                
+                with gr.Row():
+                    select_all_btn = gr.Button("Select All", size="sm", variant="secondary")
+                    clear_selection_btn = gr.Button("Clear Selection", size="sm", variant="secondary")
+                
+                gr.HTML("</div>")
+                
+                gr.HTML("""
+                    <div class="selection-summary">
+                        <h4>Selected Files Summary</h4>
+                """)
+                
+                selected_display = gr.Textbox(
+                    label="Currently selected files",
+                    interactive=False,
+                    lines=4,
+                    value="No files selected",
+                    show_label=False
+                )
+                
+                gr.HTML("</div>")
             
-            with gr.Column(scale=2):
-                gr.Markdown("### ⚙️ Configuration")
+            with gr.Column(scale=1):
+                
+                gr.HTML("""
+                    <div class="config-panel">
+                        <div class="config-header">
+                            <h2>Configuration</h2>
+                        </div>
+                """)
                 
                 strategy = gr.Dropdown(
-                    label="Chunking Strategy", 
+                    label="Chunking Strategy",
                     choices=["Equal Chunks", "Max Chunk Size"], 
-                    value="Equal Chunks"
+                    value="Equal Chunks",
+                    info="How to split your files"
                 )
                 
                 num_chunks = gr.Number(
@@ -172,31 +419,37 @@ def launch_dashboard():
                     value=5, 
                     minimum=1, 
                     step=1,
-                    visible=True
+                    visible=True,
+                    info="Split files into this many equal parts"
                 )
+                
                 max_chunk_size = gr.Number(
                     label="Max Chunk Size (tokens)", 
                     value=1000, 
                     minimum=100, 
                     step=100,
-                    visible=False
+                    visible=False,
+                    info="Maximum size for each chunk"
                 )
                 
                 output_dir = gr.Textbox(
                     label="Output Directory", 
                     value="chunks",
-                    placeholder="Directory to save chunks"
+                    placeholder="Directory to save chunks",
+                    info="Where to save the processed files"
                 )
                 
-                process_btn = gr.Button("🚀 Process Files", variant="primary", size="lg")
+                process_btn = gr.Button("Process Files", variant="primary", size="lg")
                 
                 status = gr.Textbox(
-                    label="Processing Status", 
+                    label="Processing Status",
                     interactive=False, 
-                    lines=4
+                    lines=6,
+                    value="Ready to process files",
+                    elem_classes="status-display"
                 )
-        
-        all_selected_files = gr.State(value=[])
+                
+                gr.HTML("</div>")
         
         def load_files(repo_path):
             try:

@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: pykomodo
-Version: 0.1.5
+Version: 0.2.5
 Summary: A Python-based parallel file chunking system for large codebases
 Author: oha
 Description-Content-Type: text/markdown
@@ -8,6 +8,7 @@ License-File: NOTICE
 Requires-Dist: pathspec
 Requires-Dist: PyMuPDF
 Requires-Dist: tiktoken
+Requires-Dist: gradio
 Dynamic: license-file
 
 <p align="center">
@@ -48,7 +49,7 @@ A Python-based parallel file chunking system designed for processing large codeb
 ## Installation
 
 ```bash
-pip install komodo==0.1.5
+pip install komodo==0.2.5
 ```
 
 Link to pypi: https://pypi.org/project/pykomodo/

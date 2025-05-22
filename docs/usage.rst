@@ -12,7 +12,7 @@ Command Line Interface
 
    .. code-block:: bash
 
-      pip install pykomodo==0.1.5
+      pip install pykomodo==0.2.5
 
 2. Chunk your directory into 5 equal parts:
 
@@ -83,3 +83,14 @@ Python API
        output_dir="enhanced_chunks"
    )
    chunker.process_directory("src/")
+
+Front-End
+-----------
+
+**Web Interface**
+
+1. Pykomodo also offers a web interface for easy chunking, you can run it with:
+
+   .. code-block:: bash
+
+      komodo --dashboard

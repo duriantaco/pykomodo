@@ -2,7 +2,27 @@ import sys
 import argparse
 import os
 
-KOMODO_VERSION = "0.1.5"
+KOMODO_VERSION = "0.2.5"
+
+def launch_dashboard():
+    """Launch the dashboard interface."""
+    try:
+        from pykomodo.dashboard import launch_dashboard
+        print("Starting Komodo Dashboard...")
+        demo = launch_dashboard()
+        demo.launch(
+            server_name="0.0.0.0", 
+            server_port=7860,
+            share=False,
+            debug=False
+        )
+    except ImportError as e:
+        print(f"[Error] Dashboard dependencies not available: {e}", file=sys.stderr)
+        print("Please install gradio: pip install gradio", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"[Error] Failed to launch dashboard: {e}", file=sys.stderr)
+        sys.exit(1)
 
 def main():
     """Main entry point for the komodo CLI."""
@@ -11,11 +31,14 @@ def main():
     )
 
     parser.add_argument("--version", action="version", version=f"komodo {KOMODO_VERSION}")
+    
+    parser.add_argument("--dashboard", action="store_true",
+                        help="Launch the web-based dashboard interface")
 
     parser.add_argument("dirs", nargs="*", default=["."],
                         help="Directories to process (default: current directory)")
     
-    chunk_group = parser.add_mutually_exclusive_group(required=True)
+    chunk_group = parser.add_mutually_exclusive_group(required=False)
     chunk_group.add_argument("--equal-chunks", type=int, 
                             help="Split into N equal chunks")
     chunk_group.add_argument("--max-chunk-size", type=int, 
@@ -65,6 +88,13 @@ def main():
 
     args = parser.parse_args()
 
+    if args.dashboard:
+        launch_dashboard()
+        return
+
+    if not any([args.equal_chunks, args.max_chunk_size, args.max_tokens]):
+        parser.error("One of --equal-chunks, --max-chunk-size, or --max-tokens is required (unless using --dashboard)")
+
     if args.output_dir:
         os.makedirs(args.output_dir, exist_ok=True)
 
@@ -80,65 +110,67 @@ def main():
                   file=sys.stderr)
             sys.exit(1)
 
-    if args.max_tokens:
-        try:
-            from pykomodo.token_chunker import TokenBasedChunker as ChunkerClass
-            if args.verbose:
-                print("Using TokenBasedChunker for token-based chunking")
-        except ImportError:
-            print("[Error] TokenBasedChunker not available. Please install tiktoken or update pykomodo.", 
-                  file=sys.stderr)
-            sys.exit(1)
-            
-        chunker_args = {
-            "max_tokens_per_chunk": args.max_tokens,
-            "output_dir": args.output_dir,
-            "user_ignore": args.ignore,
-            "user_unignore": args.unignore,
-            "priority_rules": priority_rules,
-            "num_threads": args.num_threads,
-            "dry_run": args.dry_run,
-            "semantic_chunking": args.semantic_chunks,
-            "file_type": args.file_type,
-            "verbose": args.verbose
-        }
-    else:
-        chunker_class = None
-        if args.enhanced:
-            from pykomodo.enhanced_chunker import EnhancedParallelChunker as ChunkerClass
-        else:
-            from pykomodo.multi_dirs_chunker import ParallelChunker as ChunkerClass
-            
-        chunker_args = {
-            "equal_chunks": args.equal_chunks,
-            "max_chunk_size": args.max_chunk_size,
-            "output_dir": args.output_dir,
-            "user_ignore": args.ignore,
-            "user_unignore": args.unignore,
-            "priority_rules": priority_rules,
-            "num_threads": args.num_threads,
-            "dry_run": args.dry_run,
-            "semantic_chunking": args.semantic_chunks,
-            "file_type": args.file_type
-        }
-        
-        if args.enhanced:
-            chunker_args.update({
-                "extract_metadata": not args.no_metadata,
-                "add_summaries": not args.no_summaries,
-                "remove_redundancy": not args.keep_redundant,
-                "context_window": args.context_window,
-                "min_relevance_score": args.min_relevance
-            })
-    
+    chunker = None
     try:
+        if args.max_tokens:
+            try:
+                from pykomodo.token_chunker import TokenBasedChunker as ChunkerClass
+                if args.verbose:
+                    print("Using TokenBasedChunker for token-based chunking")
+            except ImportError:
+                print("[Error] TokenBasedChunker not available. Please install tiktoken or update pykomodo.", 
+                      file=sys.stderr)
+                sys.exit(1)
+                
+            chunker_args = {
+                "max_tokens_per_chunk": args.max_tokens,
+                "output_dir": args.output_dir,
+                "user_ignore": args.ignore,
+                "user_unignore": args.unignore,
+                "priority_rules": priority_rules,
+                "num_threads": args.num_threads,
+                "dry_run": args.dry_run,
+                "semantic_chunking": args.semantic_chunks,
+                "file_type": args.file_type,
+                "verbose": args.verbose
+            }
+        else:
+            if args.enhanced:
+                from pykomodo.enhanced_chunker import EnhancedParallelChunker as ChunkerClass
+            else:
+                from pykomodo.multi_dirs_chunker import ParallelChunker as ChunkerClass
+                
+            chunker_args = {
+                "equal_chunks": args.equal_chunks,
+                "max_chunk_size": args.max_chunk_size,
+                "output_dir": args.output_dir,
+                "user_ignore": args.ignore,
+                "user_unignore": args.unignore,
+                "priority_rules": priority_rules,
+                "num_threads": args.num_threads,
+                "dry_run": args.dry_run,
+                "semantic_chunking": args.semantic_chunks,
+                "file_type": args.file_type
+            }
+            
+            if args.enhanced:
+                chunker_args.update({
+                    "extract_metadata": not args.no_metadata,
+                    "add_summaries": not args.no_summaries,
+                    "remove_redundancy": not args.keep_redundant,
+                    "context_window": args.context_window,
+                    "min_relevance_score": args.min_relevance
+                })
+    
         chunker = ChunkerClass(**chunker_args)
         chunker.process_directories(args.dirs)
+        
     except Exception as e:
         print(f"[Error] Processing failed: {e}", file=sys.stderr)
         sys.exit(1)
     finally:
-        chunker.close()
+        if chunker and hasattr(chunker, 'close'):
+            chunker.close()
 
 if __name__ == "__main__":
     main()

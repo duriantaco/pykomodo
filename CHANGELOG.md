@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.5] - 2025-05-22
+### Added
+- Added front end tool for chunking! 
+
 ## [0.1.5] - 2025-03-24
 
 ### Patch

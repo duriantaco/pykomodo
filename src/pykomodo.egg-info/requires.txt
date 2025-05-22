@@ -1,3 +1,4 @@
 pathspec
 PyMuPDF
 tiktoken
+gradio
