@@ -5,9 +5,8 @@
 A Python-based parallel file chunking system designed for processing large codebases into LLM-friendly chunks. The tool provides intelligent file filtering, multi-threaded processing, and advanced chunking capabilities optimized for machine learning contexts.
 
 <p align="center">
-  <video src="assets/dashboard.mov" controls="controls" style="max-width: 730px;">
-
-
+  <img src="assets/dashboard.gif" alt="KOMODO Dashboard Demo" width="730">
+</p>
 
 ## Core Features
 
