@@ -472,6 +472,10 @@ The chunker automatically ignores common non-text and build-related files:
 
 * If your path is really `src/komodo/content/results`, but you only wrote `results/**`, you may need a double-star approach `(**/results/**)` to cover deeper paths.
 
+## Troubleshooting
+
+If you see `"[Error] Processing failed: No module named 'frontend'"`, just run `pip install --upgrade pymupdf`. If the wrong package — fitz 0.0.x (an abandoned library) — is in your `PYTHONPATH` instead of `PyMuPDF`, that library will try to import frontend and crashes because that module doesn’t exist.
+
 # Acknowledgments
 This project was inspired by [repomix](https://github.com/yamadashy/repomix), a repository content chunking tool.
 

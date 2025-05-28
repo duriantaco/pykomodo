@@ -1,6 +1,6 @@
 from pykomodo.multi_dirs_chunker import ParallelChunker
 import os
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Tuple
 
 class EnhancedParallelChunker(ParallelChunker):
     def __init__(
