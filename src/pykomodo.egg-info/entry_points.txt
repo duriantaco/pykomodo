@@ -1,2 +1,0 @@
-[console_scripts]
-komodo = pykomodo.command_line:main

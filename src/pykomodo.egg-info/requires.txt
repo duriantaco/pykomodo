@@ -1,4 +1,0 @@
-pathspec
-PyMuPDF
-tiktoken
-gradio

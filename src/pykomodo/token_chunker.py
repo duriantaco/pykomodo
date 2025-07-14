@@ -3,13 +3,7 @@ from typing import Optional, List, Tuple
 import ast
 import fitz  
 import re
-
-try:
-    import tiktoken
-    TIKTOKEN_AVAILABLE = True
-except ImportError:
-    TIKTOKEN_AVAILABLE = False
-
+import tiktoken
 from pykomodo.multi_dirs_chunker import ParallelChunker
 
 class TokenBasedChunker(ParallelChunker):
@@ -48,16 +42,12 @@ class TokenBasedChunker(ParallelChunker):
         self.verbose = verbose
         
         self.encoding = None
-        if TIKTOKEN_AVAILABLE:
-            try:
-                self.encoding = tiktoken.get_encoding(encoding_name)
-                if verbose:
-                    print(f"Using {encoding_name} tokenizer", flush=True)
-            except Exception as e:
-                print(f"Error initializing tokenizer: {e}. Falling back to word-splitting.")
-        elif verbose:
-            print("tiktoken not available. Install with: pip install tiktoken")
-            print("Falling back to word-based token counting")
+        try:
+            self.encoding = tiktoken.get_encoding(encoding_name)
+            if verbose:
+                print(f"Using {encoding_name} tokenizer", flush=True)
+        except Exception as e:
+            print(f"Error initializing tokenizer: {e}. Falling back to word-splitting.")
     
     def count_tokens(self, text: str) -> int:
         if self.encoding:
@@ -85,18 +75,18 @@ class TokenBasedChunker(ParallelChunker):
                         text += page.get_text("text")
                     token_count = self.count_tokens(text)
                     text_blocks.append((path, text, token_count))
-                except Exception as e:
+                except:
                     if self.verbose:
-                        print(f"Error extracting text from PDF {path}: {e}")
+                        print(f"Error extracting text from PDF {path}")
             else:
                 try:
                     text = content_bytes.decode("utf-8", errors="replace")
                     text = self._filter_api_keys(text)
                     token_count = self.count_tokens(text)
                     text_blocks.append((path, text, token_count))
-                except Exception as e:
+                except:
                     if self.verbose:
-                        print(f"Error processing {path}: {e}")
+                        print(f"Error processing {path}")
         
         text_blocks.sort(key=lambda x: -x[2])
         
@@ -109,8 +99,12 @@ class TokenBasedChunker(ParallelChunker):
             if not chunk_files:
                 continue
             
-            chunk_text = f"{'=' * 80}\nCHUNK {i + 1} OF {self.equal_chunks}\n{'=' * 80}\n\n"
-            
+            tree_header = ""
+            if i == 0 and hasattr(self, 'current_walk_root') and self.current_walk_root:
+                tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)
+
+            chunk_text = tree_header + f"{'=' * 80}\nCHUNK {i + 1} OF {self.equal_chunks}\n{'=' * 80}\n\n"
+
             for path, text in chunk_files:
                 chunk_text += f"{'=' * 40}\nFile: {path}\n{'=' * 40}\n{text}\n\n"
             
@@ -157,7 +151,11 @@ class TokenBasedChunker(ParallelChunker):
                 line_tokens = self.count_tokens(line)
                 
                 if current_tokens + line_tokens > self.max_tokens_per_chunk and current_chunk_lines:
-                    chunk_text = f"{'=' * 80}\nCHUNK {chunk_index + 1}\n{'=' * 80}\n\n"
+                    tree_header = ""
+                    if chunk_index == 0 and hasattr(self, 'current_walk_root') and self.current_walk_root:
+                        tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)
+
+                    chunk_text = tree_header + f"{'=' * 80}\nCHUNK {chunk_index + 1}\n{'=' * 80}\n\n"
                     chunk_text += f"{'=' * 40}\nFile: {path}\n{'=' * 40}\n"
                     chunk_text += "\n".join(current_chunk_lines) + "\n"
                     
@@ -174,7 +172,12 @@ class TokenBasedChunker(ParallelChunker):
                         print(f"Warning: Line in {path} exceeds token limit ({line_tokens} tokens)")
                     
                     if current_chunk_lines:
-                        chunk_text = f"{'=' * 80}\nCHUNK {chunk_index + 1}\n{'=' * 80}\n\n"
+                        tree_header = ""
+                        if hasattr(self, 'current_walk_root') and self.current_walk_root:
+                            tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)
+
+                        chunk_text = tree_header + f"{'=' * 80}\nCHUNK {chunk_index + 1}\n{'=' * 80}\n\n"
+
                         chunk_text += f"{'=' * 40}\nFile: {path}\n{'=' * 40}\n"
                         chunk_text += "\n".join(current_chunk_lines) + "\n"
                         
@@ -205,7 +208,12 @@ class TokenBasedChunker(ParallelChunker):
                         word_chunks.append(' '.join(current_word_chunk))
                     
                     for i, word_chunk in enumerate(word_chunks):
-                        chunk_text = f"{'=' * 80}\nCHUNK {chunk_index + 1}\n{'=' * 80}\n\n"
+                        tree_header = ""
+                        if hasattr(self, 'current_walk_root') and self.current_walk_root:
+                            tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)
+
+                        chunk_text = tree_header + f"{'=' * 80}\nCHUNK {chunk_index + 1}\n{'=' * 80}\n\n"
+
                         chunk_text += f"{'=' * 40}\nFile: {path}\n{'=' * 40}\n"
                         chunk_text += f"[Long line part {i+1}/{len(word_chunks)}]\n{word_chunk}\n"
                         
@@ -222,7 +230,12 @@ class TokenBasedChunker(ParallelChunker):
                     current_tokens += line_tokens
             
             if current_chunk_lines:
-                chunk_text = f"{'=' * 80}\nCHUNK {chunk_index + 1}\n{'=' * 80}\n\n"
+                tree_header = ""
+                if hasattr(self, 'current_walk_root') and self.current_walk_root:
+                    tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)
+
+                chunk_text = tree_header + f"{'=' * 80}\nCHUNK {chunk_index + 1}\n{'=' * 80}\n\n"
+
                 chunk_text += f"{'=' * 40}\nFile: {path}\n{'=' * 40}\n"
                 chunk_text += "\n".join(current_chunk_lines) + "\n"
                 
@@ -247,7 +260,12 @@ class TokenBasedChunker(ParallelChunker):
                 line_tokens = self.count_tokens(line)
                 
                 if current_tokens + line_tokens > self.max_tokens_per_chunk and current_chunk_lines:
-                    chunk_text = f"{'=' * 80}\nCHUNK {chunk_index + 1}\n{'=' * 80}\n\n"
+                    tree_header = ""
+                    if hasattr(self, 'current_walk_root') and self.current_walk_root:
+                        tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)
+
+                    chunk_text = tree_header + f"{'=' * 80}\nCHUNK {chunk_index + 1}\n{'=' * 80}\n\n"
+
                     chunk_text += f"{'=' * 40}\nFile: {path}\n{'=' * 40}\n"
                     chunk_text += "\n".join(current_chunk_lines) + "\n"
                     
@@ -263,7 +281,12 @@ class TokenBasedChunker(ParallelChunker):
                 current_tokens += line_tokens
             
             if current_chunk_lines:
-                chunk_text = f"{'=' * 80}\nCHUNK {chunk_index + 1}\n{'=' * 80}\n\n"
+                tree_header = ""
+                if chunk_index == 0 and hasattr(self, 'current_walk_root') and self.current_walk_root:
+                    tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)
+
+                chunk_text = tree_header + f"{'=' * 80}\nCHUNK {chunk_index + 1}\n{'=' * 80}\n\n"
+
                 chunk_text += f"{'=' * 40}\nFile: {path}\n{'=' * 40}\n"
                 chunk_text += "\n".join(current_chunk_lines) + "\n"
                 
@@ -335,7 +358,13 @@ class TokenBasedChunker(ParallelChunker):
                     print(f"Warning: {block['type']} {block['name']} in {path} exceeds token limit ({block_tokens} tokens)")
                 
                 if current_chunk_blocks:
-                    chunk_text = f"{'=' * 80}\nFILE: {path}\n{'=' * 80}\n\n"
+
+                    tree_header = ""
+                    if hasattr(self, 'current_walk_root') and self.current_walk_root:
+                        tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)
+
+                    chunk_text = tree_header + f"{'=' * 80}\nFILE: {path}\n{'=' * 80}\n\n"
+
                     chunk_text += "\n\n".join(current_chunk_blocks)
                     
                     chunk_path = os.path.join(self.output_dir, f"chunk-{chunk_index}.txt")
@@ -346,8 +375,7 @@ class TokenBasedChunker(ParallelChunker):
                     current_chunk_blocks = []
                     current_tokens = 0
                 
-                chunk_text = f"{'=' * 80}\nFILE: {path}\n{'=' * 80}\n\n{block_text}"
-                
+                chunk_text = tree_header + f"{'=' * 80}\nFILE: {path}\n{'=' * 80}\n\n{block_text}"                
                 chunk_path = os.path.join(self.output_dir, f"chunk-{chunk_index}.txt")
                 with open(chunk_path, "w", encoding="utf-8") as f:
                     f.write(chunk_text)
@@ -355,8 +383,12 @@ class TokenBasedChunker(ParallelChunker):
                 chunk_index += 1
                 continue
             
+            tree_header = ""
+            if hasattr(self, 'current_walk_root') and self.current_walk_root:
+                tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)
+
             if current_tokens + block_tokens > self.max_tokens_per_chunk and current_chunk_blocks:
-                chunk_text = f"{'=' * 80}\nFILE: {path}\n{'=' * 80}\n\n"
+                chunk_text = tree_header + f"{'=' * 80}\nFILE: {path}\n{'=' * 80}\n\n"
                 chunk_text += "\n\n".join(current_chunk_blocks)
                 
                 chunk_path = os.path.join(self.output_dir, f"chunk-{chunk_index}.txt")
@@ -370,8 +402,12 @@ class TokenBasedChunker(ParallelChunker):
             current_chunk_blocks.append(block_text)
             current_tokens += block_tokens
         
+        tree_header = ""
+        if hasattr(self, 'current_walk_root') and self.current_walk_root:
+            tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)
+            
         if current_chunk_blocks:
-            chunk_text = f"{'=' * 80}\nFILE: {path}\n{'=' * 80}\n\n"
+            chunk_text = tree_header + f"{'=' * 80}\nFILE: {path}\n{'=' * 80}\n\n"
             chunk_text += "\n\n".join(current_chunk_blocks)
             
             chunk_path = os.path.join(self.output_dir, f"chunk-{chunk_index}.txt")
@@ -430,7 +466,11 @@ class TokenBasedChunker(ParallelChunker):
                     continue
                 
                 if current_tokens + para_tokens > self.max_tokens_per_chunk and current_chunk_paras:
-                    chunk_text = f"{'=' * 80}\nFILE: {path}\n{'=' * 80}\n\n"
+                    tree_header = ""
+                    if hasattr(self, 'current_walk_root') and self.current_walk_root:
+                        tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)
+
+                    chunk_text = tree_header + f"{'=' * 80}\nFILE: {path}\n{'=' * 80}\n\n"
                     chunk_text += "\n\n".join(current_chunk_paras)
                     
                     chunk_path = os.path.join(self.output_dir, f"chunk-{chunk_index}.txt")
@@ -444,8 +484,12 @@ class TokenBasedChunker(ParallelChunker):
                 current_chunk_paras.append(para)
                 current_tokens += para_tokens
             
+            tree_header = ""
+            if chunk_index == 0 and hasattr(self, 'current_walk_root') and self.current_walk_root:
+                tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)
+
             if current_chunk_paras:
-                chunk_text = f"{'=' * 80}\nFILE: {path}\n{'=' * 80}\n\n"
+                chunk_text = tree_header + f"{'=' * 80}\nFILE: {path}\n{'=' * 80}\n\n"
                 chunk_text += "\n\n".join(current_chunk_paras)
                 
                 chunk_path = os.path.join(self.output_dir, f"chunk-{chunk_index}.txt")
@@ -459,8 +503,8 @@ class TokenBasedChunker(ParallelChunker):
         except Exception as e:
             if self.verbose:
                 print(f"Error processing PDF {path}: {e}")
-            
-            chunk_text = f"{'=' * 80}\nFILE: {path}\n{'=' * 80}\n\n"
+
+            chunk_text = tree_header + f"{'=' * 80}\nFILE: {path}\n{'=' * 80}\n\n"
             chunk_text += f"[Error processing PDF: {str(e)}]\n"
             
             chunk_path = os.path.join(self.output_dir, f"chunk-{chunk_index}.txt")
