@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Komodo Chunking Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 24px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .header {
+            background: #111111;
+            border-bottom: 1px solid #2a2a2a;
+            padding: 32px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #888888;
+            font-weight: 400;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 0;
+            min-height: 70vh;
+        }
+
+        .left-panel {
+            background: #1a1a1a;
+            padding: 32px;
+            border-right: 1px solid #2a2a2a;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .step-section {
+            background: #222222;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            padding: 24px;
+            transition: border-color 0.2s ease;
+        }
+
+        .step-section:hover {
+            border-color: #444444;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #333333;
+        }
+
+        .step-number {
+            background: #ffffff;
+            color: #000000;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 16px;
+            font-size: 14px;
+        }
+
+        .step-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: #cccccc;
+            margin-bottom: 8px;
+            font-size: 0.875rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #1a1a1a;
+            border: 1px solid #333333;
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #555555;
+            background: #222222;
+        }
+
+        .form-input::placeholder {
+            color: #666666;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #ffffff;
+            color: #000000;
+            border: 1px solid #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #f0f0f0;
+            border-color: #f0f0f0;
+        }
+
+        .btn-primary:disabled {
+            background: #666666;
+            color: #333333;
+            cursor: not-allowed;
+            border-color: #666666;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #ffffff;
+            border: 1px solid #444444;
+        }
+
+        .btn-secondary:hover {
+            background: #333333;
+            border-color: #555555;
+        }
+
+        .file-browser {
+            background: #1a1a1a;
+            border: 1px solid #333333;
+            border-radius: 6px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #2a2a2a;
+            transition: background-color 0.2s ease;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-item:hover {
+            background: #222222;
+        }
+
+        .file-checkbox {
+            margin-right: 12px;
+            width: 16px;
+            height: 16px;
+            accent-color: #ffffff;
+        }
+
+        .file-name {
+            color: #cccccc;
+            font-size: 0.9rem;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+        }
+
+        .file-size {
+            margin-left: auto;
+            color: #666666;
+            font-size: 0.8rem;
+        }
+
+        .right-panel {
+            background: #222222;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .config-header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333333;
+        }
+
+        .config-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+        }
+
+        .status-display {
+            background: #111111;
+            border: 1px solid #333333;
+            border-radius: 6px;
+            padding: 16px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #cccccc;
+            min-height: 100px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .instructions {
+            background: #1a1a1a;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .instructions h3 {
+            color: #ffffff;
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .instructions ol {
+            color: #cccccc;
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #333333;
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success {
+            color: #4ade80;
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 12px;
+            font-size: 0.9rem;
+        }
+
+        .error {
+            color: #f87171;
+            background: rgba(248, 113, 113, 0.1);
+            border: 1px solid rgba(248, 113, 113, 0.2);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 12px;
+            font-size: 0.9rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .file-browser-empty {
+            color: #666666;
+            text-align: center;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+
+        select.form-input {
+            cursor: pointer;
+        }
+
+        .file-browser::-webkit-scrollbar,
+        .status-display::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .file-browser::-webkit-scrollbar-track,
+        .status-display::-webkit-scrollbar-track {
+            background: #2a2a2a;
+        }
+
+        .file-browser::-webkit-scrollbar-thumb,
+        .status-display::-webkit-scrollbar-thumb {
+            background: #444444;
+            border-radius: 3px;
+        }
+
+        .file-browser::-webkit-scrollbar-thumb:hover,
+        .status-display::-webkit-scrollbar-thumb:hover {
+            background: #555555;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .left-panel {
+                border-right: none;
+                border-bottom: 1px solid #2a2a2a;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Komodo</h1>
+            <ol>
+                <p>1. Enter your repo path. Click "Load Repository"</p>
+                <p>2. Select which files you want to process</p>
+                <p>3. Configure the parameters</p>
+                <p>4. Click "Process Files"</p>
+            </ol>
+        </div>
+
+
+
+        <div class="main-content">
+                <div class="left-panel">
+                <div class="step-section">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Load Repo</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Repo Path</label>
+                        <input type="text" id="repoPath" class="form-input" placeholder="/path/to/project or ." value=".">
+                    </div>
+                    <button class="btn btn-primary" onclick="loadRepository()">
+                        <span id="loadText">Load Repo</span>
+                        <span id="loadSpinner" class="loading hidden"></span>
+                    </button>
+                    <div id="loadStatus" class="status-display">Enter repo path and click 'Load Repo' to begin</div>
+                </div>
+
+                <div class="step-section">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Select Files</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">File Browser</label>
+                        <div id="fileBrowser" class="file-browser">
+                            <div class="file-browser-empty">Load a repository first</div>
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="selectAll()">Select All</button>
+                        <button class="btn btn-secondary" onclick="clearSelection()">Clear All</button>
+                    </div>
+                    <div id="selectedFiles" class="status-display">No files selected</div>
+            </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="config-header">
+                    <h2>Configuration</h2>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Chunking Strategy</label>
+                    <select id="strategy" class="form-input" onchange="toggleStrategy()">
+                        <option value="equal">Equal Chunks</option>
+                        <option value="size">Max Chunk Size</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="numChunksGroup">
+                    <label class="form-label">Number of Chunks</label>
+                    <input type="number" id="numChunks" class="form-input" value="5" min="1">
+                </div>
+
+                <div class="form-group hidden" id="chunkSizeGroup">
+                    <label class="form-label">Max Chunk Size (tokens)</label>
+                    <input type="number" id="chunkSize" class="form-input" value="1000" min="100" step="100">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Output Directory</label>
+                    <input type="text" id="outputDir" class="form-input" value="chunks">
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%;" onclick="processFiles()">
+                    <span id="processText">Process Files</span>
+                    <span id="processSpinner" class="loading hidden"></span>
+                </button>
+
+                <div id="processStatus" class="status-display">Ready</div>
+            </div>
+        </div>
+        </div>
+
+    <script>
+        let allFiles = [];
+        let selectedFiles = new Set();
+
+        function toggleStrategy() {
+            const strategy = document.getElementById('strategy').value;
+            const numChunksGroup = document.getElementById('numChunksGroup');
+            const chunkSizeGroup = document.getElementById('chunkSizeGroup');
+
+            if (strategy === 'equal') {
+                numChunksGroup.classList.remove('hidden');
+                chunkSizeGroup.classList.add('hidden');
+            } else {
+                numChunksGroup.classList.add('hidden');
+                chunkSizeGroup.classList.remove('hidden');
+            }
+            }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+            }
+
+        async function loadRepository() {
+            const repoPath = document.getElementById('repoPath').value.trim();
+            const loadBtn = document.querySelector('button[onclick="loadRepository()"]');
+            const loadText = document.getElementById('loadText');
+            const loadSpinner = document.getElementById('loadSpinner');
+            const loadStatus = document.getElementById('loadStatus');
+
+            if (!repoPath) {
+                loadStatus.innerHTML = '<div class="error"> Please enter a repo path</div>';
+                return;
+            }
+
+            loadText.classList.add('hidden');
+            loadSpinner.classList.remove('hidden');
+            loadBtn.disabled = true;
+
+            try {
+                loadStatus.textContent = 'Scanning repo...';
+                
+                const response = await fetch('/api/scan-directory', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: repoPath })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    allFiles = data.files;
+                    updateFileBrowser();
+                    loadStatus.innerHTML = `<div class="success">Successful ${allFiles.length} files</div>`;
+                } else {
+                    loadStatus.innerHTML = `<div class="error"> ${data.error}</div>`;
+                }
+                
+            } catch (error) {
+                loadStatus.innerHTML = `<div class="error"> Failed to load repo: ${error.message}</div>`;
+            } finally {
+                loadText.classList.remove('hidden');
+                loadSpinner.classList.add('hidden');
+                loadBtn.disabled = false;
+            }
+    }
+
+        function updateFileBrowser() {
+            const browser = document.getElementById('fileBrowser');
+            
+            if (allFiles.length === 0) {
+                browser.innerHTML = '<div class="file-browser-empty">No files found</div>';
+                return;
+                }
+
+            const html = allFiles.map(file => `
+                <div class="file-item">
+                    <input type="checkbox" class="file-checkbox" value="${file.path}" 
+                           onchange="toggleFile('${file.path}')">
+                    <span class="file-name">${file.name}</span>
+                    <span class="file-size">${formatFileSize(file.size)}</span>
+                </div>
+            `).join('');
+
+            browser.innerHTML = html;
+            }
+
+        function toggleFile(filePath) {
+            if (selectedFiles.has(filePath)) {
+                selectedFiles.delete(filePath);
+            } else {
+                selectedFiles.add(filePath);
+            }
+            updateSelectedDisplay();
+     }
+
+        function selectAll() {
+            selectedFiles.clear();
+            allFiles.forEach(file => selectedFiles.add(file.path));
+            
+            document.querySelectorAll('.file-checkbox').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            
+            updateSelectedDisplay();
+        }
+
+        function clearSelection() {
+            selectedFiles.clear();
+            
+            document.querySelectorAll('.file-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            updateSelectedDisplay();
+        }
+
+        function updateSelectedDisplay() {
+            const display = document.getElementById('selectedFiles');
+            
+            if (selectedFiles.size === 0) {
+                display.textContent = 'No files selected';
+            } else {
+                const fileNames = Array.from(selectedFiles).map(path => {
+                    const file = allFiles.find(f => f.path === path);
+                    return file ? file.name : path;
+                });
+                display.textContent = `Selected ${selectedFiles.size} files:\n\n${fileNames.join('\n')}`;
+            }
+        }
+
+        async function processFiles() {
+            const processBtn = document.querySelector('button[onclick="processFiles()"]');
+            const processText = document.getElementById('processText');
+            const processSpinner = document.getElementById('processSpinner');
+            const processStatus = document.getElementById('processStatus');
+
+            if (selectedFiles.size === 0) {
+                processStatus.innerHTML = '<div class="error"> No files selected. Please select files to process.</div>';
+                return;
+        }
+
+            processText.classList.add('hidden');
+            processSpinner.classList.remove('hidden');
+            processBtn.disabled = true;
+
+            try {
+                const strategy = document.getElementById('strategy').value;
+                const numChunks = document.getElementById('numChunks').value;
+                const chunkSize = document.getElementById('chunkSize').value;
+                const outputDir = document.getElementById('outputDir').value;
+
+                processStatus.textContent = 'Processing files and generating chunks with directory tree structure...';
+
+                const response = await fetch('/api/process-files', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        files: Array.from(selectedFiles),
+                        strategy: strategy,
+                        numChunks: strategy === 'equal' ? parseInt(numChunks) : null,
+                        chunkSize: strategy === 'size' ? parseInt(chunkSize) : null,
+                        outputDir: outputDir
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    processStatus.innerHTML = `<div class="success"> Processing completed successfully!
+
+* Output Directory: ${data.output_dir}
+* Files Processed: ${selectedFiles.size}
+* Chunks Created: ${data.chunks}
+</div>`;
+                } else {
+                    processStatus.innerHTML = `<div class="error"> Processing failed: ${data.error}</div>`;
+                }
+            } catch (error) {
+                processStatus.innerHTML = `<div class="error"> Network error: ${error.message}</div>`;
+            } finally {
+                processText.classList.remove('hidden');
+                processSpinner.classList.add('hidden');
+                processBtn.disabled = false;
+        }
+    }
+    </script>
+</body>
+</html>

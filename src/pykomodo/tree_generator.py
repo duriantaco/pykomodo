@@ -31,7 +31,8 @@ class TreeGenerator:
             self.tree_header = (
                 "=" * 80 + "\n" +
                 "PROJECT STRUCTURE\n" +
-                "=" * 80 + "\n\n" +
+                "=" * 80 + "\n" +
+                "This tree shows the complete project structure. Use it to understand the file organization and hierarchy\n" +
                 tree_content + "\n" +
                 "=" * 80 + "\n\n"
             )
