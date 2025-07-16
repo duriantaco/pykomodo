@@ -1,42 +1,67 @@
 import sys
 import argparse
 import os
+import webbrowser
+import time
+import threading
+from pykomodo.server import app
+import socket
 
 KOMODO_VERSION = "0.2.5"
 
-def launch_dashboard():
-    """Launch the dashboard interface."""
-    try:
-        from pykomodo.dashboard import launch_dashboard
-        print("Starting Komodo Dashboard...")
-        demo = launch_dashboard()
-        demo.launch(
-            server_name="0.0.0.0", 
-            server_port=7860,
-            share=False,
-            debug=False
-        )
-    except ImportError as e:
-        print(f"[Error] Dashboard dependencies not available: {e}", file=sys.stderr)
-        print("Please install gradio: pip install gradio", file=sys.stderr)
+def run_server():
+    try: 
+        def is_port_available(port):
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                try:
+                    s.bind(('localhost', port))
+                    return True
+                except OSError:
+                    return False
+        
+        port = 5555
+        while not is_port_available(port) and port < 5555:
+            port += 1
+        
+        print(f" Starting Komodo server on http://localhost:{port}")
+        print("")
+        print("Press Ctrl+C to stop the server")
+        
+        def open_browser():
+            time.sleep(1.0)
+            webbrowser.open(f'http://localhost:{port}')
+        
+        browser_thread = threading.Thread(target=open_browser)
+        browser_thread.daemon = True
+        browser_thread.start()
+        
+        app.run(host='0.0.0.0', port=port, debug=False)
+        
+    except ImportError:
+        print(f"Error: Could not import Flask server")
+        print("Please install flask: pip install flask")
         sys.exit(1)
-    except Exception as e:
-        print(f"[Error] Failed to launch dashboard: {e}", file=sys.stderr)
+    except KeyboardInterrupt:
+        print("\n Komodo server stopped")
+        sys.exit(0)
+    except Exception:
+        print(f" Failed to start server")
         sys.exit(1)
 
 def main():
-    """Main entry point for the komodo CLI."""
     parser = argparse.ArgumentParser(
-        description="Process and chunk codebase content with advanced chunking strategies."
+        description="Process and chunk codebase",
+        epilog="Examples:\n  komodo . --max-chunk-size 2000\n  komodo run",
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
     parser.add_argument("--version", action="version", version=f"komodo {KOMODO_VERSION}")
     
-    parser.add_argument("--dashboard", action="store_true",
-                        help="Launch the web-based dashboard interface")
+    parser.add_argument("command", nargs="?", 
+                        help="run: Launch web interface")
 
     parser.add_argument("dirs", nargs="*", default=["."],
-                        help="Directories to process (default: current directory)")
+                        help="Directories to process")
     
     chunk_group = parser.add_mutually_exclusive_group(required=False)
     chunk_group.add_argument("--equal-chunks", type=int, 
@@ -44,35 +69,35 @@ def main():
     chunk_group.add_argument("--max-chunk-size", type=int, 
                             help="Maximum tokens/lines per chunk")
     chunk_group.add_argument("--max-tokens", type=int,
-                            help="Maximum tokens per chunk (token-based chunking)")
+                            help="Maximum tokens per chunk")
     
     parser.add_argument("--output-dir", default="chunks",
-                        help="Output directory for chunks (default: chunks)")
+                        help="Output directory for chunks")
     
     parser.add_argument("--ignore", action="append", default=[],
-                        help="Repeatable. Each usage adds one ignore pattern. Example: --ignore '**/node_modules/**' --ignore 'venv'")
+                        help="Each usage adds one ignore pattern. Example: --ignore '**/node_modules/**' --ignore 'venv'")
     parser.add_argument("--unignore", action="append", default=[],
-                        help="Repeatable. Each usage adds one unignore pattern. Example: --unignore '*.md'")
+                        help="Each usage adds one unignore pattern. Example: --unignore '*.md'")
     
     parser.add_argument("--dry-run", action="store_true",
-                        help="Show which files would be processed, but do not generate any chunks.")
+                        help="Show which files would be processed")
 
     parser.add_argument("--priority", action="append", default=[],
-                        help="Priority rules in format 'pattern,score' (repeatable). Example: --priority '*.py,10' --priority 'file2.txt,20'")
+                        help="Example: --priority '*.py,10' --priority 'file2.txt,20'")
     
     parser.add_argument("--num-threads", type=int, default=4,
-                        help="Number of processing threads (default: 4)")
+                        help="Number of processing threads")
 
     parser.add_argument("--enhanced", action="store_true",
                         help="Enable LLM optimizations")
     
     parser.add_argument("--semantic-chunks", action="store_true",
-                        help="Use AST-based chunking for .py files (splits by top-level functions/classes)")
+                        help="Use AST-based chunking for .py files")
 
     parser.add_argument("--context-window", type=int, default=4096,
-                        help="Target LLM context window size (default: 4096)")
+                        help="Target LLM context window size")
     parser.add_argument("--min-relevance", type=float, default=0.3,
-                        help="Minimum relevance score 0.0-1.0 (default: 0.3)")
+                        help="Min relevance score 0.0-1.0 (default: 0.3)")
     parser.add_argument("--no-metadata", action="store_true",
                         help="Disable metadata extraction")
     parser.add_argument("--keep-redundant", action="store_true",
@@ -88,12 +113,12 @@ def main():
 
     args = parser.parse_args()
 
-    if args.dashboard:
-        launch_dashboard()
+    if args.command == "run":
+        run_server()
         return
 
     if not any([args.equal_chunks, args.max_chunk_size, args.max_tokens]):
-        parser.error("One of --equal-chunks, --max-chunk-size, or --max-tokens is required (unless using --dashboard)")
+        parser.error("One of --equal-chunks, --max-chunk-size, or --max-tokens is required (unless using 'run')")
 
     if args.output_dir:
         os.makedirs(args.output_dir, exist_ok=True)
@@ -123,6 +148,7 @@ def main():
                 sys.exit(1)
                 
             chunker_args = {
+                "equal_chunks": args.equal_chunks,
                 "max_tokens_per_chunk": args.max_tokens,
                 "output_dir": args.output_dir,
                 "user_ignore": args.ignore,
@@ -163,10 +189,13 @@ def main():
                 })
     
         chunker = ChunkerClass(**chunker_args)
+        
+        print("Directory tree structure will be automatically included")
+        
         chunker.process_directories(args.dirs)
         
-    except Exception as e:
-        print(f"[Error] Processing failed: {e}", file=sys.stderr)
+    except Exception:
+        print(f"[Error] Processing failed")
         sys.exit(1)
     finally:
         if chunker and hasattr(chunker, 'close'):
