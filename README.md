@@ -8,6 +8,33 @@ A Python-based parallel file chunking system designed for processing large codeb
   <img src="assets/dashboard.gif" alt="KOMODO Dashboard Demo" width="700">
 </p>
 
+## Table of Contents
+
+- [Core Features](#core-features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+ - [Dashboard](#dashboard)
+ - [Command Line Usage](#command-line-usage)
+ - [Basic Usage](#basic-usage)
+ - [Chunking Modes](#chunking-modes)
+ - [Ignoring & Unignoring Files](#ignoring--unignoring-files)
+ - [Dry Run](#dry-run)
+ - [Python API Usage](#python-api-usage)
+ - [Front-end Usage](#front-end-usage)
+- [Advanced LLM Features](#advanced-llm-features)
+ - [Metadata Extraction](#metadata-extraction)
+ - [Relevance Scoring](#relevance-scoring)
+ - [Redundancy Removal](#redundancy-removal)
+ - [File Type Restriction](#file-type-restriction)
+ - [Typed Classes & Pydantic-Based Configuration](#typed-classes--pydantic-based-configuration)
+- [Common Use Cases](#common-use-cases)
+- [Built-in Ignore Patterns](#built-in-ignore-patterns)
+- [Common Gotchas](#common-gotchas)
+- [Troubleshooting](#troubleshooting)
+- [Acknowledgments](#acknowledgments)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Core Features
 
 * **NEW** Front end tool for chunking. Run `komodo run`. This will launch both the front end as well as the server. The server will be running on port 5555
@@ -48,6 +75,10 @@ pip install komodo==0.3.0
 Link to pypi: https://pypi.org/project/pykomodo/
 
 ## Quick Start
+
+### Dashboard
+
+To run the front end, use `komodo run`
 
 ### Command Line Usage
 
