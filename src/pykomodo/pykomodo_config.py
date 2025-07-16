@@ -5,20 +5,17 @@ from pykomodo.enhanced_chunker import EnhancedParallelChunker
 from pykomodo.multi_dirs_chunker import ParallelChunker
 
 class KomodoConfig(BaseModel):
-    """
-    A Pydantic model representing pykomodo settings.
-    """
     directories: List[str] = Field(
         default_factory=lambda: ["."],
-        description="Which directories to process."
+        description="Which directories to process"
     )
     equal_chunks: Optional[int] = Field(
         default=None,
-        description="Number of equal chunks to produce (mutually exclusive with max_chunk_size)."
+        description="Number of equal chunks to produce"
     )
     max_chunk_size: Optional[int] = Field(
         default=None,
-        description="Max tokens/lines per chunk (mutually exclusive with equal_chunks)."
+        description="Max tokens/lines per chunk"
     )
     output_dir: str = Field(
         default="chunks",
@@ -30,7 +27,7 @@ class KomodoConfig(BaseModel):
     )
     enhanced: bool = Field(
         default=False,
-        description="If True, use EnhancedParallelChunker for LLM-related features."
+        description="If True, use EnhancedParallelChunker for LLM-related features"
     )
     context_window: int = 4096
     min_relevance_score: float = 0.3
@@ -38,9 +35,6 @@ class KomodoConfig(BaseModel):
     extract_metadata: bool = True
 
 def run_chunker_with_config(config: KomodoConfig):
-    """
-    Build and run a pykomodo chunker (Enhanced or basic) from config.
-    """
     ChunkerClass = EnhancedParallelChunker if config.enhanced else ParallelChunker
 
     chunker = ChunkerClass(
