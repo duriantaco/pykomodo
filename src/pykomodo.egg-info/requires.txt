@@ -1,0 +1,5 @@
+pathspec
+PyMuPDF
+tiktoken
+flask
+treeline

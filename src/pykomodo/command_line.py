@@ -7,7 +7,7 @@ import threading
 from pykomodo.server import app
 import socket
 
-KOMODO_VERSION = "0.2.5"
+KOMODO_VERSION = "0.3.0"
 
 def run_server():
     try: 
