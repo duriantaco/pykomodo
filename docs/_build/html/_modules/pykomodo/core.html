@@ -1,0 +1,269 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pykomodo.core &mdash; pykomodo 0.0.7 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=178c8cff" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=bbaf98b3"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            pykomodo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chunking_guide.html">Chunking Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli_reference.html">CLI Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contribution.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pykomodo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pykomodo.core</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pykomodo.core</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">fnmatch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<div class="viewcode-block" id="PriorityRule">
+<a class="viewcode-back" href="../../api_reference.html#pykomodo.core.PriorityRule">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PriorityRule</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple Python container for (pattern, score).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="PriorityRule.__init__">
+<a class="viewcode-back" href="../../api_reference.html#pykomodo.core.PriorityRule.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">score</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">pattern</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">score</span></div>
+</div>
+
+
+<div class="viewcode-block" id="PyCConfig">
+<a class="viewcode-back" href="../../api_reference.html#pykomodo.core.PyCConfig">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PyCConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A pure Python equivalent of the &#39;PyCConfig&#39; that in Cython</span>
+<span class="sd">    wrapped the &#39;CConfig&#39; struct. This class maintains the same</span>
+<span class="sd">    conceptual fields but in Pythonic form (lists, strings, booleans).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="PyCConfig.__init__">
+<a class="viewcode-back" href="../../api_reference.html#pykomodo.core.PyCConfig.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">token_mode</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">ignore_patterns</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unignore_patterns</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">priority_rules</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PriorityRule</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">binary_exts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="PyCConfig.add_ignore_pattern">
+<a class="viewcode-back" href="../../api_reference.html#pykomodo.core.PyCConfig.add_ignore_pattern">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_ignore_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Just appends to a Python list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ignore_patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PyCConfig.add_unignore_pattern">
+<a class="viewcode-back" href="../../api_reference.html#pykomodo.core.PyCConfig.add_unignore_pattern">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_unignore_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unignore_patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PyCConfig.add_priority_rule">
+<a class="viewcode-back" href="../../api_reference.html#pykomodo.core.PyCConfig.add_priority_rule">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_priority_rule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">score</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">priority_rules</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PriorityRule</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">score</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="PyCConfig.should_ignore">
+<a class="viewcode-back" href="../../api_reference.html#pykomodo.core.PyCConfig.should_ignore">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">should_ignore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if path matches one of the ignore_patterns,</span>
+<span class="sd">        unless it matches unignore_patterns first.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">pat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">unignore_patterns</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">pat</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">for</span> <span class="n">pat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_patterns</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">pat</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="PyCConfig.calculate_priority">
+<a class="viewcode-back" href="../../api_reference.html#pykomodo.core.PyCConfig.calculate_priority">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_priority</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the highest score among any matching priority rule.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">highest</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">priority_rules</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">rule</span><span class="o">.</span><span class="n">pattern</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">rule</span><span class="o">.</span><span class="n">score</span> <span class="o">&gt;</span> <span class="n">highest</span><span class="p">:</span>
+                    <span class="n">highest</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">score</span>
+        <span class="k">return</span> <span class="n">highest</span></div>
+
+
+<div class="viewcode-block" id="PyCConfig.is_binary_file">
+<a class="viewcode-back" href="../../api_reference.html#pykomodo.core.PyCConfig.is_binary_file">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_binary_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        1) If extension is in self.binary_exts -&gt; True</span>
+<span class="sd">        2) Else read up to 512 bytes, if it has a null byte -&gt; True</span>
+<span class="sd">        3) If can&#39;t open -&gt; True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">ext</span> <span class="ow">in</span> <span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_exts</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">chunk</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="sa">b</span><span class="s2">&quot;</span><span class="se">\0</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">chunk</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="PyCConfig.read_file_contents">
+<a class="viewcode-back" href="../../api_reference.html#pykomodo.core.PyCConfig.read_file_contents">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">read_file_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads the entire file as text, returns it.</span>
+<span class="sd">        If can&#39;t open, return &quot;&lt;NULL&gt;&quot; or handle differently.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;replace&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&lt;NULL&gt;&quot;</span></div>
+
+
+<div class="viewcode-block" id="PyCConfig.count_tokens">
+<a class="viewcode-back" href="../../api_reference.html#pykomodo.core.PyCConfig.count_tokens">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">count_tokens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Replicates py_count_tokens:</span>
+<span class="sd">        Simple whitespace-based token counting in pure Python.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="PyCConfig.make_c_string">
+<a class="viewcode-back" href="../../api_reference.html#pykomodo.core.PyCConfig.make_c_string">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_c_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&lt;NULL&gt;&quot;</span>
+        <span class="k">return</span> <span class="n">text</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PyCConfig(max_size=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_size</span><span class="si">}</span><span class="s2">, token_mode=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">token_mode</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;output_dir=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="si">!r}</span><span class="s2">, stream=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;ignore_patterns=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_patterns</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;unignore_patterns=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">unignore_patterns</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;priority_rules=</span><span class="si">{</span><span class="p">[</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">pattern</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="o">.</span><span class="n">score</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">priority_rules</span><span class="w"> </span><span class="p">]</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;binary_exts=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">binary_exts</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, oha.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

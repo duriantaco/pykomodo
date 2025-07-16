@@ -1,0 +1,28 @@
+[build-system]
+requires = [
+    "setuptools>=64",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pykomodo"
+version = "0.3.0"
+description = "A Python-based parallel file chunking system for large codebases"
+dependencies = ["pathspec", 
+                "PyMuPDF",
+                "tiktoken",
+                "flask",
+                "treeline"]
+readme = { file = "README.md", content-type = "text/markdown" }
+authors = [{ name = "oha" }]
+
+[project.scripts]
+komodo = "pykomodo.command_line:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["pykomodo*"]
+
+[tool.setuptools]
+zip-safe = false

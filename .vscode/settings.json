@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.pyx": "cython",
+        "*.pxd": "cython",
+        "thread_pool.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled" 
+}

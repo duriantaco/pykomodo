@@ -1,0 +1,623 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Reference &mdash; pykomodo 0.0.7 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=178c8cff" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=bbaf98b3"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contributing" href="contribution.html" />
+    <link rel="prev" title="CLI Reference" href="cli_reference.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            pykomodo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chunking_guide.html">Chunking Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_reference.html">CLI Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-pykomodo.core">Core Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pykomodo.core.PriorityRule"><code class="docutils literal notranslate"><span class="pre">PriorityRule</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.core.PriorityRule.__init__"><code class="docutils literal notranslate"><span class="pre">PriorityRule.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pykomodo.core.PyCConfig"><code class="docutils literal notranslate"><span class="pre">PyCConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.core.PyCConfig.__init__"><code class="docutils literal notranslate"><span class="pre">PyCConfig.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.core.PyCConfig.add_ignore_pattern"><code class="docutils literal notranslate"><span class="pre">PyCConfig.add_ignore_pattern()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.core.PyCConfig.add_priority_rule"><code class="docutils literal notranslate"><span class="pre">PyCConfig.add_priority_rule()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.core.PyCConfig.add_unignore_pattern"><code class="docutils literal notranslate"><span class="pre">PyCConfig.add_unignore_pattern()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.core.PyCConfig.calculate_priority"><code class="docutils literal notranslate"><span class="pre">PyCConfig.calculate_priority()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.core.PyCConfig.count_tokens"><code class="docutils literal notranslate"><span class="pre">PyCConfig.count_tokens()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.core.PyCConfig.is_binary_file"><code class="docutils literal notranslate"><span class="pre">PyCConfig.is_binary_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.core.PyCConfig.make_c_string"><code class="docutils literal notranslate"><span class="pre">PyCConfig.make_c_string()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.core.PyCConfig.read_file_contents"><code class="docutils literal notranslate"><span class="pre">PyCConfig.read_file_contents()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.core.PyCConfig.should_ignore"><code class="docutils literal notranslate"><span class="pre">PyCConfig.should_ignore()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-pykomodo.multi_dirs_chunker">Multi-Directory Chunker</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pykomodo.multi_dirs_chunker.ParallelChunker"><code class="docutils literal notranslate"><span class="pre">ParallelChunker</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.multi_dirs_chunker.ParallelChunker.__init__"><code class="docutils literal notranslate"><span class="pre">ParallelChunker.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.multi_dirs_chunker.ParallelChunker.calculate_priority"><code class="docutils literal notranslate"><span class="pre">ParallelChunker.calculate_priority()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.multi_dirs_chunker.ParallelChunker.close"><code class="docutils literal notranslate"><span class="pre">ParallelChunker.close()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.multi_dirs_chunker.ParallelChunker.is_absolute_pattern"><code class="docutils literal notranslate"><span class="pre">ParallelChunker.is_absolute_pattern()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.multi_dirs_chunker.ParallelChunker.is_binary_file"><code class="docutils literal notranslate"><span class="pre">ParallelChunker.is_binary_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.multi_dirs_chunker.ParallelChunker.process_directories"><code class="docutils literal notranslate"><span class="pre">ParallelChunker.process_directories()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.multi_dirs_chunker.ParallelChunker.process_directory"><code class="docutils literal notranslate"><span class="pre">ParallelChunker.process_directory()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.multi_dirs_chunker.ParallelChunker.process_file"><code class="docutils literal notranslate"><span class="pre">ParallelChunker.process_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.multi_dirs_chunker.ParallelChunker.should_ignore_file"><code class="docutils literal notranslate"><span class="pre">ParallelChunker.should_ignore_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.multi_dirs_chunker.ParallelChunker.DIR_IGNORE_NAMES"><code class="docutils literal notranslate"><span class="pre">ParallelChunker.DIR_IGNORE_NAMES</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pykomodo.multi_dirs_chunker.PriorityRule"><code class="docutils literal notranslate"><span class="pre">PriorityRule</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.multi_dirs_chunker.PriorityRule.__init__"><code class="docutils literal notranslate"><span class="pre">PriorityRule.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-pykomodo.enhanced_chunker">Enhanced Chunker</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pykomodo.enhanced_chunker.EnhancedParallelChunker"><code class="docutils literal notranslate"><span class="pre">EnhancedParallelChunker</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.enhanced_chunker.EnhancedParallelChunker.__init__"><code class="docutils literal notranslate"><span class="pre">EnhancedParallelChunker.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-pykomodo.command_line">Command Line Interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pykomodo.command_line.launch_dashboard"><code class="docutils literal notranslate"><span class="pre">launch_dashboard()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pykomodo.command_line.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-pykomodo.pykomodo_config">Configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pykomodo.pykomodo_config.KomodoConfig"><code class="docutils literal notranslate"><span class="pre">KomodoConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.pykomodo_config.KomodoConfig.context_window"><code class="docutils literal notranslate"><span class="pre">KomodoConfig.context_window</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.pykomodo_config.KomodoConfig.directories"><code class="docutils literal notranslate"><span class="pre">KomodoConfig.directories</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.pykomodo_config.KomodoConfig.enhanced"><code class="docutils literal notranslate"><span class="pre">KomodoConfig.enhanced</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.pykomodo_config.KomodoConfig.equal_chunks"><code class="docutils literal notranslate"><span class="pre">KomodoConfig.equal_chunks</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.pykomodo_config.KomodoConfig.extract_metadata"><code class="docutils literal notranslate"><span class="pre">KomodoConfig.extract_metadata</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.pykomodo_config.KomodoConfig.max_chunk_size"><code class="docutils literal notranslate"><span class="pre">KomodoConfig.max_chunk_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.pykomodo_config.KomodoConfig.min_relevance_score"><code class="docutils literal notranslate"><span class="pre">KomodoConfig.min_relevance_score</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.pykomodo_config.KomodoConfig.model_config"><code class="docutils literal notranslate"><span class="pre">KomodoConfig.model_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.pykomodo_config.KomodoConfig.output_dir"><code class="docutils literal notranslate"><span class="pre">KomodoConfig.output_dir</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.pykomodo_config.KomodoConfig.remove_redundancy"><code class="docutils literal notranslate"><span class="pre">KomodoConfig.remove_redundancy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pykomodo.pykomodo_config.KomodoConfig.semantic_chunking"><code class="docutils literal notranslate"><span class="pre">KomodoConfig.semantic_chunking</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pykomodo.pykomodo_config.run_chunker_with_config"><code class="docutils literal notranslate"><span class="pre">run_chunker_with_config()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contribution.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pykomodo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">API Reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/api_reference.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="api-reference">
+<span id="id1"></span><h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
+<p>PyKomodo provides several modules for document processing, chunking, and management.</p>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#module-pykomodo.core" id="id2">Core Module</a></p></li>
+<li><p><a class="reference internal" href="#module-pykomodo.multi_dirs_chunker" id="id3">Multi-Directory Chunker</a></p></li>
+<li><p><a class="reference internal" href="#module-pykomodo.enhanced_chunker" id="id4">Enhanced Chunker</a></p></li>
+<li><p><a class="reference internal" href="#module-pykomodo.command_line" id="id5">Command Line Interface</a></p></li>
+<li><p><a class="reference internal" href="#module-pykomodo.pykomodo_config" id="id6">Configuration</a></p></li>
+</ul>
+</nav>
+<section id="module-pykomodo.core">
+<span id="core-module"></span><h2><a class="toc-backref" href="#id2" role="doc-backlink">Core Module</a><a class="headerlink" href="#module-pykomodo.core" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="pykomodo.core.PriorityRule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pykomodo.core.</span></span><span class="sig-name descname"><span class="pre">PriorityRule</span></span><a class="reference internal" href="_modules/pykomodo/core.html#PriorityRule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.core.PriorityRule" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Simple Python container for (pattern, score).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.core.PriorityRule.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/core.html#PriorityRule.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.core.PriorityRule.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pykomodo.core.PyCConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pykomodo.core.</span></span><span class="sig-name descname"><span class="pre">PyCConfig</span></span><a class="reference internal" href="_modules/pykomodo/core.html#PyCConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.core.PyCConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A pure Python equivalent of the ‘PyCConfig’ that in Cython
+wrapped the ‘CConfig’ struct. This class maintains the same
+conceptual fields but in Pythonic form (lists, strings, booleans).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.core.PyCConfig.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/core.html#PyCConfig.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.core.PyCConfig.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.core.PyCConfig.add_ignore_pattern">
+<span class="sig-name descname"><span class="pre">add_ignore_pattern</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/core.html#PyCConfig.add_ignore_pattern"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.core.PyCConfig.add_ignore_pattern" title="Link to this definition"></a></dt>
+<dd><p>Just appends to a Python list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pattern</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.core.PyCConfig.add_priority_rule">
+<span class="sig-name descname"><span class="pre">add_priority_rule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/core.html#PyCConfig.add_priority_rule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.core.PyCConfig.add_priority_rule" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pattern</strong> (<em>str</em>)</p></li>
+<li><p><strong>score</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.core.PyCConfig.add_unignore_pattern">
+<span class="sig-name descname"><span class="pre">add_unignore_pattern</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/core.html#PyCConfig.add_unignore_pattern"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.core.PyCConfig.add_unignore_pattern" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pattern</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.core.PyCConfig.calculate_priority">
+<span class="sig-name descname"><span class="pre">calculate_priority</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/core.html#PyCConfig.calculate_priority"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.core.PyCConfig.calculate_priority" title="Link to this definition"></a></dt>
+<dd><p>Returns the highest score among any matching priority rule.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.core.PyCConfig.count_tokens">
+<span class="sig-name descname"><span class="pre">count_tokens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/core.html#PyCConfig.count_tokens"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.core.PyCConfig.count_tokens" title="Link to this definition"></a></dt>
+<dd><p>Replicates py_count_tokens:
+Simple whitespace-based token counting in pure Python.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>text</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.core.PyCConfig.is_binary_file">
+<span class="sig-name descname"><span class="pre">is_binary_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/core.html#PyCConfig.is_binary_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.core.PyCConfig.is_binary_file" title="Link to this definition"></a></dt>
+<dd><ol class="arabic simple">
+<li><p>If extension is in self.binary_exts -&gt; True</p></li>
+<li><p>Else read up to 512 bytes, if it has a null byte -&gt; True</p></li>
+<li><p>If can’t open -&gt; True</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.core.PyCConfig.make_c_string">
+<span class="sig-name descname"><span class="pre">make_c_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/core.html#PyCConfig.make_c_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.core.PyCConfig.make_c_string" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>text</strong> (<em>str</em><em> | </em><em>None</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.core.PyCConfig.read_file_contents">
+<span class="sig-name descname"><span class="pre">read_file_contents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/core.html#PyCConfig.read_file_contents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.core.PyCConfig.read_file_contents" title="Link to this definition"></a></dt>
+<dd><p>Reads the entire file as text, returns it.
+If can’t open, return “&lt;NULL&gt;” or handle differently.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.core.PyCConfig.should_ignore">
+<span class="sig-name descname"><span class="pre">should_ignore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/core.html#PyCConfig.should_ignore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.core.PyCConfig.should_ignore" title="Link to this definition"></a></dt>
+<dd><p>Return True if path matches one of the ignore_patterns,
+unless it matches unignore_patterns first.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>Example usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pykomodo.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">TextProcessor</span>
+
+<span class="n">processor</span> <span class="o">=</span> <span class="n">TextProcessor</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">processor</span><span class="o">.</span><span class="n">process_text</span><span class="p">(</span><span class="n">my_document</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="module-pykomodo.multi_dirs_chunker">
+<span id="multi-directory-chunker"></span><h2><a class="toc-backref" href="#id3" role="doc-backlink">Multi-Directory Chunker</a><a class="headerlink" href="#module-pykomodo.multi_dirs_chunker" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="pykomodo.multi_dirs_chunker.ParallelChunker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pykomodo.multi_dirs_chunker.</span></span><span class="sig-name descname"><span class="pre">ParallelChunker</span></span><a class="reference internal" href="_modules/pykomodo/multi_dirs_chunker.html#ParallelChunker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.multi_dirs_chunker.ParallelChunker" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.multi_dirs_chunker.ParallelChunker.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">equal_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'chunks'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_ignore</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_unignore</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary_extensions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority_rules</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">semantic_chunking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/multi_dirs_chunker.html#ParallelChunker.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.multi_dirs_chunker.ParallelChunker.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>equal_chunks</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>max_chunk_size</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>output_dir</strong> (<em>str</em>)</p></li>
+<li><p><strong>user_ignore</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>user_unignore</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>binary_extensions</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>priority_rules</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>num_threads</strong> (<em>int</em>)</p></li>
+<li><p><strong>dry_run</strong> (<em>bool</em>)</p></li>
+<li><p><strong>semantic_chunking</strong> (<em>bool</em>)</p></li>
+<li><p><strong>file_type</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.multi_dirs_chunker.ParallelChunker.calculate_priority">
+<span class="sig-name descname"><span class="pre">calculate_priority</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/multi_dirs_chunker.html#ParallelChunker.calculate_priority"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.multi_dirs_chunker.ParallelChunker.calculate_priority" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.multi_dirs_chunker.ParallelChunker.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/multi_dirs_chunker.html#ParallelChunker.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.multi_dirs_chunker.ParallelChunker.close" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.multi_dirs_chunker.ParallelChunker.is_absolute_pattern">
+<span class="sig-name descname"><span class="pre">is_absolute_pattern</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/multi_dirs_chunker.html#ParallelChunker.is_absolute_pattern"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.multi_dirs_chunker.ParallelChunker.is_absolute_pattern" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.multi_dirs_chunker.ParallelChunker.is_binary_file">
+<span class="sig-name descname"><span class="pre">is_binary_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/multi_dirs_chunker.html#ParallelChunker.is_binary_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.multi_dirs_chunker.ParallelChunker.is_binary_file" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.multi_dirs_chunker.ParallelChunker.process_directories">
+<span class="sig-name descname"><span class="pre">process_directories</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dirs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/multi_dirs_chunker.html#ParallelChunker.process_directories"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.multi_dirs_chunker.ParallelChunker.process_directories" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dirs</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.multi_dirs_chunker.ParallelChunker.process_directory">
+<span class="sig-name descname"><span class="pre">process_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/multi_dirs_chunker.html#ParallelChunker.process_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.multi_dirs_chunker.ParallelChunker.process_directory" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.multi_dirs_chunker.ParallelChunker.process_file">
+<span class="sig-name descname"><span class="pre">process_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_process</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/multi_dirs_chunker.html#ParallelChunker.process_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.multi_dirs_chunker.ParallelChunker.process_file" title="Link to this definition"></a></dt>
+<dd><p>Process a single file and create chunks from it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> (<em>str</em>) – Path to the file to process</p></li>
+<li><p><strong>custom_chunk_size</strong> (<em>int</em><em> | </em><em>None</em>) – Optional custom chunk size for this specific file, overriding the global setting</p></li>
+<li><p><strong>force_process</strong> (<em>bool</em>) – If True, process the file even if it would normally be ignored</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.multi_dirs_chunker.ParallelChunker.should_ignore_file">
+<span class="sig-name descname"><span class="pre">should_ignore_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/multi_dirs_chunker.html#ParallelChunker.should_ignore_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.multi_dirs_chunker.ParallelChunker.should_ignore_file" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pykomodo.multi_dirs_chunker.ParallelChunker.DIR_IGNORE_NAMES">
+<span class="sig-name descname"><span class="pre">DIR_IGNORE_NAMES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['venv',</span> <span class="pre">'.venv',</span> <span class="pre">'env',</span> <span class="pre">'node_modules',</span> <span class="pre">'.git',</span> <span class="pre">'.svn',</span> <span class="pre">'.hg',</span> <span class="pre">'__pycache__',</span> <span class="pre">'.pytest_cache',</span> <span class="pre">'.tox',</span> <span class="pre">'.eggs',</span> <span class="pre">'build',</span> <span class="pre">'dist']</span></em><a class="headerlink" href="#pykomodo.multi_dirs_chunker.ParallelChunker.DIR_IGNORE_NAMES" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pykomodo.multi_dirs_chunker.PriorityRule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pykomodo.multi_dirs_chunker.</span></span><span class="sig-name descname"><span class="pre">PriorityRule</span></span><a class="reference internal" href="_modules/pykomodo/multi_dirs_chunker.html#PriorityRule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.multi_dirs_chunker.PriorityRule" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.multi_dirs_chunker.PriorityRule.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/multi_dirs_chunker.html#PriorityRule.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.multi_dirs_chunker.PriorityRule.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<p>Example usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pykomodo.multi_dirs_chunker</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiDirChunker</span>
+
+<span class="n">chunker</span> <span class="o">=</span> <span class="n">MultiDirChunker</span><span class="p">()</span>
+<span class="n">chunks</span> <span class="o">=</span> <span class="n">chunker</span><span class="o">.</span><span class="n">chunk_directories</span><span class="p">([</span><span class="s1">&#39;path/to/dir1&#39;</span><span class="p">,</span> <span class="s1">&#39;path/to/dir2&#39;</span><span class="p">],</span> <span class="n">chunk_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="module-pykomodo.enhanced_chunker">
+<span id="enhanced-chunker"></span><h2><a class="toc-backref" href="#id4" role="doc-backlink">Enhanced Chunker</a><a class="headerlink" href="#module-pykomodo.enhanced_chunker" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="pykomodo.enhanced_chunker.EnhancedParallelChunker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pykomodo.enhanced_chunker.</span></span><span class="sig-name descname"><span class="pre">EnhancedParallelChunker</span></span><a class="reference internal" href="_modules/pykomodo/enhanced_chunker.html#EnhancedParallelChunker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.enhanced_chunker.EnhancedParallelChunker" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pykomodo.multi_dirs_chunker.ParallelChunker" title="pykomodo.multi_dirs_chunker.ParallelChunker"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParallelChunker</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pykomodo.enhanced_chunker.EnhancedParallelChunker.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">equal_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'chunks'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_ignore</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_unignore</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary_extensions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority_rules</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extract_metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_summaries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_redundancy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4096</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_relevance_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/enhanced_chunker.html#EnhancedParallelChunker.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.enhanced_chunker.EnhancedParallelChunker.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>equal_chunks</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>max_chunk_size</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>output_dir</strong> (<em>str</em>)</p></li>
+<li><p><strong>user_ignore</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>user_unignore</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>binary_extensions</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>priority_rules</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>num_threads</strong> (<em>int</em>)</p></li>
+<li><p><strong>extract_metadata</strong> (<em>bool</em>)</p></li>
+<li><p><strong>add_summaries</strong> (<em>bool</em>)</p></li>
+<li><p><strong>remove_redundancy</strong> (<em>bool</em>)</p></li>
+<li><p><strong>context_window</strong> (<em>int</em>)</p></li>
+<li><p><strong>min_relevance_score</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-pykomodo.command_line">
+<span id="command-line-interface"></span><h2><a class="toc-backref" href="#id5" role="doc-backlink">Command Line Interface</a><a class="headerlink" href="#module-pykomodo.command_line" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="pykomodo.command_line.launch_dashboard">
+<span class="sig-prename descclassname"><span class="pre">pykomodo.command_line.</span></span><span class="sig-name descname"><span class="pre">launch_dashboard</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/command_line.html#launch_dashboard"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.command_line.launch_dashboard" title="Link to this definition"></a></dt>
+<dd><p>Launch the dashboard interface.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pykomodo.command_line.main">
+<span class="sig-prename descclassname"><span class="pre">pykomodo.command_line.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/command_line.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.command_line.main" title="Link to this definition"></a></dt>
+<dd><p>Main entry point for the komodo CLI.</p>
+</dd></dl>
+
+</section>
+<section id="module-pykomodo.pykomodo_config">
+<span id="configuration"></span><h2><a class="toc-backref" href="#id6" role="doc-backlink">Configuration</a><a class="headerlink" href="#module-pykomodo.pykomodo_config" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="pykomodo.pykomodo_config.KomodoConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pykomodo.pykomodo_config.</span></span><span class="sig-name descname"><span class="pre">KomodoConfig</span></span><a class="reference internal" href="_modules/pykomodo/pykomodo_config.html#KomodoConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.pykomodo_config.KomodoConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>A Pydantic model representing pykomodo settings.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pykomodo.pykomodo_config.KomodoConfig.context_window">
+<span class="sig-name descname"><span class="pre">context_window</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pykomodo.pykomodo_config.KomodoConfig.context_window" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pykomodo.pykomodo_config.KomodoConfig.directories">
+<span class="sig-name descname"><span class="pre">directories</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pykomodo.pykomodo_config.KomodoConfig.directories" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pykomodo.pykomodo_config.KomodoConfig.enhanced">
+<span class="sig-name descname"><span class="pre">enhanced</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#pykomodo.pykomodo_config.KomodoConfig.enhanced" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pykomodo.pykomodo_config.KomodoConfig.equal_chunks">
+<span class="sig-name descname"><span class="pre">equal_chunks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#pykomodo.pykomodo_config.KomodoConfig.equal_chunks" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pykomodo.pykomodo_config.KomodoConfig.extract_metadata">
+<span class="sig-name descname"><span class="pre">extract_metadata</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#pykomodo.pykomodo_config.KomodoConfig.extract_metadata" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pykomodo.pykomodo_config.KomodoConfig.max_chunk_size">
+<span class="sig-name descname"><span class="pre">max_chunk_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#pykomodo.pykomodo_config.KomodoConfig.max_chunk_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pykomodo.pykomodo_config.KomodoConfig.min_relevance_score">
+<span class="sig-name descname"><span class="pre">min_relevance_score</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#pykomodo.pykomodo_config.KomodoConfig.min_relevance_score" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pykomodo.pykomodo_config.KomodoConfig.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#pykomodo.pykomodo_config.KomodoConfig.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pykomodo.pykomodo_config.KomodoConfig.output_dir">
+<span class="sig-name descname"><span class="pre">output_dir</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#pykomodo.pykomodo_config.KomodoConfig.output_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pykomodo.pykomodo_config.KomodoConfig.remove_redundancy">
+<span class="sig-name descname"><span class="pre">remove_redundancy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#pykomodo.pykomodo_config.KomodoConfig.remove_redundancy" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pykomodo.pykomodo_config.KomodoConfig.semantic_chunking">
+<span class="sig-name descname"><span class="pre">semantic_chunking</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#pykomodo.pykomodo_config.KomodoConfig.semantic_chunking" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pykomodo.pykomodo_config.run_chunker_with_config">
+<span class="sig-prename descclassname"><span class="pre">pykomodo.pykomodo_config.</span></span><span class="sig-name descname"><span class="pre">run_chunker_with_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pykomodo/pykomodo_config.html#run_chunker_with_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykomodo.pykomodo_config.run_chunker_with_config" title="Link to this definition"></a></dt>
+<dd><p>Build and run a pykomodo chunker (Enhanced or basic) from config.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#pykomodo.pykomodo_config.KomodoConfig" title="pykomodo.pykomodo_config.KomodoConfig"><em>KomodoConfig</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Example configuration:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pykomodo.pykomodo_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">PyKomodoConfig</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">PyKomodoConfig</span><span class="p">()</span>
+<span class="n">config</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="s1">&#39;config.yaml&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cli_reference.html" class="btn btn-neutral float-left" title="CLI Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="contribution.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, oha.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

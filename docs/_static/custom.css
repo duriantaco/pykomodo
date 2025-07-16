@@ -1,0 +1,19 @@
+.highlight {
+    border-radius: 4px;
+}
+
+dl.field-list > dt {
+    font-weight: bold;
+    background: #f8f8f8;
+    padding: 3px 6px;
+    border-radius: 3px;
+}
+
+dl.py.method > dt,
+dl.py.class > dt {
+    background: #f3f6f9;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border-left: 3px solid #2980b9;
+    margin-bottom: 10px;
+}
