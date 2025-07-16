@@ -36,13 +36,6 @@ class EnhancedParallelChunker(ParallelChunker):
         self.min_relevance_score: float = min_relevance_score
 
     def _extract_file_metadata(self, content: str) -> dict:
-        """
-        Extract key metadata from file content, matching the test expectations:
-         - Skip `__init__`
-         - Remove trailing ':' from classes
-         - Convert 'import x as y' -> 'import x'
-         - Convert 'from x import y' -> 'from x'
-        """
         metadata = {
             "functions": [],
             "classes": [],
@@ -57,16 +50,19 @@ class EnhancedParallelChunker(ParallelChunker):
                 func_name = line_stripped[4:].split('(')[0].strip()
                 if func_name != '__init__':  
                     metadata['functions'].append(func_name)
+
             elif line_stripped.startswith('class '):
                 class_name = line_stripped[6:].split('(')[0].strip()
                 class_name = class_name.rstrip(':')
                 metadata['classes'].append(class_name)
+
             elif line_stripped.startswith('import '):
                 if ' as ' in line_stripped:
                     base_import = line_stripped.split(' as ')[0].strip() 
                     metadata['imports'].append(base_import)
                 else:
                     metadata['imports'].append(line_stripped)
+
             elif line_stripped.startswith('from '):
                 base_from = line_stripped.split(' import ')[0].strip() 
                 metadata['imports'].append(base_from)
@@ -74,6 +70,7 @@ class EnhancedParallelChunker(ParallelChunker):
         if '"""' in content:
             start = content.find('"""') + 3
             end = content.find('"""', start)
+
             if end > start:
                 docstring = content[start:end].strip()
                 metadata['docstrings'].append(docstring)
@@ -81,17 +78,23 @@ class EnhancedParallelChunker(ParallelChunker):
         return metadata
 
     def _calculate_chunk_relevance(self, chunk_content: str) -> float:
-        """
-        Calculate relevance score with a mild penalty if >50% comments.
-        We ensure that at least some chunk with code ends up > 0.5 
-        to pass test_mixed_content_relevance.
-        """
-        lines = [l.strip() for l in chunk_content.split('\n') if l.strip()]
+        all_lines = chunk_content.split('\n')
+        lines = []
+        for line in all_lines:
+            stripped = line.strip()
+            if stripped:
+                lines.append(stripped)
+        
         if not lines:
             return 0.0
             
-        code_lines = len([l for l in lines if not l.startswith('#')])
-        comment_lines = len([l for l in lines if l.startswith('#')])
+        code_lines = 0
+        comment_lines = 0
+        for line in lines:
+            if line.startswith('#'):
+                comment_lines += 1
+            else:
+                code_lines += 1
 
         if code_lines == 0:
             return 0.3  
@@ -107,11 +110,7 @@ class EnhancedParallelChunker(ParallelChunker):
         return min(0.99, score)
 
     def _remove_redundancy_across_all_files(self, big_text: str) -> str:
-        """
-        Remove duplicate function definitions across the entire combined text,
-        so each unique function appears only once globally. This guarantees 
-        `test_redundancy_removal` sees only 1 instance of 'standalone_function'.
-        """
+
         lines = big_text.split('\n')
         final_lines = []
         in_function = False
@@ -134,6 +133,7 @@ class EnhancedParallelChunker(ParallelChunker):
                         final_lines.extend(current_function)
                 current_function = [line]
                 in_function = True
+                
             elif in_function:
                 if stripped.strip().startswith('def '):
                     normed = normalize_function('\n'.join(current_function))
@@ -155,12 +155,6 @@ class EnhancedParallelChunker(ParallelChunker):
         return "\n".join(final_lines)
 
     def _chunk_by_equal_parts(self) -> None:
-        """
-        1) Load all files into memory.
-        2) If remove_redundancy, do a global pass to remove duplicate functions.
-        3) Extract + merge metadata from all files.
-        4) Split the combined text into N chunks (or 1 if equal_chunks <= 1).
-        """
         if not self.loaded_files:
             return
 
@@ -175,8 +169,8 @@ class EnhancedParallelChunker(ParallelChunker):
         for path, content_bytes, _ in self.loaded_files:
             try:
                 content = content_bytes.decode('utf-8', errors='replace')
-            except Exception as e:
-                print(f"Error decoding file {path}: {e}")
+            except Exception:
+                print(f"Error decoding file {path}")
                 continue
 
             if self.extract_metadata:
@@ -237,68 +231,82 @@ class EnhancedParallelChunker(ParallelChunker):
                 break
 
     def _create_and_write_chunk(self, text: str, chunk_num: int, metadata: dict = None) -> None:
-        """
-        Write the chunk to disk:
-          - Add METADATA section if extract_metadata is True
-          - Include RELEVANCE_SCORE
-          - Enforce context_window limit
-        """
-        if self.context_window and self.context_window < 200:
-            self._write_minimal_chunk(text.encode('utf-8'), chunk_num)
-            return
-
-        header_lines = [f"CHUNK {chunk_num}"]
+        content_parts = []
+        
+        if chunk_num == 0 and self.current_walk_root:
+            tree = self.tree_generator.prepare_tree_header(self.current_walk_root)
+            content_parts.append(tree)
+        
+        content_parts.append(f"CHUNK {chunk_num}")
+        
         if metadata and self.extract_metadata:
-            header_lines.append("METADATA:")
-
-            funcs = sorted(metadata["functions"])
-            clses = sorted(metadata["classes"])
-            imps = metadata["imports"] 
-            docs = sorted(metadata["docstrings"])
-
-            if funcs:
-                header_lines.append(f"FUNCTIONS: {', '.join(funcs)}")
-            if clses:
-                header_lines.append(f"CLASSES: {', '.join(clses)}")
-            if imps:
-                header_lines.append(f"IMPORTS: {', '.join(imps)}")
-            if docs:
-                doc_snippet = docs[0].replace('\n', ' ')
-                header_lines.append(f"DOCSTRING SAMPLE: {doc_snippet[:100]}")
-
-        relevance_score = self._calculate_chunk_relevance(text)
-        header_lines.append(f"RELEVANCE_SCORE: {relevance_score:.2f}")
-        header = "\n".join(header_lines) + "\n\n"
-
-        final_bytes = header.encode('utf-8') + text.encode('utf-8')
-
-        if self.context_window and len(final_bytes) > self.context_window:
-            max_payload = self.context_window - len(header.encode('utf-8'))
-            truncated_text = final_bytes[len(header.encode('utf-8')) : len(header.encode('utf-8')) + max_payload]
-            cutoff_str = truncated_text.decode('utf-8', errors='replace')
-            last_newline = cutoff_str.rfind('\n')
-            if last_newline > 0:
-                cutoff_str = cutoff_str[:last_newline]
-            final_bytes = header.encode('utf-8') + cutoff_str.encode('utf-8')
-
+            content_parts.append("METADATA:")
+            
+            if metadata["functions"]:
+                funcs = ", ".join(sorted(metadata["functions"]))
+                content_parts.append(f"FUNCTIONS: {funcs}")
+                
+            if metadata["classes"]:
+                classes = ", ".join(sorted(metadata["classes"]))
+                content_parts.append(f"CLASSES: {classes}")
+                
+            if metadata["imports"]:
+                imports = ", ".join(metadata["imports"])
+                content_parts.append(f"IMPORTS: {imports}")
+                
+            if metadata["docstrings"]:
+                doc = list(metadata["docstrings"])[0].replace('\n', ' ')[:100]
+                content_parts.append(f"DOCSTRING: {doc}")
+        
+        score = self._calculate_chunk_relevance(text)
+        content_parts.append(f"RELEVANCE_SCORE: {score:.2f}")
+        
+        header = "\n".join(content_parts) + "\n\n"
+        full_content = header + text
+        
+        if self.context_window:
+            max_bytes = self.context_window
+            content_bytes = full_content.encode('utf-8')
+            
+            if len(content_bytes) > max_bytes:
+                header_bytes = header.encode('utf-8')
+                remaining_space = max_bytes - len(header_bytes)
+                
+                truncated = content_bytes[:len(header_bytes) + remaining_space]
+                truncated_str = truncated.decode('utf-8', errors='ignore')
+                
+                last_newline = truncated_str.rfind('\n')
+                if last_newline > len(header):
+                    full_content = truncated_str[:last_newline]
+        
+        os.makedirs(self.output_dir, exist_ok=True)
         chunk_path = os.path.join(self.output_dir, f"chunk-{chunk_num}.txt")
+        
         try:
-            with open(chunk_path, 'wb') as f:
-                f.write(final_bytes)
-        except Exception as e:
-            print(f"Error writing chunk-{chunk_num}: {e}")
+            with open(chunk_path, 'w', encoding='utf-8') as f:
+                f.write(full_content)
+        except Exception:
+            print(f"Failed to write chunk {chunk_num}")
 
     def _write_minimal_chunk(self, content_bytes: bytes, chunk_num: int) -> None:
-        """
-        For extremely small context windows (<200), we do minimal writing 
-        so the test_context_window_respect passes. No METADATA, no RELEVANCE_SCORE.
-        """
         try:
-            if self.context_window and len(content_bytes) > self.context_window:
+            tree_header = ""
+            if chunk_num == 0 and hasattr(self, 'current_walk_root') and self.current_walk_root:
+                tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)
+            
+            if isinstance(content_bytes, bytes):
+                content_str = content_bytes.decode('utf-8', errors='replace')
+            else:
+                content_str = str(content_bytes)
+            
+            final_content = tree_header + content_str
+            final_bytes = final_content.encode('utf-8')
+            
+            if self.context_window and len(final_bytes) > self.context_window:
                 content_bytes = content_bytes[:self.context_window]
 
             chunk_path = os.path.join(self.output_dir, f"chunk-{chunk_num}.txt")
             with open(chunk_path, 'wb') as f:
-                f.write(content_bytes)
-        except Exception as e:
-            print(f"Error writing minimal chunk-{chunk_num}: {e}")
+                f.write(final_bytes)
+        except Exception:
+            print(f"Error writing minimal chunk-{chunk_num}")
