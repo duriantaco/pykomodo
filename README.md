@@ -2,22 +2,22 @@
   <img src="assets/KOMODO.png" alt="KOMODO Logo" width="200">
 </p>
 
-A Python-based parallel file chunking system designed for processing large codebases into LLM-friendly chunks. The tool provides intelligent file filtering, multi-threaded processing, and advanced chunking capabilities optimized for machine learning contexts.
+A Python-based parallel file chunking system designed for processing large codebases into LLM-friendly chunks. The tool provides file filtering, multi-threaded processing, and chunking capabilities for machine learning contexts.
 
 <p align="center">
-  <img src="assets/dashboard.gif" alt="KOMODO Dashboard Demo" width="730">
+  <img src="assets/dashboard.gif" alt="KOMODO Dashboard Demo" width="700">
 </p>
 
 ## Core Features
 
-* **NEW** Front end tool for chunking. Run `komodo --dashboard`
+* **NEW** Front end tool for chunking. Run `komodo run`. This will launch both the front end as well as the server. The server will be running on port 5555
 
 * Parallel Processing: Multi-threaded file reading with configurable thread pools
 
-* Smart File Filtering:
+* File Filtering:
     * Built-in patterns for common excludes (.git, node_modules, pycache, etc.)
     * Customizable ignore/unignore patterns
-    * Intelligent binary file detection
+    * Binary file detection
 
 * Flexible Chunking:
     * Equal-parts chunking: Split content into N equal chunks
@@ -42,7 +42,7 @@ A Python-based parallel file chunking system designed for processing large codeb
 ## Installation
 
 ```bash
-pip install komodo==0.2.5
+pip install komodo==0.3.0
 ```
 
 Link to pypi: https://pypi.org/project/pykomodo/
@@ -116,7 +116,6 @@ Without `--semantic-chunks`: Splits each file into chunks with at most M tokens 
 
   **Important: You must specify either --equal-chunks or --max-chunk-size, but not both.**
 
-
 - **With --semantic-chunks**:
 
 * For .py files: Aims for chunks of M lines, grouping top-level functions/classes as atomic units. If a function exceeds M lines, it becomes a single chunk.
@@ -132,7 +131,7 @@ Without `--semantic-chunks`: Splits each file into chunks with at most M tokens 
   komodo . --max-tokens 1000 --output-dir chunks
   ```
 
-* Precise token limits: Chunks content based on token counts rather than line counts
+* Token limits: Chunks content based on token counts rather than line counts
 * Tiktoken integration: Uses OpenAI's tiktoken library when available for accurate LLM token counting
 * Fallback tokenization: Falls back to word-based splitting when tiktoken is unavailable
 

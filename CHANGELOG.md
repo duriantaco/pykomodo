@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.0] - 2025-07-16
+### Added 
+- Added a tree tool by `treeline` for adding code structure context in chunks
+- Added tests for new `server.py` and for `tree_generator.py`
+
+### Changed
+- Removed gradio and swapped it with html for frontend 
+- Added run command in pykomodo so users can launch the server + front end with `komodo run` 
+- General house cleaning 
+
 ## [0.2.5] - 2025-05-22
 ### Added
 - Added front end tool for chunking! 
