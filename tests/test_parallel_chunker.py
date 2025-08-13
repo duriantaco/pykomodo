@@ -2,9 +2,10 @@ import unittest
 import os
 import tempfile
 import shutil
-from pykomodo.multi_dirs_chunker import ParallelChunker, PriorityRule
+from pykomodo.multi_dirs_chunker import ParallelChunker
 import io
 import sys
+import json
 
 class TestParallelChunker(unittest.TestCase):
     def setUp(self):
@@ -201,21 +202,23 @@ class MyClass:
         )
         chunker.process_directory(self.test_dir)
 
-        chunks = [f for f in os.listdir(out_dir) if f.startswith("chunk-")]
+        chunks = []
+        for filename in os.listdir(out_dir):
+            if filename.startswith("chunk-"):
+                chunks.append(filename)
+
         self.assertTrue(len(chunks) > 0)
 
-        # Check if semantic info is in chunks
-        found_func = False
-        found_class = False
-        for chunk_file in chunks:
-            with open(os.path.join(out_dir, chunk_file), "r") as f:
-                content = f.read()
-                if "Function: func1" in content:
-                    found_func = True
-                if "Class: MyClass" in content:
-                    found_class = True
+        found_semantic_label = False
+        for ch in chunks:
+            with open(os.path.join(out_dir, ch), "r", encoding="utf-8") as f:
+                c = f.read()
+                if "Function: func1" in c or "Class: MyClass" in c:
+                    found_semantic_label = True
+                    break
 
-        self.assertTrue(found_func or found_class)
+        self.assertTrue(found_semantic_label)
+
 
     def test_semantic_chunking_syntax_error_fallback(self):
         out_dir = os.path.join(self.test_dir, "syntax_error_out")
@@ -302,15 +305,19 @@ class MyClass:
         chunks = [f for f in os.listdir(out_dir) if f.startswith("chunk-")]
         self.assertTrue(len(chunks) >= 1)
 
-    def test_force_process_binary_file(self):
+    def test_force_process_binary_file_is_skipped(self):
         out_dir = os.path.join(self.test_dir, "force_binary_out")
         os.mkdir(out_dir)
-        
+
         chunker = ParallelChunker(max_chunk_size=1000, output_dir=out_dir)
         chunker.process_file(self.test_file_bin, force_process=True)
-        
-        chunks = [f for f in os.listdir(out_dir) if f.startswith("chunk-")]
-        self.assertEqual(len(chunks), 1)
+        files = os.listdir(out_dir)
+        chunks = []
+        for filename in files:
+            if filename.startswith("chunk-"):
+                chunks.append(filename)
+
+        self.assertEqual(len(chunks), 0)
 
     def test_multiple_directories(self):
         second_dir = os.path.join(self.test_dir, "second")
@@ -345,8 +352,43 @@ class MyClass:
         chunker = ParallelChunker(max_chunk_size=1000)
         chunker.process_directory(self.test_dir)
         
-        loaded_files = [os.path.basename(x[0]) for x in chunker.loaded_files]
+        loaded_files = []
+        for file_info in chunker.loaded_files:
+            filename = os.path.basename(file_info[0])
+            loaded_files.append(filename)
+
         self.assertNotIn("test.tmp", loaded_files)
+
+    def test_export_jsonl_creates_and_contains_metadata(self):
+        out_dir = os.path.join(self.test_dir, "jsonl_out")
+        os.mkdir(out_dir)
+
+        chunker = ParallelChunker(
+            max_chunk_size=10,
+            output_dir=out_dir,
+            export_jsonl=True,
+            export_embed_model="unit-test-model"
+        )
+        chunker.process_directory(self.test_dir)
+
+        jsonl_path = os.path.join(out_dir, "chunks.jsonl")
+        self.assertTrue(os.path.exists(jsonl_path))
+
+        with open(jsonl_path, "r", encoding="utf-8") as f:
+            lines = []
+            for line in f:
+                if line.strip():
+                    data = json.loads(line)
+                    lines.append(data)
+
+        self.assertTrue(len(lines) > 0)
+
+        rec = lines[0]
+        self.assertIn("page_content", rec)
+        self.assertIn("metadata", rec)
+        self.assertIn("chunk_id", rec["metadata"])
+        self.assertIn("sources", rec["metadata"])
+        self.assertEqual(rec["metadata"]["embed_model"], "unit-test-model")
 
 if __name__ == "__main__":
     unittest.main()
