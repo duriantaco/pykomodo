@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.3.1] - 2025-08-13
+
+### Added
+- JSONL exports. For LangChain/LlamaIndex `chunks.jsonl` with one doc per line 
+- New CLI flags: 
+  - `--export-jsonl` – JSONL export
+  - `--export-path` – override output path
+  - `--export-embed-model` – annotate metadata with embedding model name
+-  `chunk_id` (BLAKE2b-128) per chunk content for downstream tracking
+
+### Changed
+- `.pdf` handling is now **case-insensitive** across all chunking paths
+- JSONL implemented with UTF-8 and unicode preservation
+- Cached directory tree header
+- Faster walks, earlier pruning of ignored directories 
+
+### Fixed
+- In `semantic_chunking`, fixed tuple unpack bug in `_chunk_by_semantic`
+- Size based non Python chunking should no longer drops lines due to local variable reset
+- Fixed server port increment bug
+
 ## [0.3.0] - 2025-07-16
 ### Added 
 - Added a tree tool by `treeline` for adding code structure context in chunks

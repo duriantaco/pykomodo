@@ -37,7 +37,9 @@ A Python-based parallel file chunking system designed for processing large codeb
 
 ## Core Features
 
-* **NEW** Front end tool for chunking. Run `komodo run`. This will launch both the front end as well as the server. The server will be running on port 5555
+* **New** JSONL export: write LangChain/LlamaIndex-ready `chunks.jsonl` with per-chunk metadata (stable `chunk_id`, sources, root).
+
+* Run `komodo run`. This launches the server + frontend on port 5555 (or the next free port up to 5600).
 
 * Parallel Processing: Multi-threaded file reading with configurable thread pools
 
@@ -69,7 +71,7 @@ A Python-based parallel file chunking system designed for processing large codeb
 ## Installation
 
 ```bash
-pip install komodo==0.3.0
+pip install komodo==0.3.1
 ```
 
 Link to pypi: https://pypi.org/project/pykomodo/
@@ -86,7 +88,6 @@ Here’s a complete list of available command-line options for the `komodo` tool
 
 | Option                | Description                                                                                   | Default Value      |
 |-----------------------|-----------------------------------------------------------------------------------------------|--------------------|
-| `--dashboard`         | Launches the front end for chunking     | N/A                |
 | `--version`           | Show the version of komodo         | N/A                |
 | `dirs`                | Directories to process (space-separated; e.g., `komodo dir1/ dir2/`).                         | Current directory (`.`) |
 | `--equal-chunks N`    | Split content into N equal chunks. Mutually exclusive with `--max-chunk-size`.                | None               |
@@ -104,12 +105,17 @@ Here’s a complete list of available command-line options for the `komodo` tool
 | `--min-relevance F`   | Minimum relevance score for chunks (0.0-1.0, used with `--enhanced`).                         | 0.3                |
 | `--no-metadata`       | Disable metadata extraction (used with `--enhanced`).                                         | False (metadata enabled) |
 | `--keep-redundant`    | Keep redundant content across chunks (used with `--enhanced`).                                | False (removes redundancy) |
-| `--no-summaries`      | Disable summary generation (used with `--enhanced`; currently a placeholder in code).          | False (summaries enabled) |
+| `--no-summaries`      | Disable summary generation (used with `--enhanced`;).          | False (summaries enabled) |
 | `--file-type TYPE`    | Only process files of this extension (e.g., `pdf`, `py`).                                     | None               |
+| `--export-jsonl`	    | Writes chunks.jsonl (LangChain/LlamaIndex-ready).               | False
+| `--export-path PATH`. | Where to write the JSONL (defaults to `<output_dir>/chunks.jsonl`) | None
+| `--export-embed-model NAME` | Embedding model name to store in metadata | None
+
 
 **Notes:**
 - Options like `--equal-chunks` and `--max-chunk-size` cannot be used together (enforced by the CLI).
 - Use `--dry-run` to test your ignore/unignore patterns or priority rules without generating output.
+- JSONL export isn’t available with --max-tokens yet.
 
 #### Basic usage
 
@@ -181,6 +187,33 @@ Without `--semantic-chunks`: Splits each file into chunks with at most M tokens 
     ```
 
     **IMPORTANT: Do note that for PDFs with a lot of images, this PDF chunker will NOT WORK. This current PDF chunker is NOT capable of chunking formulas/images** 
+
+### Export JSONL (LangChain/LlamaIndex)
+
+Enable a machine-learning-friendly export alongside the usual `chunk-*.txt` files.
+
+**CLI**
+```bash
+komodo . --max-chunk-size 800 \
+  --export-jsonl \
+  --export-path chunks/chunks.jsonl \
+  --export-embed-model text-embedding-3
+```
+
+##### Use with langchain
+
+```python
+from langchain.docstore.document import Document
+import json
+
+with open("chunks/chunks.jsonl", "r", encoding="utf-8") as f:
+    docs = []
+    for line in f:
+        data = json.loads(line)
+        docs.append(Document(**data))
+```
+
+**Note:** Note: `--max-tokens` (TokenBasedChunker) doesn’t support `--export-jsonl` yet.
 
 #### Ignoring & Unignoring Files
 
@@ -298,7 +331,7 @@ No chunks are created. Komodo simply prints the would-be processed files, sorted
 Basic usage:
 
 ```python
-from komodo import ParallelChunker
+from pykomodo.multi_dirs_chunker import ParallelChunker
 
 # Split into 5 equal chunks
 chunker = ParallelChunker(
@@ -352,7 +385,7 @@ print("PDF processing completed successfully!")
 
 ### Front-end Usage
 
-To run the front end for chunking, just use `komodo --dashboard`
+To run the front end for chunking, just use `komodo run`
 
 ## Advanced LLM Features
 
@@ -405,53 +438,6 @@ chunker = ParallelChunker(
 chunker.process_directory("/path/to/dir")
 
 print("PDF processing completed successfully!")
-```
-
-### Typed Classes & Pydantic-Based Configuration
-
-Komodo’s main classes (`ParallelChunker`, `EnhancedParallelChunker`, etc.) now include **type hints**. Nothing changes at runtime, but if you’re using an IDE or a type checker like `mypy`, you’ll get improved error checking and auto-completion - or hopefully. 
-
-You can also use **Pydantic** to configure Komodo with strongly typed settings. For instance:
-
-```python
-from pydantic import BaseModel, Field
-from typing import List, Optional
-from pykomodo.multi_dirs_chunker import ParallelChunker
-from pykomodo.enhanced_chunker import EnhancedParallelChunker
-
-class KomodoConfig(BaseModel):
-    directories: List[str] = Field(default_factory=lambda: ["."], description="Directories to process.")
-    equal_chunks: Optional[int] = None
-    max_chunk_size: Optional[int] = None
-    output_dir: str = "chunks"
-    semantic_chunking: bool = False
-    enhanced: bool = False
-    context_window: int = 4096
-    min_relevance_score: float = 0.3
-    remove_redundancy: bool = True
-    extract_metadata: bool = True
-
-def run_chunker_with_config(config: KomodoConfig):
-    ChunkerClass = EnhancedParallelChunker if config.enhanced else ParallelChunker
-
-    chunker = ChunkerClass(
-        equal_chunks=config.equal_chunks,
-        max_chunk_size=config.max_chunk_size,
-        output_dir=config.output_dir,
-        semantic_chunking=config.semantic_chunking,
-        context_window=config.context_window if config.enhanced else None,
-        min_relevance_score=config.min_relevance_score if config.enhanced else None,
-        remove_redundancy=config.remove_redundancy if config.enhanced else None,
-        extract_metadata=config.extract_metadata if config.enhanced else None,
-    )
-
-    chunker.process_directories(config.directories)
-    chunker.close()
-
-if __name__ == "__main__":
-    # example use with typed + validated config
-    cfg = KomodoConfig(directories=["src/", "docs/"], equal_chunks=5, enhanced=True)
-    run_chunker_with_config(cfg)
 ```
 
 ## Common Use Cases
