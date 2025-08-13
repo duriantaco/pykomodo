@@ -7,40 +7,44 @@ class PDFProcessor:
     
     def extract_text_from_pdf(self, path):
         try:
-            doc = fitz.open(path)
             text = ""
-            for page in doc:
-                text += page.get_text("text")
+            with fitz.open(path) as doc:
+                for page in doc:
+                    text += page.get_text("text")
             return text
         except Exception:
-            print(f"Error extracting text from PDF")
+            print(f"Error extracting text from PDF: {path}")
             return ""
     
     def extract_pdf_paragraphs(self, path):
         try:
-            doc = fitz.open(path)
             paragraphs = []
-            for page in doc:
-                text = page.get_text("text")
-                page_paras = text.split("\n\n")
-                paragraphs.extend([para.strip() for para in page_paras if para.strip()])
+            with fitz.open(path) as doc:
+                for page in doc:
+                    text = page.get_text("text")
+                    page_paras = text.split("\n\n")
+                    for para in page_paras:
+                        stripped = para.strip()
+                        if stripped:
+                            paragraphs.append(stripped)
+            if len(paragraphs) <= 1:
+                paragraphs = [ln.strip() for ln in text.splitlines() if ln.strip()]
             return paragraphs
         except Exception:
-            print(f"Error extracting paragraphs from PDF")
+            print(f"Error extracting paragraphs from PDF: {path}")
             return []
     
     def process_pdf_for_chunking(self, path, start_idx, chunk_writer):
         try:
-            doc = fitz.open(path)
             all_pages_content = []
-            
-            for page_num in range(len(doc)):
-                page = doc[page_num]
-                page_text = self._extract_page_text(page, page_num)
-                all_pages_content.append(page_text)
-            
+            with fitz.open(path) as doc:
+                for page_num in range(len(doc)):
+                    page = doc[page_num]
+                    page_text = self._extract_page_text(page, page_num)
+                    all_pages_content.append(page_text)
             full_document = "\n\n".join(all_pages_content)
             return self._chunk_pdf_content(path, full_document, start_idx, chunk_writer)
+
             
         except Exception as e:
             print(f"Error processing PDF {path}: {e}")
