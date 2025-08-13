@@ -1,24 +1,23 @@
 from pykomodo.multi_dirs_chunker import ParallelChunker
 import os
-from typing import Optional, List, Tuple
 
 class EnhancedParallelChunker(ParallelChunker):
     def __init__(
         self,
-        equal_chunks: Optional[int] = None,
-        max_chunk_size: Optional[int] = None,
-        output_dir: str = "chunks",
-        user_ignore: Optional[List[str]] = None,
-        user_unignore: Optional[List[str]] = None,
-        binary_extensions: Optional[List[str]] = None,
-        priority_rules: Optional[List[Tuple[str, int]]] = None,
-        num_threads: int = 4,
-        extract_metadata: bool = True,
-        add_summaries: bool = True,
-        remove_redundancy: bool = True,
-        context_window: int = 4096,
-        min_relevance_score: float = 0.3
-    ) -> None:
+        equal_chunks = None,
+        max_chunk_size = None,
+        output_dir = "chunks",
+        user_ignore = None,
+        user_unignore = None,
+        binary_extensions = None,
+        priority_rules = None,
+        num_threads = 4,
+        extract_metadata = True,
+        add_summaries = True,
+        remove_redundancy = True,
+        context_window = 4096,
+        min_relevance_score = 0.3
+    ):
         super().__init__(
             equal_chunks=equal_chunks,
             max_chunk_size=max_chunk_size,
@@ -29,13 +28,13 @@ class EnhancedParallelChunker(ParallelChunker):
             priority_rules=priority_rules,
             num_threads=num_threads
         )
-        self.extract_metadata: bool = extract_metadata
-        self.add_summaries: bool = add_summaries
-        self.remove_redundancy: bool = remove_redundancy
-        self.context_window: int = context_window
-        self.min_relevance_score: float = min_relevance_score
+        self.extract_metadata = extract_metadata
+        self.add_summaries = add_summaries
+        self.remove_redundancy = remove_redundancy
+        self.context_window = context_window
+        self.min_relevance_score = min_relevance_score
 
-    def _extract_file_metadata(self, content: str) -> dict:
+    def _extract_file_metadata(self, content):
         metadata = {
             "functions": [],
             "classes": [],
@@ -77,7 +76,7 @@ class EnhancedParallelChunker(ParallelChunker):
                 
         return metadata
 
-    def _calculate_chunk_relevance(self, chunk_content: str) -> float:
+    def _calculate_chunk_relevance(self, chunk_content):
         all_lines = chunk_content.split('\n')
         lines = []
         for line in all_lines:
@@ -102,23 +101,34 @@ class EnhancedParallelChunker(ParallelChunker):
         score = 1.0
 
         total_lines = code_lines + comment_lines
-        comment_ratio = comment_lines / total_lines if total_lines else 0.0
-        
+        if total_lines == 0:
+            comment_ratio = 0.0
+        else:
+            comment_ratio = comment_lines / total_lines
+
         if comment_ratio > 0.5:
             score *= 0.8  
 
         return min(0.99, score)
 
-    def _remove_redundancy_across_all_files(self, big_text: str) -> str:
+    def _remove_redundancy_across_all_files(self, big_text):
 
         lines = big_text.split('\n')
         final_lines = []
         in_function = False
         current_function = []
 
-        def normalize_function(func_text: str) -> str:
-            lines_ = [ln.strip() for ln in func_text.split('\n')]
-            lines_ = [ln for ln in lines_ if ln] 
+        def normalize_function(func_text):
+            lines_ = []
+            for ln in func_text.split('\n'):
+                lines_.append(ln.strip())
+            
+            filtered_lines = []
+            for ln in lines_:
+                if ln:
+                    filtered_lines.append(ln)
+            lines_ = filtered_lines
+
             return '\n'.join(lines_)
 
         seen_functions = {}
@@ -197,8 +207,11 @@ class EnhancedParallelChunker(ParallelChunker):
             return
 
         total_size = len(combined_text.encode('utf-8'))
-        max_size = (self.context_window - 50) if (self.context_window and self.context_window > 200) else float('inf')
-        max_size = int(max_size) if max_size != float('inf') else max_size
+        if self.context_window and self.context_window > 200:
+            max_size = self.context_window - 50
+            max_size = int(max_size)
+        else:
+            max_size = float('inf')
         target_size = min(total_size // self.equal_chunks, max_size)
 
         chunk_num = 0
@@ -230,7 +243,7 @@ class EnhancedParallelChunker(ParallelChunker):
                     )
                 break
 
-    def _create_and_write_chunk(self, text: str, chunk_num: int, metadata: dict = None) -> None:
+    def _create_and_write_chunk(self, text, chunk_num, metadata = None):
         content_parts = []
         
         if chunk_num == 0 and self.current_walk_root:
@@ -288,7 +301,7 @@ class EnhancedParallelChunker(ParallelChunker):
         except Exception:
             print(f"Failed to write chunk {chunk_num}")
 
-    def _write_minimal_chunk(self, content_bytes: bytes, chunk_num: int) -> None:
+    def _write_minimal_chunk(self, content_bytes, chunk_num) -> None:
         try:
             tree_header = ""
             if chunk_num == 0 and hasattr(self, 'current_walk_root') and self.current_walk_root:
