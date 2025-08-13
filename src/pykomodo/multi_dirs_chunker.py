@@ -2,10 +2,11 @@ import os
 import fnmatch
 import re
 import concurrent.futures
-from typing import Optional, List, Tuple
 from pykomodo.tree_generator import TreeGenerator
 from pykomodo.pdf_processor import PDFProcessor
 import ast
+import json
+import hashlib
 
 BUILTIN_IGNORES = [
     "**/.git/**",
@@ -88,19 +89,22 @@ class ParallelChunker:
     ]
     def __init__(
         self,
-        equal_chunks: Optional[int] = None,
-        max_chunk_size: Optional[int] = None,
-        output_dir: str = "chunks",
-        user_ignore: Optional[List[str]] = None,
-        user_unignore: Optional[List[str]] = None,
-        binary_extensions: Optional[List[str]] = None,
-        priority_rules: Optional[List[Tuple[str,int]]] = None,
-        num_threads: int = 4,
-        dry_run: bool = False,
-        semantic_chunking: bool = False,
-        file_type: Optional[str] = None,
-        verbose: bool = False
-        ) -> None:
+        equal_chunks = None,
+        max_chunk_size = None,
+        output_dir = "chunks",
+        user_ignore = None,
+        user_unignore = None,
+        binary_extensions = None,
+        priority_rules = None,
+        num_threads = 4,
+        dry_run = False,
+        semantic_chunking = False,
+        file_type = None,
+        verbose = False,
+        export_jsonl = False,
+        export_path = None,
+        export_embed_model = None,
+        ):
         
         if equal_chunks is not None and max_chunk_size is not None:
             raise ValueError("Cannot specify both equal_chunks and max_chunk_size")
@@ -110,11 +114,18 @@ class ParallelChunker:
         self.equal_chunks = equal_chunks
         self.max_chunk_size = max_chunk_size
         self.output_dir = output_dir
+        self._output_dir_abs = os.path.abspath(output_dir)
         self.num_threads = num_threads
         self.dry_run = dry_run 
         self.semantic_chunking = semantic_chunking
         self.file_type = file_type.lower() if file_type else None
         self.verbose = verbose
+        self._cached_tree_header = None
+        self._cached_tree_root = None
+        self.export_jsonl = export_jsonl
+        self.export_path = export_path or os.path.join(self.output_dir, "chunks.jsonl")
+        self.export_embed_model = export_embed_model or "unknown"
+        self._export_rows = []
 
         if user_ignore is None:
             user_ignore = []
@@ -158,7 +169,7 @@ class ParallelChunker:
         self.pdf_processor = PDFProcessor(pdf_chunk_size)
 
     def _get_text_content(self, path, content_bytes):
-        if path.endswith(".pdf"):
+        if path.lower().endswith(".pdf"):
             return self.pdf_processor.extract_text_from_pdf(path)
         else:
             text = content_bytes.decode("utf-8", errors="replace")
@@ -172,11 +183,11 @@ class ParallelChunker:
             return True
         return False
     
-    def _contains_api_key(self, line: str) -> bool:
+    def _contains_api_key(self, line):
         pattern = r'[\'"].*[a-zA-Z0-9_-]{20,}.*[\'"]'
         return bool(re.search(pattern, line))
 
-    def _filter_api_keys(self, text: str) -> str:
+    def _filter_api_keys(self, text):
         lines = text.splitlines()
         filtered_lines = []
         for line in lines:
@@ -192,7 +203,11 @@ class ParallelChunker:
         if pj == len(pattern_segs):
             return pi == len(path_segs)
         if pi == len(path_segs):
-            return all(seg == '**' for seg in pattern_segs[pj:])
+            for seg in pattern_segs[pj:]:
+                if seg != '**':
+                    return False
+            return True
+
         seg_pat = pattern_segs[pj]
         if seg_pat == "**":
             if self._match_segments(path_segs, pattern_segs, pi, pj + 1):
@@ -277,8 +292,12 @@ class ParallelChunker:
             for root, dirs, files in os.walk(directory):
                 new_dirs = []
                 for d in dirs:
-                    if d not in self.dir_ignore_names:
-                        new_dirs.append(d)
+                    if d in self.dir_ignore_names:
+                        continue
+                    full_dir = os.path.join(root, d)
+                    if self.should_ignore_file(full_dir):
+                        continue
+                    new_dirs.append(d)
                 dirs[:] = new_dirs
                 
                 for filename in files:
@@ -288,7 +307,8 @@ class ParallelChunker:
                         if not filename.lower().endswith(f".{self.file_type}"):
                             continue
 
-                    if os.path.commonprefix([os.path.abspath(self.output_dir), os.path.abspath(full_path)]) == os.path.abspath(self.output_dir):
+                    full_abs = os.path.abspath(full_path)
+                    if os.path.commonpath([self._output_dir_abs, full_abs]) == self._output_dir_abs:
                         continue
 
                     if self.should_ignore_file(full_path):
@@ -299,6 +319,8 @@ class ParallelChunker:
 
     def _load_file_data(self, path):
         try:
+            if self.is_binary_file(path):
+                return path, None, 0
             with open(path, "rb") as f:
                 content = f.read()
             return path, content, self.calculate_priority(path)
@@ -313,7 +335,7 @@ class ParallelChunker:
                 highest = max(highest, rule.score)
         return highest
 
-    def process_directories(self, dirs: List[str]) -> None:
+    def process_directories(self, dirs):
         if dirs:
             self.current_walk_root = os.path.abspath(dirs[0])
         
@@ -341,7 +363,10 @@ class ParallelChunker:
             priority = self.calculate_priority(path)
             files.append((path, priority))
         
-        files.sort(key=lambda x: -x[1])
+        def get_score(x):
+            return x[1]
+
+        files.sort(key=get_score, reverse=True)
         
         for path, priority in files:
             print(f"  - {path} (priority={priority})")
@@ -357,12 +382,12 @@ class ParallelChunker:
         for future in concurrent.futures.as_completed(futures):
             path, content, priority = future.result()
             
-            if content and not self.is_binary_file(path):
+            if content:
                 self.loaded_files.append((path, content, priority))
         
         executor.shutdown()
 
-    def process_file(self, file_path: str, custom_chunk_size: Optional[int] = None, force_process: bool = False) -> None:
+    def process_file(self, file_path, custom_chunk_size = None, force_process = False):
         if not os.path.isfile(file_path):
             raise ValueError(f"File not found: {file_path}")
             
@@ -375,7 +400,7 @@ class ParallelChunker:
             print(f"[DRY-RUN] Would process file: {file_path} (priority={priority})")
             return
             
-        if self.is_binary_file(file_path) and not file_path.endswith(".pdf") and not force_process:
+        if self.is_binary_file(file_path) and not file_path.lower().endswith(".pdf") and not force_process:
             print(f"Skipping binary file: {file_path}")
             return
             
@@ -410,7 +435,10 @@ class ParallelChunker:
         try:
             tree_header = ""
             if chunk_num == 0 and self.current_walk_root:
-                tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)   
+                if self._cached_tree_root != self.current_walk_root:
+                    self._cached_tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)
+                    self._cached_tree_root = self.current_walk_root
+                tree_header = self._cached_tree_header or ""
 
             if type(content_bytes) == bytes:
                 chunk_content = content_bytes.decode('utf-8', errors='replace')
@@ -418,6 +446,22 @@ class ParallelChunker:
                 chunk_content = str(content_bytes)
             
             final_content = tree_header + chunk_content
+
+            if self.export_jsonl:
+                cid = hashlib.blake2b(
+                    self._normalize_text(final_content).encode("utf-8", errors="replace"),
+                    digest_size=16
+                ).hexdigest()
+                self._export_rows.append({
+                    "page_content": final_content,
+                    "metadata": {
+                        "chunk_id": cid,
+                        "chunk_num": chunk_num,
+                        "root": self.current_walk_root or "",
+                        "sources": self._scan_chunk_sources(final_content),
+                        "embed_model": self.export_embed_model,
+                    }
+                })
             
             with open(chunk_path, "w", encoding="utf-8") as f:
                 f.write(final_content)
@@ -429,6 +473,16 @@ class ParallelChunker:
                     f.write(content_bytes)
             except:
                 pass
+    
+    def _normalize_text(self, s):
+        return s.replace("\r\n", "\n").replace("\r", "\n")
+
+    def _scan_chunk_sources(self, text):
+        out = []
+        for line in text.splitlines():
+            if line.startswith("File: "):
+                out.append(line[6:].strip())
+        return out
 
     def pdf_chunking(self, path, idx):
         chunk_writer = ChunkWriterInterface(self)
@@ -443,14 +497,21 @@ class ParallelChunker:
             self._chunk_by_equal_parts()
         else:
             self._chunk_by_size()
+
+        if self.export_jsonl and self._export_rows:
+            os.makedirs(os.path.dirname(self.export_path), exist_ok=True)
+            with open(self.export_path, "w", encoding="utf-8") as f:
+                for row in self._export_rows:
+                    f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
     
     def _extract_pdf_paragraphs(self, path):
         return self.pdf_processor.extract_pdf_paragraphs(path)
 
-    def _chunk_by_equal_parts(self) -> None:
+    def _chunk_by_equal_parts(self):
         text_blocks = []
         for path, content_bytes, _ in self.loaded_files:
-            if path.endswith(".pdf"):
+            if path.lower().endswith(".pdf"):
                 paragraphs = self._extract_pdf_paragraphs(path)
                 for para in paragraphs:
                     s = len(para.split())
@@ -467,9 +528,15 @@ class ParallelChunker:
             return
         
         n_chunks = self.equal_chunks
-        text_blocks.sort(key=lambda x: -x[2])  
+        def get_priority(x):
+            return x[2]
 
-        chunks = [[] for _ in range(n_chunks)]
+        text_blocks.sort(key=get_priority, reverse=True)
+
+        chunks = []
+        for i in range(n_chunks):
+            chunks.append([])
+
         chunk_sizes = [0] * n_chunks
 
         for block in text_blocks:
@@ -484,12 +551,18 @@ class ParallelChunker:
 
         for i, chunk in enumerate(chunks):
             if chunk:
-                self._write_equal_chunk([(path, text) for path, text, _ in chunk], i)
-    
+                chunk_data = []
+                for path, text, _ in chunk:
+                    chunk_data.append((path, text))
+                self._write_equal_chunk(chunk_data, i)
+
     def _write_equal_chunk(self, chunk_data, chunk_num):
         tree_header = ""
         if chunk_num == 0 and self.current_walk_root:
-            tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)
+            if self._cached_tree_root != self.current_walk_root:
+                self._cached_tree_header = self.tree_generator.prepare_tree_header(self.current_walk_root)
+                self._cached_tree_root = self.current_walk_root
+            tree_header = self._cached_tree_header or ""
         
         txt = tree_header
         txt += "="*80 + "\n" + f"CHUNK {chunk_num + 1} OF {self.equal_chunks}\n" + "="*80 + "\n\n"
@@ -501,6 +574,27 @@ class ParallelChunker:
         chunk_path = os.path.join(self.output_dir, f"chunk-{chunk_num}.txt")
         with open(chunk_path, "w", encoding="utf-8") as f:
             f.write(txt)
+
+        if self.export_jsonl:
+            cid = hashlib.blake2b(
+                self._normalize_text(txt).encode("utf-8", errors="replace"),
+                digest_size=16
+            ).hexdigest()
+
+            files = []
+            for path, _ in chunk_data:
+                files.append(path)
+
+            self._export_rows.append({
+                "page_content": txt,
+                "metadata": {
+                    "chunk_id": cid,
+                    "chunk_num": chunk_num,
+                    "root": self.current_walk_root or "",
+                    "sources": files,
+                    "embed_model": self.export_embed_model,
+                }
+            })
 
     def _build_chunk_header(self, num, file_path):
         return [
@@ -532,7 +626,7 @@ class ParallelChunker:
                 chunk_num += 1
                 continue
 
-            if path.endswith(".pdf"):
+            if path.lower().endswith(".pdf"):
                 next_idx = self.pdf_chunking(path, chunk_num - 1)
                 chunk_num = next_idx + 1
                 continue
@@ -563,9 +657,9 @@ class ParallelChunker:
 
     def _chunk_by_semantic(self):
         chunk_index = 0
-        for path, content_bytes in self.loaded_files:
+        for path, content_bytes, _ in self.loaded_files:
             text = self._get_text_content(path, content_bytes)
-            if not text and not path.endswith(".pdf"):
+            if not text and not path.lower().endswith(".pdf"):
                 continue
             if path.endswith(".py"):
                 chunk_index = self._chunk_python_file_ast(path, text, chunk_index)
@@ -573,8 +667,8 @@ class ParallelChunker:
                 chunk_index = self._chunk_nonpython_file_by_size(path, text, chunk_index)
 
     def _chunk_nonpython_file_by_size(self, path, text, chunk_index):
-        lines = text.splitlines()
-        if not lines:
+        all_lines = text.splitlines()
+        if not all_lines:
             t = (
                 "="*80 + "\n"
                 + f"CHUNK {chunk_index + 1}\n"
@@ -587,28 +681,29 @@ class ParallelChunker:
             self._write_chunk(t.encode("utf-8"), chunk_index)
             return chunk_index + 1
 
-        lines = []
+        acc_lines = []
         current_size = 0
         idx = chunk_index
 
-        for line in lines:
+        for line in all_lines:
             line_size = len(line.split())
-            if self.max_chunk_size and (current_size + line_size) > self.max_chunk_size and lines:
-                chunk_data = self._format_chunk_content(path, lines, idx)
+
+            if self.max_chunk_size and (current_size + line_size) > self.max_chunk_size and acc_lines:
+                chunk_data = self._format_chunk_content(path, acc_lines, idx)
                 self._write_chunk(chunk_data.encode("utf-8"), idx)
                 idx += 1
-                lines = []
+                acc_lines = []
                 current_size = 0
 
-            lines.append(line)
+            acc_lines.append(line)
             current_size += line_size
-
-        if lines:
-            chunk_data = self._format_chunk_content(path, lines, idx)
+        if acc_lines:
+            chunk_data = self._format_chunk_content(path, acc_lines, idx)
             self._write_chunk(chunk_data.encode("utf-8"), idx)
             idx += 1
 
         return idx
+
 
     def _format_chunk_content(self, path, lines, idx):
         h = [
@@ -646,7 +741,10 @@ class ParallelChunker:
             end = getattr(node, 'end_lineno', start)
             node_boundaries.append((start, end, label))
 
-        node_boundaries.sort(key=lambda x: x[0])
+        def get_first_element(x):
+            return x[0]
+
+        node_boundaries.sort(key=get_first_element)
 
         expanded_blocks = []
         prev_end = 1
@@ -715,6 +813,6 @@ class ParallelChunker:
     def __enter__(self):
         return self
 
-    def __exit__(self):
+    def __exit__(self, exc_type, exc, tb):
         self.close()
         return False

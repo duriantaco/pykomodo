@@ -20,7 +20,7 @@ def run_server():
                     return False
         
         port = 5555
-        while not is_port_available(port) and port < 5555:
+        while not is_port_available(port) and port < 5600:
             port += 1
         
         print(f" Starting Komodo server on http://localhost:{port}")
@@ -110,6 +110,13 @@ def main():
                         
     parser.add_argument("--verbose", action="store_true",
                         help="Enable verbose output")
+    
+    parser.add_argument("--export-jsonl", action="store_true",
+                        help="Write chunks.jsonl (LangChain/LlamaIndex-ready)")
+    parser.add_argument("--export-path", default=None,
+                        help="Path for the JSONL (default: <output_dir>/chunks.jsonl)")
+    parser.add_argument("--export-embed-model", default=None,
+                        help="Embed model name to store in metadata")
 
     args = parser.parse_args()
 
@@ -178,6 +185,13 @@ def main():
                 "semantic_chunking": args.semantic_chunks,
                 "file_type": args.file_type
             }
+
+            if not args.enhanced:
+                chunker_args.update({
+                    "export_jsonl": args.export_jsonl,
+                    "export_path": args.export_path,
+                    "export_embed_model": args.export_embed_model,
+                })
             
             if args.enhanced:
                 chunker_args.update({
@@ -189,7 +203,10 @@ def main():
                 })
     
         chunker = ChunkerClass(**chunker_args)
-        
+
+        if args.export_jsonl and args.max_tokens:
+            print("[Warn] --export-jsonl ignored for --max-tokens; TokenBasedChunker doesn't support export.")
+
         print("Directory tree structure will be automatically included")
         
         chunker.process_directories(args.dirs)
