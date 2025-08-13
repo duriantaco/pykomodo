@@ -1,20 +1,13 @@
-# src/config.py
-
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Optional
-
-@dataclass
 class PriorityRule:
-    pattern: str
-    score: int
+    def __init__(self, pattern, score):
+        self.pattern = pattern
+        self.score = score
 
-@dataclass
 class KomodoConfig:
-    max_size: int = 10 * 1024 * 1024
-    token_mode: bool = False
-    output_dir: Optional[Path] = None
-    stream: bool = False
-    ignore_patterns: list[str] = None
-    priority_rules: list[PriorityRule] = None
-    binary_extensions: list[str] = None
+    max_size = 10 * 1024 * 1024
+    token_mode = False
+    output_dir = None
+    stream = False
+    ignore_patterns = None
+    priority_rules = None
+    binary_extensions = None

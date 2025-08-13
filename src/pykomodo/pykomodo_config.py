@@ -35,7 +35,10 @@ class KomodoConfig(BaseModel):
     extract_metadata: bool = True
 
 def run_chunker_with_config(config: KomodoConfig):
-    ChunkerClass = EnhancedParallelChunker if config.enhanced else ParallelChunker
+    if config.enhanced:
+        ChunkerClass = EnhancedParallelChunker
+    else:
+        ChunkerClass = ParallelChunker
 
     chunker = ChunkerClass(
         equal_chunks=config.equal_chunks,

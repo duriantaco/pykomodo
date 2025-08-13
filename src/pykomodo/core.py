@@ -1,34 +1,33 @@
 import os
 import fnmatch
-from typing import List, Optional
 
 class PriorityRule:
     def __init__(self, pattern, score):
-        self.pattern: str = pattern
-        self.score: int = score
+        self.pattern = pattern
+        self.score = score
 
 class PyCConfig:
     def __init__(self):
-        self.max_size: int = 0
-        self.token_mode: bool = False
-        self.output_dir: Optional[str] = None
-        self.stream: bool = False
+        self.max_size = 0
+        self.token_mode = False
+        self.output_dir = None
+        self.stream = False
         
-        self.ignore_patterns: List[str] = []
-        self.unignore_patterns: List[str] = [] 
-        self.priority_rules: List[PriorityRule] = []
-        self.binary_exts: List[str] = []
+        self.ignore_patterns = []
+        self.unignore_patterns = [] 
+        self.priority_rules = []
+        self.binary_exts = []
 
-    def add_ignore_pattern(self, pattern: str) -> None:
+    def add_ignore_pattern(self, pattern):
         self.ignore_patterns.append(pattern)
 
-    def add_unignore_pattern(self, pattern: str) -> None:
+    def add_unignore_pattern(self, pattern):
         self.unignore_patterns.append(pattern)
 
-    def add_priority_rule(self, pattern: str, score: int) -> None:
+    def add_priority_rule(self, pattern, score):
         self.priority_rules.append(PriorityRule(pattern, score))
 
-    def should_ignore(self, path: str) -> bool:
+    def should_ignore(self, path):
         for pat in self.unignore_patterns:
             if fnmatch.fnmatch(path, pat):
                 return False
@@ -39,7 +38,7 @@ class PyCConfig:
 
         return False
 
-    def calculate_priority(self, path: str) -> int:
+    def calculate_priority(self, path):
         highest = 0
         for rule in self.priority_rules:
             if fnmatch.fnmatch(path, rule.pattern):
@@ -47,10 +46,16 @@ class PyCConfig:
                     highest = rule.score
         return highest
 
-    def is_binary_file(self, path: str) -> bool:
+    def is_binary_file(self, path):
         _, ext = os.path.splitext(path)
         ext = ext.lstrip(".").lower()
-        if ext in (b.lower() for b in self.binary_exts):
+        is_binary = False
+        for b in self.binary_exts:
+            if ext == b.lower():
+                is_binary = True
+                break
+
+        if is_binary:
             return True
 
         try:
@@ -64,7 +69,7 @@ class PyCConfig:
 
         return False
 
-    def read_file_contents(self, path: str) -> str:
+    def read_file_contents(self, path):
         try:
             with open(path, "rb") as f:
                 data = f.read()
@@ -72,15 +77,15 @@ class PyCConfig:
         except OSError:
             return "<NULL>"
 
-    def count_tokens(self, text: str) -> int:
+    def count_tokens(self, text):
         return len(text.split())
 
-    def make_c_string(self, text: Optional[str]) -> str:
+    def make_c_string(self, text):
         if text is None:
             return "<NULL>"
         return text
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         return (f"PyCConfig(max_size={self.max_size}, token_mode={self.token_mode}, "
                 f"output_dir={self.output_dir!r}, stream={self.stream}, "
                 f"ignore_patterns={self.ignore_patterns}, "

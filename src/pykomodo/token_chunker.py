@@ -1,5 +1,4 @@
 import os
-from typing import Optional, List, Tuple
 import ast
 import fitz  
 import re
@@ -9,20 +8,20 @@ from pykomodo.multi_dirs_chunker import ParallelChunker
 class TokenBasedChunker(ParallelChunker):
     def __init__(
         self,
-        equal_chunks: Optional[int] = None,
-        max_tokens_per_chunk: Optional[int] = None,
-        output_dir: str = "chunks",
-        user_ignore: Optional[List[str]] = None,
-        user_unignore: Optional[List[str]] = None,
-        binary_extensions: Optional[List[str]] = None,
-        priority_rules: Optional[List[Tuple[str, int]]] = None,
-        num_threads: int = 4,
-        dry_run: bool = False,
-        semantic_chunking: bool = False,
-        file_type: Optional[str] = None,
-        encoding_name: str = "cl100k_base",  
-        verbose: bool = False
-    ) -> None:
+        equal_chunks = None,
+        max_tokens_per_chunk = None,
+        output_dir = "chunks",
+        user_ignore = None,
+        user_unignore = None,
+        binary_extensions = None,
+        priority_rules = None,
+        num_threads = 4,
+        dry_run = False,
+        semantic_chunking = False,
+        file_type = None,
+        encoding_name = "cl100k_base",  
+        verbose = False
+    ):
         super().__init__(
             equal_chunks=equal_chunks,
             max_chunk_size=max_tokens_per_chunk, 
@@ -49,7 +48,7 @@ class TokenBasedChunker(ParallelChunker):
         except Exception as e:
             print(f"Error initializing tokenizer: {e}. Falling back to word-splitting.")
     
-    def count_tokens(self, text: str) -> int:
+    def count_tokens(self, text):
         if self.encoding:
             return len(self.encoding.encode(text))
         else:
@@ -115,7 +114,7 @@ class TokenBasedChunker(ParallelChunker):
             if self.verbose:
                 print(f"Created chunk {i+1} with approximately {chunk_token_counts[i]} tokens")
     
-    def _chunk_by_size(self) -> None:
+    def _chunk_by_size(self):
         if not self.loaded_files:
             return
         
@@ -245,7 +244,7 @@ class TokenBasedChunker(ParallelChunker):
                 
                 chunk_index += 1
     
-    def _chunk_python_file_semantic(self, path: str, text: str, chunk_index: int) -> int:
+    def _chunk_python_file_semantic(self, path, text, chunk_index):
         try:
             tree = ast.parse(text, filename=path)
         except SyntaxError:
@@ -418,7 +417,7 @@ class TokenBasedChunker(ParallelChunker):
         
         return chunk_index
     
-    def _chunk_pdf_file(self, path: str, chunk_index: int) -> int:
+    def _chunk_pdf_file(self, path, chunk_index):
         try:
             doc = fitz.open(path)
             
